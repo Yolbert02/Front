@@ -1,6 +1,5 @@
 import React from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-
 import {
   CCloseButton,
   CSidebar,
@@ -13,10 +12,7 @@ import CIcon from '@coreui/icons-react'
 
 import { AppSidebarNav } from './AppSidebarNav'
 
-import { logo } from 'src/assets/brand/logo'
-import { sygnet } from 'src/assets/brand/sygnet'
-
-// sidebar nav config
+import logo from 'src/assets/brand/Mylogo.png'
 import navigation from '../_nav'
 
 const AppSidebar = () => {
@@ -36,9 +32,17 @@ const AppSidebar = () => {
       }}
     >
       <CSidebarHeader className="border-bottom">
-        <CSidebarBrand to="/">
-          <CIcon customClassName="sidebar-brand-full" icon={logo} height={32} />
-          <CIcon customClassName="sidebar-brand-narrow" icon={sygnet} height={32} />
+        <CSidebarBrand to="/" className="w-100 d-flex justify-content-center">
+          <img
+            src={logo}
+            alt="logo"
+            style={{
+              height: '90px', 
+              width: 'auto', 
+              maxWidth: '100%',
+              objectFit: 'contain'
+            }}
+          />
         </CSidebarBrand>
         <CCloseButton
           className="d-lg-none"

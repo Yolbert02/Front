@@ -1,4 +1,5 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   CAvatar,
   CBadge,
@@ -19,74 +20,159 @@ import {
   cilSettings,
   cilTask,
   cilUser,
+  cilAccountLogout,
 } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
 
-import avatar8 from './../../assets/images/avatars/8.jpg'
+import { getProfile } from 'src/services/profile'
+import { logout } from 'src/services/auth'
 
 const AppHeaderDropdown = () => {
+  const navigate = useNavigate()
+  const [profile, setProfile] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    loadProfile()
+    
+    // Escuchar eventos de actualización de foto de perfil
+    const handleProfilePictureUpdate = (event) => {
+      setProfile(prev => ({
+        ...prev,
+        profile_picture: event.detail.profilePicture
+      }))
+    }
+
+    // Escuchar eventos de actualización del perfil
+    const handleProfileUpdate = (event) => {
+      setProfile(prev => ({
+        ...prev,
+        ...event.detail
+      }))
+    }
+
+    window.addEventListener('profilePictureUpdated', handleProfilePictureUpdate)
+    window.addEventListener('profileUpdated', handleProfileUpdate)
+    
+    return () => {
+      window.removeEventListener('profilePictureUpdated', handleProfilePictureUpdate)
+      window.removeEventListener('profileUpdated', handleProfileUpdate)
+    }
+  }, [])
+
+  const loadProfile = async () => {
+    try {
+      const data = await getProfile()
+      setProfile(data)
+    } catch (error) {
+      console.error('Error loading profile in dropdown:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleLogout = async () => {
+    try {
+      await logout()
+      // Redirigir al login
+      navigate('/login')
+    } catch (error) {
+      console.error('Error during logout:', error)
+      // Forzar logout incluso si hay error
+      navigate('/login')
+    }
+  }
+
+  const handleProfileClick = () => {
+    navigate('/profile')
+  }
+
   return (
     <CDropdown variant="nav-item">
       <CDropdownToggle placement="bottom-end" className="py-0 pe-0" caret={false}>
-        <CAvatar src={avatar8} size="md" />
+        {profile?.profile_picture ? (
+          <CAvatar 
+            src={profile.profile_picture} 
+            size="md"
+            status="success"
+            style={{ cursor: 'pointer' }}
+          />
+        ) : (
+          <div 
+            className="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white"
+            style={{ width: 40, height: 40 }}
+          >
+            <CIcon icon={cilUser} />
+          </div>
+        )}
       </CDropdownToggle>
       <CDropdownMenu className="pt-0" placement="bottom-end">
-        <CDropdownHeader className="bg-body-secondary fw-semibold mb-2">Account</CDropdownHeader>
+        <CDropdownHeader className="bg-body-secondary fw-semibold mb-2">
+          Cuenta
+        </CDropdownHeader>
+        
+        {/* Información del usuario */}
+        <CDropdownItem className="d-flex align-items-center" disabled>
+          <div className="d-flex align-items-center w-100">
+            {profile?.profile_picture ? (
+              <CAvatar 
+                src={profile.profile_picture} 
+                size="sm"
+                className="me-2"
+              />
+            ) : (
+              <div 
+                className="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white me-2"
+                style={{ width: 24, height: 24 }}
+              >
+                <CIcon icon={cilUser} size="sm" />
+              </div>
+            )}
+            <div className="flex-grow-1">
+              <div className="fw-semibold">
+                {profile?.first_name} {profile?.last_name}
+              </div>
+              <small className="text-muted">{profile?.gmail}</small>
+            </div>
+          </div>
+        </CDropdownItem>
+        
+        <CDropdownDivider />
+        
         <CDropdownItem href="#">
           <CIcon icon={cilBell} className="me-2" />
-          Updates
-          <CBadge color="info" className="ms-2">
-            42
-          </CBadge>
+          Actualizaciones
         </CDropdownItem>
-        <CDropdownItem href="#">
-          <CIcon icon={cilEnvelopeOpen} className="me-2" />
-          Messages
-          <CBadge color="success" className="ms-2">
-            42
-          </CBadge>
-        </CDropdownItem>
-        <CDropdownItem href="#">
-          <CIcon icon={cilTask} className="me-2" />
-          Tasks
-          <CBadge color="danger" className="ms-2">
-            42
-          </CBadge>
-        </CDropdownItem>
-        <CDropdownItem href="#">
-          <CIcon icon={cilCommentSquare} className="me-2" />
-          Comments
-          <CBadge color="warning" className="ms-2">
-            42
-          </CBadge>
-        </CDropdownItem>
-        <CDropdownHeader className="bg-body-secondary fw-semibold my-2">Settings</CDropdownHeader>
-        <CDropdownItem href="#">
+        
+        <CDropdownHeader className="bg-body-secondary fw-semibold my-2">
+          Configuración
+        </CDropdownHeader>
+        
+        {/* Enlace al perfil */}
+        <CDropdownItem 
+          className="d-flex align-items-center"
+          onClick={handleProfileClick}
+          style={{ cursor: 'pointer' }}
+        >
           <CIcon icon={cilUser} className="me-2" />
-          Profile
+          Mi Perfil
         </CDropdownItem>
+        
         <CDropdownItem href="#">
           <CIcon icon={cilSettings} className="me-2" />
-          Settings
+          Configuración
         </CDropdownItem>
-        <CDropdownItem href="#">
-          <CIcon icon={cilCreditCard} className="me-2" />
-          Payments
-          <CBadge color="secondary" className="ms-2">
-            42
-          </CBadge>
-        </CDropdownItem>
-        <CDropdownItem href="#">
-          <CIcon icon={cilFile} className="me-2" />
-          Projects
-          <CBadge color="primary" className="ms-2">
-            42
-          </CBadge>
-        </CDropdownItem>
+
         <CDropdownDivider />
-        <CDropdownItem href="#">
-          <CIcon icon={cilLockLocked} className="me-2" />
-          Lock Account
+        
+        {/* Cerrar sesión */}
+        <CDropdownItem 
+          className="d-flex align-items-center text-danger"
+          onClick={handleLogout}
+          style={{ cursor: 'pointer' }}
+        >
+          <CIcon icon={cilAccountLogout} className="me-2" />
+          Cerrar Sesión
         </CDropdownItem>
       </CDropdownMenu>
     </CDropdown>
