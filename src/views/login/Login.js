@@ -16,14 +16,15 @@ import {
   CSpinner
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { cilLockLocked, cilUser } from '@coreui/icons'
-import { login } from 'src/services/auth' // ✅ Importar el servicio actualizado
+import { cilLockLocked, cilUser, cilShieldAlt } from '@coreui/icons'
+import { login } from 'src/services/auth'
 
 const Login = () => {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [showDemoInfo, setShowDemoInfo] = useState(false)
 
   const navigate = useNavigate()
 
@@ -45,25 +46,14 @@ const Login = () => {
         navigate('/dashboard')
       }
     } catch (err) {
-      setError(err.message || 'Login error')
+      setError(err.message || 'Error logging')
     } finally {
       setLoading(false)
     }
   }
 
-  const fillDemoCredentials = (type) => {
-    if (type === 'admin') {
-      setUsername('admin')
-      setPassword('admin123')
-    } else if (type === 'user') {
-      setUsername('user')
-      setPassword('user123')
-    }
-    setError('')
-  }
-
   return (
-    <div className="bg-light min-vh-100 d-flex flex-row align-items-center">
+    <div className="bg-light min-vh-100 d-flex flex-row align-items-center login-background">
       <CContainer>
         <CRow className="justify-content-center">
           <CCol md={8} lg={6} xl={5}>
@@ -72,8 +62,17 @@ const Login = () => {
                 <CCardBody>
                   <CForm onSubmit={handleSubmit}>
                     <div className="text-center mb-4">
-                      <h2 className="text-primary">Sistema Judicial</h2>
-                      <p className="text-body-secondary">Iniciar Sesión</p>
+                      <img 
+                        src="/newicon.png" 
+                        alt="Logo" 
+                        className="mb-2"
+                        style={{ width: '100px', height: '100px', objectFit: 'contain' }}
+                        onError={(e) => {
+                          e.target.style.display = 'none'
+                        }}
+                      />
+                      <h2 className="text-primary">Welcom</h2>
+                      <p className="text-body-secondary">Login</p>
                     </div>
                     
                     {error && (
@@ -102,7 +101,7 @@ const Login = () => {
                       </CInputGroupText>
                       <CFormInput
                         type="password"
-                        placeholder="Contraseña"
+                        placeholder="password"
                         autoComplete="current-password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
@@ -122,46 +121,47 @@ const Login = () => {
                           {loading ? (
                             <>
                               <CSpinner component="span" size="sm" className="me-2" />
-                              Ingresando...
+                              Entering...
                             </>
                           ) : (
-                            'Ingresar'
+                            'Log in'
                           )}
                         </CButton>
                       </CCol>
                       <CCol xs={6} className="text-end">
-                        <small className="text-muted d-block">
-                          Usuario: <strong>admin</strong>
-                        </small>
-                        <small className="text-muted">
-                          Contraseña: <strong>admin123</strong>
-                        </small>
+                        <CButton 
+                          color="link" 
+                          className="px-0"
+                          onClick={() => setShowDemoInfo(!showDemoInfo)}
+                          disabled={loading}
+                        >
+                          ¿Forgot password?
+                        </CButton>
                       </CCol>
                     </CRow>
-
-                    <div className="mt-3 text-center">
-                      <small className="text-muted">
-                        ¿Primera vez? Prueba las credenciales de demo
-                      </small>
-                      <div className="d-flex gap-2 justify-content-center mt-2">
-                        <CButton 
-                          size="sm" 
-                          color="outline-primary"
-                          onClick={() => fillDemoCredentials('admin')}
-                          disabled={loading}
-                        >
-                          Admin
-                        </CButton>
-                        <CButton 
-                          size="sm" 
-                          color="outline-secondary"
-                          onClick={() => fillDemoCredentials('user')}
-                          disabled={loading}
-                        >
-                          Usuario
-                        </CButton>
+                    
+                    {showDemoInfo && (
+                      <div className="mt-3 p-3 bg-light rounded">
+                        <h6 className="mb-2">
+                          <CIcon icon={cilShieldAlt} className="me-2" />
+                          Recover Password
+                        </h6>
+                        <div className="d-grid gap-2">
+                          <CFormInput 
+                            placeholder="Email" 
+                            type="email"
+                            autoComplete="email"
+                            required
+                          />
+                          <CButton 
+                            color="primary" 
+                            disabled={loading}
+                          >
+                            Send recovery code
+                          </CButton>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </CForm>
                 </CCardBody>
               </CCard>
