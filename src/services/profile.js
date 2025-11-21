@@ -11,7 +11,7 @@ const initialProfile = {
     profile_picture: null,
     bio: "Soy el administrador del sistema",
     department: "Sistemas",
-    location: "Caracas, Venezuela",
+    location: "Tachira, Venezuela",
     join_date: "2024-01-01",
     notifications: true,
     email_notifications: true,
@@ -55,7 +55,7 @@ export async function updateProfile(payload) {
     }
     saveProfile(updatedProfile)
     
-    // Disparar evento para notificar cambios
+    // notificar cambios
     window.dispatchEvent(new CustomEvent('profileUpdated', {
         detail: { 
             first_name: updatedProfile.first_name,
@@ -76,7 +76,7 @@ export async function updateProfilePicture(imageData) {
     }
     saveProfile(updatedProfile)
     
-    // Disparar evento para notificar cambios en la foto
+    // notificar cambios en la foto
     window.dispatchEvent(new CustomEvent('profilePictureUpdated', {
         detail: { profilePicture: updatedProfile.profile_picture }
     }))

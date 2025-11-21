@@ -39,19 +39,19 @@ const Notifications = () => {
     const [showForm, setShowForm] = useState(false)
     const [editing, setEditing] = useState(null)
 
-    // Configuraciones
+    // Configurations
     const statusConfig = {
-        'programado': { color: 'primary', text: 'Programado' },
-        'en_curso': { color: 'warning', text: 'En Curso' },
-        'concluido': { color: 'success', text: 'Concluido' },
-        'cancelado': { color: 'danger', text: 'Cancelado' },
-        'aplazado': { color: 'info', text: 'Aplazado' }
+        'scheduled': { color: 'primary', text: 'Scheduled' },
+        'in_progress': { color: 'warning', text: 'In Progress' },
+        'completed': { color: 'success', text: 'Completed' },
+        'cancelled': { color: 'danger', text: 'Cancelled' },
+        'postponed': { color: 'info', text: 'Postponed' }
     }
 
     const priorityConfig = {
-        'alta': { color: 'danger', text: 'Alta' },
-        'media': { color: 'warning', text: 'Media' },
-        'baja': { color: 'success', text: 'Baja' }
+        'high': { color: 'danger', text: 'High' },
+        'medium': { color: 'warning', text: 'Medium' },
+        'low': { color: 'success', text: 'Low' }
     }
 
     useEffect(() => { 
@@ -83,19 +83,19 @@ const Notifications = () => {
             await fetchData()
         } catch (error) {
             console.error('Error saving notification:', error)
-            alert('Error al guardar la notificación: ' + error.message)
+            alert('Error saving notification: ' + error.message)
         }
     }
 
     const handleDelete = async (id) => {
-        if (!window.confirm('¿Estás seguro de que quieres eliminar esta notificación judicial?')) return
+        if (!window.confirm('Are you sure you want to delete this judicial notification?')) return
         
         try {
             await deleteNotification(id)
             await fetchData()
         } catch (error) {
             console.error('Error deleting notification:', error)
-            alert('Error al eliminar la notificación: ' + error.message)
+            alert('Error deleting notification: ' + error.message)
         }
     }
 
@@ -114,7 +114,7 @@ const Notifications = () => {
         setEditing(null)
     }
 
-    // Funciones de utilidad
+    // Utility functions
     const getStatusBadge = (status) => {
         const config = statusConfig[status] || { color: 'secondary', text: status }
         return <CBadge color={config.color}>{config.text}</CBadge>
@@ -126,14 +126,14 @@ const Notifications = () => {
     }
 
     const formatDate = (dateString) => {
-        return dateString ? new Date(dateString).toLocaleDateString('es-ES') : 'No establecida'
+        return dateString ? new Date(dateString).toLocaleDateString('en-US') : 'Not set'
     }
 
     const getParticipantsCount = (notification) => {
-        const funcionaries = notification.funcionaries?.length || 0
+        const officials = notification.officials?.length || 0
         const witnesses = notification.witnesses?.length || 0
         const jury = notification.jury?.length || 0
-        return funcionaries + witnesses + jury + (notification.judge_id ? 1 : 0)
+        return officials + witnesses + jury + (notification.judge_id ? 1 : 0)
     }
 
     const truncateDescription = (description, maxLength = 50) => {
@@ -143,7 +143,7 @@ const Notifications = () => {
             : description
     }
 
-    // Componentes reutilizables
+    // Reusable components
     const DateCell = ({ date, time }) => (
         <CTableDataCell>
             <div className="d-flex align-items-start">
@@ -159,7 +159,7 @@ const Notifications = () => {
     )
 
     const ParticipantsCell = ({ notification }) => {
-        const funcionaries = notification.funcionaries?.length || 0
+        const officials = notification.officials?.length || 0
         const witnesses = notification.witnesses?.length || 0
         const jury = notification.jury?.length || 0
         
@@ -168,9 +168,9 @@ const Notifications = () => {
                 <div className="d-flex align-items-start">
                     <CIcon icon={cilUser} className="me-1 text-info mt-1" />
                     <div>
-                        <div>{getParticipantsCount(notification)} personas</div>
+                        <div>{getParticipantsCount(notification)} people</div>
                         <small className="text-muted">
-                            {funcionaries} funcionario(s), {witnesses} testigo(s), {jury} jurado(s)
+                            {officials} official(s), {witnesses} witness(es), {jury} juror(s)
                         </small>
                     </div>
                 </div>
@@ -181,7 +181,7 @@ const Notifications = () => {
     const LoadingState = () => (
         <div className="text-center py-4">
             <CSpinner color="primary" />
-            <div className="mt-2">Cargando notificaciones judiciales...</div>
+            <div className="mt-2">Loading judicial notifications...</div>
         </div>
     )
 
@@ -189,10 +189,10 @@ const Notifications = () => {
         <div className="text-center py-5">
             <div className="text-muted">
                 <CIcon icon={cilBalanceScale} size="3xl" className="mb-3" />
-                <h5>No se encontraron notificaciones judiciales</h5>
-                <p>Comienza creando una nueva notificación judicial.</p>
+                <h5>No judicial notifications found</h5>
+                <p>Start by creating a new judicial notification.</p>
                 <CButton color="primary" onClick={handleNewNotification}>
-                    Crear primera notificación
+                    Create first notification
                 </CButton>
             </div>
         </div>
@@ -207,11 +207,11 @@ const Notifications = () => {
                             <div className="d-flex justify-content-between align-items-center">
                                 <h4 className="mb-0">
                                     <CIcon icon={cilBalanceScale} className="me-2" />
-                                    Gestión de Notificaciones Judiciales
+                                    Judicial Notifications Management
                                 </h4>
                                 <CButton color="primary" onClick={handleNewNotification}>
                                     <CIcon icon={cilPlus} className="me-2" />
-                                    Nueva Notificación
+                                    New Notification
                                 </CButton>
                             </div>
                         </CCardHeader>
@@ -221,22 +221,22 @@ const Notifications = () => {
                             ) : (
                                 <>
                                     <div className="mb-3 text-muted">
-                                        Mostrando {data.length} notificación(es) judicial(es)
+                                        Showing {data.length} judicial notification(s)
                                     </div>
                                     
                                     {data.length > 0 ? (
                                         <CTable hover responsive>
                                             <CTableHead>
                                                 <CTableRow>
-                                                    <CTableHeaderCell>N° de Caso</CTableHeaderCell>
-                                                    <CTableHeaderCell>Título del Caso</CTableHeaderCell>
-                                                    <CTableHeaderCell>Juez</CTableHeaderCell>
-                                                    <CTableHeaderCell>Fecha de Audiencia</CTableHeaderCell>
-                                                    <CTableHeaderCell>Fecha de Juicio</CTableHeaderCell>
-                                                    <CTableHeaderCell>Participantes</CTableHeaderCell>
-                                                    <CTableHeaderCell>Prioridad</CTableHeaderCell>
-                                                    <CTableHeaderCell>Estado</CTableHeaderCell>
-                                                    <CTableHeaderCell style={{ width: '120px' }}>Acciones</CTableHeaderCell>
+                                                    <CTableHeaderCell>Case No.</CTableHeaderCell>
+                                                    <CTableHeaderCell>Case Title</CTableHeaderCell>
+                                                    <CTableHeaderCell>Judge</CTableHeaderCell>
+                                                    <CTableHeaderCell>Hearing Date</CTableHeaderCell>
+                                                    <CTableHeaderCell>Trial Date</CTableHeaderCell>
+                                                    <CTableHeaderCell>Participants</CTableHeaderCell>
+                                                    <CTableHeaderCell>Priority</CTableHeaderCell>
+                                                    <CTableHeaderCell>Status</CTableHeaderCell>
+                                                    <CTableHeaderCell style={{ width: '120px' }}>Actions</CTableHeaderCell>
                                                 </CTableRow>
                                             </CTableHead>
                                             <CTableBody>
@@ -255,7 +255,7 @@ const Notifications = () => {
                                                             </div>
                                                         </CTableDataCell>
                                                         <CTableDataCell>
-                                                            {notification.judge_name || 'No asignado'}
+                                                            {notification.judge_name || 'Not assigned'}
                                                         </CTableDataCell>
                                                         <DateCell date={notification.hearing_date} time={notification.hearing_time} />
                                                         <DateCell date={notification.trial_date} time={notification.trial_time} />
@@ -273,7 +273,7 @@ const Notifications = () => {
                                                                     color="primary" 
                                                                     variant="outline"
                                                                     onClick={() => handleEdit(notification)}
-                                                                    title="Editar notificación"
+                                                                    title="Edit notification"
                                                                 >
                                                                     <CIcon icon={cilPencil} />
                                                                 </CButton>
@@ -282,7 +282,7 @@ const Notifications = () => {
                                                                     color="danger" 
                                                                     variant="outline"
                                                                     onClick={() => handleDelete(notification.id)}
-                                                                    title="Eliminar notificación"
+                                                                    title="Delete notification"
                                                                 >
                                                                     <CIcon icon={cilTrash} />
                                                                 </CButton>

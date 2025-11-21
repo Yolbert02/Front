@@ -29,15 +29,15 @@ const NotificationForm = ({ visible, onClose, onSave, initial = null }) => {
     const [trialDate, setTrialDate] = useState('')
     const [trialTime, setTrialTime] = useState('10:00')
     const [location, setLocation] = useState('')
-    const [status, setStatus] = useState('programado')
-    const [priority, setPriority] = useState('media')
+    const [status, setStatus] = useState('scheduled')
+    const [priority, setPriority] = useState('medium')
     
-    const [funcionaries, setFuncionaries] = useState([])
+    const [officials, setOfficials] = useState([])
     const [witnesses, setWitnesses] = useState([])
     const [jury, setJury] = useState([])
     
-    // Listas de usuarios disponibles
-    const [availableFuncionaries, setAvailableFuncionaries] = useState([])
+    // Available users lists
+    const [availableOfficials, setAvailableOfficials] = useState([])
     const [availableCitizens, setAvailableCitizens] = useState([])
     
     const [loading, setLoading] = useState(false)
@@ -57,9 +57,9 @@ const NotificationForm = ({ visible, onClose, onSave, initial = null }) => {
                 setTrialDate(initial.trial_date || '')
                 setTrialTime(initial.trial_time || '10:00')
                 setLocation(initial.location || '')
-                setStatus(initial.status || 'programado')
-                setPriority(initial.priority || 'media')
-                setFuncionaries(initial.funcionaries || [])
+                setStatus(initial.status || 'scheduled')
+                setPriority(initial.priority || 'medium')
+                setOfficials(initial.officials || [])
                 setWitnesses(initial.witnesses || [])
                 setJury(initial.jury || [])
             } else {
@@ -78,9 +78,9 @@ const NotificationForm = ({ visible, onClose, onSave, initial = null }) => {
         setTrialDate('')
         setTrialTime('10:00')
         setLocation('')
-        setStatus('programado')
-        setPriority('media')
-        setFuncionaries([])
+        setStatus('scheduled')
+        setPriority('medium')
+        setOfficials([])
         setWitnesses([])
         setJury([])
     }
@@ -88,12 +88,12 @@ const NotificationForm = ({ visible, onClose, onSave, initial = null }) => {
     const loadUsers = async () => {
         setLoading(true)
         try {
-            const [funcionaries, citizens] = await Promise.all([
+            const [officials, citizens] = await Promise.all([
                 getFuncionaries(),
                 getCitizens()
             ])
             
-            setAvailableFuncionaries(funcionaries)
+            setAvailableOfficials(officials)
             setAvailableCitizens(citizens)
             
         } catch (error) {
@@ -103,34 +103,34 @@ const NotificationForm = ({ visible, onClose, onSave, initial = null }) => {
         }
     }
 
-    const addFuncionary = () => {
-        setFuncionaries([...funcionaries, { 
+    const addOfficial = () => {
+        setOfficials([...officials, { 
             user_id: '', 
             name: '', 
-            role: 'Abogado'
+            role: 'Lawyer'
         }])
     }
 
     const addWitness = () => {
-        setWitnesses([...witnesses, { user_id: '', name: '', role: 'Testigo' }])
+        setWitnesses([...witnesses, { user_id: '', name: '', role: 'Witness' }])
     }
 
     const addJury = () => {
-        setJury([...jury, { user_id: '', name: '', role: 'Jurado' }])
+        setJury([...jury, { user_id: '', name: '', role: 'Juror' }])
     }
 
-    const updateFuncionary = (index, field, value) => {
-        const updated = [...funcionaries]
+    const updateOfficial = (index, field, value) => {
+        const updated = [...officials]
         updated[index][field] = value
         
         if (field === 'user_id' && value) {
-            const selectedUser = availableFuncionaries.find(u => u.id === parseInt(value))
+            const selectedUser = availableOfficials.find(u => u.id === parseInt(value))
             if (selectedUser) {
                 updated[index].name = `${selectedUser.first_name} ${selectedUser.last_name}`
             }
         }
         
-        setFuncionaries(updated)
+        setOfficials(updated)
     }
 
     const updateWitness = (index, field, value) => {
@@ -161,8 +161,8 @@ const NotificationForm = ({ visible, onClose, onSave, initial = null }) => {
         setJury(updated)
     }
 
-    const removeFuncionary = (index) => {
-        setFuncionaries(funcionaries.filter((_, i) => i !== index))
+    const removeOfficial = (index) => {
+        setOfficials(officials.filter((_, i) => i !== index))
     }
 
     const removeWitness = (index) => {
@@ -177,12 +177,12 @@ const NotificationForm = ({ visible, onClose, onSave, initial = null }) => {
         e.preventDefault()
         
         if (!caseTitle.trim() || !caseDescription.trim()) {
-            alert('El título y descripción del caso son requeridos')
+            alert('Case title and description are required')
             return
         }
 
-        // Encontrar el nombre del juez seleccionado
-        const selectedJudge = availableFuncionaries.find(j => j.id === parseInt(judgeId))
+        // Find selected judge name
+        const selectedJudge = availableOfficials.find(j => j.id === parseInt(judgeId))
         const judgeName = selectedJudge ? `${selectedJudge.first_name} ${selectedJudge.last_name}` : ''
 
         const payload = { 
@@ -198,7 +198,7 @@ const NotificationForm = ({ visible, onClose, onSave, initial = null }) => {
             location: location.trim(),
             status,
             priority,
-            funcionaries: funcionaries.filter(f => f.user_id && f.name),
+            officials: officials.filter(f => f.user_id && f.name),
             witnesses: witnesses.filter(w => w.user_id && w.name),
             jury: jury.filter(j => j.user_id && j.name)
         }
@@ -206,17 +206,17 @@ const NotificationForm = ({ visible, onClose, onSave, initial = null }) => {
         onSave(payload)
     }
 
-    const renderFuncionaries = () => {
-        return funcionaries.map((funcionary, index) => (
+    const renderOfficials = () => {
+        return officials.map((official, index) => (
             <CRow key={index} className="g-3 mb-3 align-items-end">
                 <CCol md={5}>
                     <CFormSelect 
-                        label="Funcionario"
-                        value={funcionary.user_id}
-                        onChange={(e) => updateFuncionary(index, 'user_id', e.target.value)}
+                        label="Official"
+                        value={official.user_id}
+                        onChange={(e) => updateOfficial(index, 'user_id', e.target.value)}
                     >
-                        <option value="">Seleccionar funcionario</option>
-                        {availableFuncionaries.map(user => (
+                        <option value="">Select official</option>
+                        {availableOfficials.map(user => (
                             <option key={user.id} value={user.id}>
                                 {user.first_name} {user.last_name} - {user.document}
                             </option>
@@ -225,21 +225,21 @@ const NotificationForm = ({ visible, onClose, onSave, initial = null }) => {
                 </CCol>
                 <CCol md={5}>
                     <CFormSelect 
-                        label="Rol"
-                        value={funcionary.role}
-                        onChange={(e) => updateFuncionary(index, 'role', e.target.value)}
+                        label="Role"
+                        value={official.role}
+                        onChange={(e) => updateOfficial(index, 'role', e.target.value)}
                     >
-                        <option value="Abogado">Abogado</option>
-                        <option value="Fiscal">Fiscal</option>
-                        <option value="Defensor">Defensor</option>
-                        <option value="Juez">Juez</option>
+                        <option value="Lawyer">Lawyer</option>
+                        <option value="Prosecutor">Prosecutor</option>
+                        <option value="Defender">Defender</option>
+                        <option value="Judge">Judge</option>
                     </CFormSelect>
                 </CCol>
                 <CCol md={2}>
                     <CButton 
                         color="danger" 
                         variant="outline"
-                        onClick={() => removeFuncionary(index)}
+                        onClick={() => removeOfficial(index)}
                     >
                         <CIcon icon={cilTrash} />
                     </CButton>
@@ -253,11 +253,11 @@ const NotificationForm = ({ visible, onClose, onSave, initial = null }) => {
             <CRow key={index} className="g-3 mb-3 align-items-end">
                 <CCol md={5}>
                     <CFormSelect 
-                        label="Testigo"
+                        label="Witness"
                         value={witness.user_id}
                         onChange={(e) => updateWitness(index, 'user_id', e.target.value)}
                     >
-                        <option value="">Seleccionar testigo</option>
+                        <option value="">Select witness</option>
                         {availableCitizens.map(user => (
                             <option key={user.id} value={user.id}>
                                 {user.first_name} {user.last_name} - {user.document}
@@ -267,10 +267,10 @@ const NotificationForm = ({ visible, onClose, onSave, initial = null }) => {
                 </CCol>
                 <CCol md={5}>
                     <CFormInput 
-                        label="Rol"
+                        label="Role"
                         value={witness.role}
                         onChange={(e) => updateWitness(index, 'role', e.target.value)}
-                        placeholder="Testigo ocular, Testigo técnico..."
+                        placeholder="Eyewitness, Expert witness..."
                     />
                 </CCol>
                 <CCol md={2}>
@@ -291,11 +291,11 @@ const NotificationForm = ({ visible, onClose, onSave, initial = null }) => {
             <CRow key={index} className="g-3 mb-3 align-items-end">
                 <CCol md={5}>
                     <CFormSelect 
-                        label="Miembro del Jurado"
+                        label="Jury Member"
                         value={juryMember.user_id}
                         onChange={(e) => updateJury(index, 'user_id', e.target.value)}
                     >
-                        <option value="">Seleccionar miembro</option>
+                        <option value="">Select member</option>
                         {availableCitizens.map(user => (
                             <option key={user.id} value={user.id}>
                                 {user.first_name} {user.last_name} - {user.document}
@@ -305,10 +305,10 @@ const NotificationForm = ({ visible, onClose, onSave, initial = null }) => {
                 </CCol>
                 <CCol md={5}>
                     <CFormInput 
-                        label="Rol"
+                        label="Role"
                         value={juryMember.role}
                         onChange={(e) => updateJury(index, 'role', e.target.value)}
-                        placeholder="Jurado"
+                        placeholder="Juror"
                     />
                 </CCol>
                 <CCol md={2}>
@@ -327,17 +327,17 @@ const NotificationForm = ({ visible, onClose, onSave, initial = null }) => {
     return (
         <CModal size="xl" visible={visible} onClose={onClose}>
             <CModalHeader>
-                <CModalTitle>{initial ? 'Editar Notificación Judicial' : 'Nueva Notificación Judicial'}</CModalTitle>
+                <CModalTitle>{initial ? 'Edit Judicial Notification' : 'New Judicial Notification'}</CModalTitle>
             </CModalHeader>
             <CForm onSubmit={handleSubmit}>
                 <CModalBody style={{ maxHeight: '70vh', overflowY: 'auto' }}>
-                    {/* Información del Caso */}
-                    <h6 className="mb-3 text-primary">Información del Caso</h6>
+                    {/* Case Information */}
+                    <h6 className="mb-3 text-primary">Case Information</h6>
                     <CRow className="g-3">
                         <CCol md={12}>
                             <CFormInput 
-                                label="Título del Caso *" 
-                                placeholder="Robo en vía pública"
+                                label="Case Title *" 
+                                placeholder="Robbery in public space"
                                 value={caseTitle} 
                                 onChange={(e) => setCaseTitle(e.target.value)}
                                 required 
@@ -347,8 +347,8 @@ const NotificationForm = ({ visible, onClose, onSave, initial = null }) => {
 
                     <div className="mt-3">
                         <CFormTextarea
-                            label="Descripción del Caso *"
-                            placeholder="Descripción detallada del caso..."
+                            label="Case Description *"
+                            placeholder="Detailed description of the case..."
                             rows="3"
                             value={caseDescription}
                             onChange={(e) => setCaseDescription(e.target.value)}
@@ -359,28 +359,28 @@ const NotificationForm = ({ visible, onClose, onSave, initial = null }) => {
                     <CRow className="g-3 mt-2">
                         <CCol md={6}>
                             <CFormInput 
-                                label="Juzgado"
-                                placeholder="Juzgado Primero Penal"
+                                label="Court"
+                                placeholder="First Criminal Court"
                                 value={court}
                                 onChange={(e) => setCourt(e.target.value)}
                             />
                         </CCol>
                         <CCol md={6}>
                             <CFormInput 
-                                label="Ubicación"
-                                placeholder="Palacio de Justicia, Sala 4A"
+                                label="Location"
+                                placeholder="Justice Palace, Room 4A"
                                 value={location}
                                 onChange={(e) => setLocation(e.target.value)}
                             />
                         </CCol>
                     </CRow>
 
-                    {/* Fechas Importantes */}
-                    <h6 className="mb-3 mt-4 text-primary">Fechas Importantes</h6>
+                    {/* Important Dates */}
+                    <h6 className="mb-3 mt-4 text-primary">Important Dates</h6>
                     <CRow className="g-3">
                         <CCol md={6}>
                             <CFormInput 
-                                label="Fecha de Audiencia"
+                                label="Hearing Date"
                                 type="date"
                                 value={hearingDate}
                                 onChange={(e) => setHearingDate(e.target.value)}
@@ -388,7 +388,7 @@ const NotificationForm = ({ visible, onClose, onSave, initial = null }) => {
                         </CCol>
                         <CCol md={6}>
                             <CFormInput 
-                                label="Hora de Audiencia"
+                                label="Hearing Time"
                                 type="time"
                                 value={hearingTime}
                                 onChange={(e) => setHearingTime(e.target.value)}
@@ -399,7 +399,7 @@ const NotificationForm = ({ visible, onClose, onSave, initial = null }) => {
                     <CRow className="g-3 mt-2">
                         <CCol md={6}>
                             <CFormInput 
-                                label="Fecha de Juicio"
+                                label="Trial Date"
                                 type="date"
                                 value={trialDate}
                                 onChange={(e) => setTrialDate(e.target.value)}
@@ -407,7 +407,7 @@ const NotificationForm = ({ visible, onClose, onSave, initial = null }) => {
                         </CCol>
                         <CCol md={6}>
                             <CFormInput 
-                                label="Hora de Juicio"
+                                label="Trial Time"
                                 type="time"
                                 value={trialTime}
                                 onChange={(e) => setTrialTime(e.target.value)}
@@ -415,99 +415,99 @@ const NotificationForm = ({ visible, onClose, onSave, initial = null }) => {
                         </CCol>
                     </CRow>
 
-                    {/* Juez Principal */}
-                    <h6 className="mb-3 mt-4 text-primary">Juez Principal</h6>
+                    {/* Main Judge */}
+                    <h6 className="mb-3 mt-4 text-primary">Main Judge</h6>
                     <CRow className="g-3">
                         <CCol md={12}>
                             <CFormSelect 
-                                label="Juez Asignado"
+                                label="Assigned Judge"
                                 value={judgeId}
                                 onChange={(e) => setJudgeId(e.target.value)}
                                 disabled={loading}
                             >
-                                <option value="">Seleccionar un juez</option>
-                                {availableFuncionaries.map(funcionary => (
-                                    <option key={funcionary.id} value={funcionary.id}>
-                                        {funcionary.first_name} {funcionary.last_name} - {funcionary.document}
+                                <option value="">Select a judge</option>
+                                {availableOfficials.map(official => (
+                                    <option key={official.id} value={official.id}>
+                                        {official.first_name} {official.last_name} - {official.document}
                                     </option>
                                 ))}
                             </CFormSelect>
                         </CCol>
                     </CRow>
 
-                    {/* Funcionarios del Caso */}
-                    <h6 className="mb-3 mt-4 text-primary">Funcionarios del Caso</h6>
+                    {/* Case Officials */}
+                    <h6 className="mb-3 mt-4 text-primary">Case Officials</h6>
                     <CCard className="mb-3">
                         <CCardBody>
-                            {renderFuncionaries()}
-                            <CButton color="primary" variant="outline" onClick={addFuncionary}>
+                            {renderOfficials()}
+                            <CButton color="primary" variant="outline" onClick={addOfficial}>
                                 <CIcon icon={cilPlus} className="me-2" />
-                                Agregar Funcionario
+                                Add Official
                             </CButton>
                         </CCardBody>
                     </CCard>
 
-                    {/* Testigos */}
-                    <h6 className="mb-3 mt-4 text-primary">Testigos</h6>
+                    {/* Witnesses */}
+                    <h6 className="mb-3 mt-4 text-primary">Witnesses</h6>
                     <CCard className="mb-3">
                         <CCardBody>
                             {renderWitnesses()}
                             <CButton color="primary" variant="outline" onClick={addWitness}>
                                 <CIcon icon={cilPlus} className="me-2" />
-                                Agregar Testigo
+                                Add Witness
                             </CButton>
                         </CCardBody>
                     </CCard>
 
-                    {/* Jurado */}
-                    <h6 className="mb-3 mt-4 text-primary">Miembros del Jurado</h6>
+                    {/* Jury */}
+                    <h6 className="mb-3 mt-4 text-primary">Jury Members</h6>
                     <CCard className="mb-3">
                         <CCardBody>
                             {renderJury()}
                             <CButton color="primary" variant="outline" onClick={addJury}>
                                 <CIcon icon={cilPlus} className="me-2" />
-                                Agregar Miembro
+                                Add Member
                             </CButton>
                         </CCardBody>
                     </CCard>
 
-                    {/* Estado y Prioridad */}
-                    <h6 className="mb-3 mt-4 text-primary">Estado y Prioridad</h6>
+                    {/* Status and Priority */}
+                    <h6 className="mb-3 mt-4 text-primary">Status and Priority</h6>
                     <CRow className="g-3">
                         <CCol md={6}>
                             <CFormSelect 
-                                label="Estado"
+                                label="Status"
                                 value={status}
                                 onChange={(e) => setStatus(e.target.value)}
                             >
-                                <option value="programado">Programado</option>
-                                <option value="en_curso">En Curso</option>
-                                <option value="concluido">Concluido</option>
-                                <option value="cancelado">Cancelado</option>
-                                <option value="aplazado">Aplazado</option>
+                                <option value="scheduled">Scheduled</option>
+                                <option value="in_progress">In Progress</option>
+                                <option value="completed">Completed</option>
+                                <option value="cancelled">Cancelled</option>
+                                <option value="postponed">Postponed</option>
                             </CFormSelect>
                         </CCol>
                         <CCol md={6}>
                             <CFormSelect 
-                                label="Prioridad"
+                                label="Priority"
                                 value={priority}
                                 onChange={(e) => setPriority(e.target.value)}
                             >
-                                <option value="alta">Alta</option>
-                                <option value="media">Media</option>
-                                <option value="baja">Baja</option>
+                                <option value="high">High</option>
+                                <option value="medium">Medium</option>
+                                <option value="low">Low</option>
                             </CFormSelect>
                         </CCol>
                     </CRow>
 
                     <div className="mt-3">
-                        <small className="text-muted">* Campos requeridos</small>
+                        <small className="text-muted">* Required fields</small>
                     </div>
                 </CModalBody>
                 <CModalFooter>
-                    <CButton color="secondary" onClick={onClose}>Cancelar</CButton>
+                    <CButton color="secondary" onClick={onClose}>Cancel</CButton>
                     <CButton type="submit" color="primary">
-                        {initial ? 'Actualizar' : 'Crear'} Notificación
+                        {initial ? 'Update' : 'Create'} Notification
                     </CButton>
                 </CModalFooter>
             </CForm>
