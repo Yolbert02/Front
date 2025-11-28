@@ -6,7 +6,6 @@ import {
     CContainer,
     CRow,
     CCol,
-    CButton,
     CTable,
     CTableHead,
     CTableRow,
@@ -29,7 +28,7 @@ import AvatarLetter from 'src/components/AvatarLetter'
 import ConfirmationModal from 'src/components/ConfirmationModal'
 
 const Users = () => {
-    const [data, setData] = useState([])
+    const [data] = useState([])
     const [loading, setLoading] = useState(true)
     const [showForm, setShowForm] = useState(false)
     const [showInfo, setShowInfo] = useState(false)
@@ -44,7 +43,6 @@ const Users = () => {
 
     useEffect(() => { 
         console.log('Users component mounted')
-        fetchData() 
     }, [])
 
     async function fetchData() { 
