@@ -23,23 +23,33 @@ import {
     cilTrash, 
     cilCalendar, 
     cilUser, 
-    cilBalanceScale 
+    cilBalanceScale,
+    cilInfo
 } from '@coreui/icons'
 import NotificationForm from './NotificationForm'
+import InfoNotification from './InfoNotification'
 import { 
     listNotifications, 
     deleteNotification, 
     updateNotification, 
     createNotification 
 } from 'src/services/notifications'
+import ConfirmationModal from 'src/components/ConfirmationModal'
 
 const Notifications = () => {
     const [data, setData] = useState([])
     const [loading, setLoading] = useState(true)
     const [showForm, setShowForm] = useState(false)
+    const [showInfo, setShowInfo] = useState(false)
     const [editing, setEditing] = useState(null)
+    const [selectedNotification, setSelectedNotification] = useState(null)
 
-    // Configurations
+    const [deleteModal, setDeleteModal] = useState({
+    visible: false,
+    notificationId: null,
+    notificationTitle: ''
+})
+
     const statusConfig = {
         'scheduled': { color: 'primary', text: 'Scheduled' },
         'in_progress': { color: 'warning', text: 'In Progress' },
@@ -87,17 +97,31 @@ const Notifications = () => {
         }
     }
 
-    const handleDelete = async (id) => {
-        if (!window.confirm('Are you sure you want to delete this judicial notification?')) return
-        
-        try {
-            await deleteNotification(id)
-            await fetchData()
-        } catch (error) {
-            console.error('Error deleting notification:', error)
-            alert('Error deleting notification: ' + error.message)
-        }
+    const showDeleteConfirmation = (id, title) => {
+    setDeleteModal({
+        visible: true,
+        notificationId: id,
+        notificationTitle: title
+    })
+}
+
+const handleDelete = async (id) => {
+    try {
+        await deleteNotification(id)
+        await fetchData()
+        console.log('Notification deleted successfully')
+    } catch (error) {
+        console.error('Error deleting notification:', error)
+        alert('Error deleting notification: ' + error.message)
     }
+}
+
+const confirmDelete = () => {
+    if (deleteModal.notificationId) {
+        handleDelete(deleteModal.notificationId)
+    }
+    setDeleteModal({ visible: false, notificationId: null, notificationTitle: '' })
+}
 
     const handleEdit = (notification) => {
         setEditing(notification)
@@ -114,7 +138,11 @@ const Notifications = () => {
         setEditing(null)
     }
 
-    // Utility functions
+    const handleShowInfo = (notification) => {
+        setSelectedNotification(notification)
+        setShowInfo(true)
+    }
+
     const getStatusBadge = (status) => {
         const config = statusConfig[status] || { color: 'secondary', text: status }
         return <CBadge color={config.color}>{config.text}</CBadge>
@@ -143,7 +171,6 @@ const Notifications = () => {
             : description
     }
 
-    // Reusable components
     const DateCell = ({ date, time }) => (
         <CTableDataCell>
             <div className="d-flex align-items-start">
@@ -236,7 +263,7 @@ const Notifications = () => {
                                                     <CTableHeaderCell>Participants</CTableHeaderCell>
                                                     <CTableHeaderCell>Priority</CTableHeaderCell>
                                                     <CTableHeaderCell>Status</CTableHeaderCell>
-                                                    <CTableHeaderCell style={{ width: '120px' }}>Actions</CTableHeaderCell>
+                                                    <CTableHeaderCell style={{ width: '150px' }}>Actions</CTableHeaderCell>
                                                 </CTableRow>
                                             </CTableHead>
                                             <CTableBody>
@@ -270,6 +297,15 @@ const Notifications = () => {
                                                             <div className="d-flex gap-2">
                                                                 <CButton 
                                                                     size="sm" 
+                                                                    color="success" 
+                                                                    variant="outline"
+                                                                    onClick={() => handleShowInfo(notification)}
+                                                                    title="View notification details"
+                                                                >
+                                                                    <CIcon icon={cilInfo} />
+                                                                </CButton>
+                                                                <CButton 
+                                                                    size="sm" 
                                                                     color="primary" 
                                                                     variant="outline"
                                                                     onClick={() => handleEdit(notification)}
@@ -281,11 +317,11 @@ const Notifications = () => {
                                                                     size="sm" 
                                                                     color="danger" 
                                                                     variant="outline"
-                                                                    onClick={() => handleDelete(notification.id)}
+                                                                    onClick={() => showDeleteConfirmation(notification.id, notification.case_title)}
                                                                     title="Delete notification"
-                                                                >
+                                                                    >
                                                                     <CIcon icon={cilTrash} />
-                                                                </CButton>
+                                                                    </CButton>
                                                             </div>
                                                         </CTableDataCell>
                                                     </CTableRow>
@@ -307,6 +343,25 @@ const Notifications = () => {
                 onClose={handleCloseForm} 
                 onSave={handleSave} 
                 initial={editing} 
+            />
+
+            <InfoNotification 
+                visible={showInfo}
+                onClose={() => {
+                    setShowInfo(false)
+                    setSelectedNotification(null)
+                }}
+                notification={selectedNotification}
+            />
+
+            <ConfirmationModal
+                visible={deleteModal.visible}
+                onClose={() => setDeleteModal({ visible: false, notificationId: null, notificationTitle: '' })}
+                onConfirm={confirmDelete}
+                title="Delete Judicial Notification"
+                message={`Are you sure you want to delete the notification "${deleteModal.notificationTitle}"? This action cannot be undone.`}
+                confirmText="Delete"
+                type="danger"
             />
         </CContainer>
     )

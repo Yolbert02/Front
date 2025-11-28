@@ -36,13 +36,11 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
     const [officers, setOfficers] = useState([])
     const [uploadProgress, setUploadProgress] = useState({})
 
-    // Cargar oficiales cuando se abre el modal
     useEffect(() => {
         if (visible) {
             loadOfficers()
             
             if (initial) {
-                // Edit mode
                 setTitle(initial.title || '')
                 setDescription(initial.description || '')
                 setComplainantName(initial.complainantName || '')
@@ -55,7 +53,6 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
                 setIncidentDate(initial.incidentDate || '')
                 setEvidence(initial.evidence || [])
             } else {
-                // New complaint mode
                 setTitle('')
                 setDescription('')
                 setComplainantName('')
@@ -75,7 +72,6 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
     const loadOfficers = async () => {
         try {
             const allOfficers = await listOfficers()
-            // Filter only active officers
             const activeOfficers = allOfficers.filter(officer => officer.status === 'Active')
             setOfficers(activeOfficers)
         } catch (error) {
@@ -84,7 +80,6 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
         }
     }
 
-    // Simulate file upload with progress
     const simulateUpload = (fileId) => {
         return new Promise((resolve) => {
             let progress = 0
@@ -103,14 +98,12 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
         })
     }
 
-    // Handle file upload
     const handleFileUpload = async (event) => {
         const files = Array.from(event.target.files)
         
         for (const file of files) {
             const fileId = Date.now() + Math.random()
             
-            // Add file to evidence immediately with uploading state
             const newEvidence = {
                 id: fileId,
                 name: file.name,
@@ -123,10 +116,8 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
             
             setEvidence(prev => [...prev, newEvidence])
             
-            // Simulate upload progress
             await simulateUpload(fileId)
             
-            // Update status to completed
             setEvidence(prev => 
                 prev.map(item => 
                     item.id === fileId 
@@ -135,10 +126,9 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
                 )
             )
         }
-        event.target.value = '' // Reset input
+        event.target.value = ''
     }
 
-    // Remove evidence
     const removeEvidence = (evidenceId) => {
         setEvidence(prev => prev.filter(item => item.id !== evidenceId))
         setUploadProgress(prev => {
@@ -148,14 +138,12 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
         })
     }
 
-    // Get file icon based on type
     const getFileIcon = (fileType) => {
         if (fileType.includes('image')) return cilImage
         if (fileType.includes('video')) return cilVideo
         return cilFile
     }
 
-    // Format file size
     const formatFileSize = (bytes) => {
         if (bytes === 0) return '0 Bytes'
         const k = 1024
@@ -167,13 +155,11 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
     const handleSubmit = (e) => {
         e.preventDefault()
         
-        // Basic validations
         if (!title.trim() || !description.trim() || !complainantName.trim() || !location.trim()) {
             alert('Title, Description, Complainant Name, and Location are required')
             return
         }
 
-        // Find selected officer name
         const selectedOfficer = officers.find(o => o.id === parseInt(assignedOfficerId))
         const assignedOfficerName = selectedOfficer ? `${selectedOfficer.name} ${selectedOfficer.lastName}` : ''
 
@@ -189,7 +175,7 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
             status,
             priority,
             incidentDate,
-            evidence: evidence.filter(item => item.status === 'completed') // Only include completed uploads
+            evidence: evidence.filter(item => item.status === 'completed') 
         }
         
         onSave(payload)
@@ -202,7 +188,6 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
             </CModalHeader>
             <CForm onSubmit={handleSubmit}>
                 <CModalBody style={{ maxHeight: '70vh', overflowY: 'auto' }}>
-                    {/* Complaint Information */}
                     <h6 className="mb-3 text-primary">Complaint Information</h6>
                     <CRow className="g-3">
                         <CCol md={12}>
@@ -246,8 +231,6 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
                             />
                         </CCol>
                     </CRow>
-
-                    {/* Complainant Information */}
                     <h6 className="mb-3 mt-4 text-primary">Complainant Information</h6>
                     <CRow className="g-3">
                         <CCol md={6}>
@@ -278,8 +261,6 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
                             onChange={(e) => setComplainantEmail(e.target.value)}
                         />
                     </div>
-
-                    {/* Assignment and Status */}
                     <h6 className="mb-3 mt-4 text-primary">Assignment and Status</h6>
                     <CRow className="g-3">
                         <CCol md={6}>
@@ -322,8 +303,6 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
                             </CFormSelect>
                         </CCol>
                     </CRow>
-
-                    {/* Multimedia Evidence */}
                     <h6 className="mb-3 mt-4 text-primary">Multimedia Evidence</h6>
                     <CCard>
                         <CCardBody>

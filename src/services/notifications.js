@@ -1,13 +1,12 @@
 const KEY = 'mock_judicial_notifications_v1'
 
-// Datos iniciales de notificaciones
 const initialNotifications = [
     {
         id: 1,
         case_number: "CASE-2024-001",
         case_title: "Robo en vía pública",
         case_description: "Caso de robo de celular en centro comercial",
-        judge_id: 2, // ID del funcionario Carlos Rodríguez
+        judge_id: 2,
         judge_name: "Carlos Rodríguez",
         court: "Juzgado Primero Penal",
         hearing_date: "2024-02-15",
@@ -114,7 +113,6 @@ export async function deleteNotification(id) {
     return Promise.resolve({ success: true })
 }
 
-// Obtener todos los funcionarios activos
 export async function getFuncionaries() {
     try {
         const usersModule = await import('./users.js')
@@ -126,7 +124,6 @@ export async function getFuncionaries() {
     }
 }
 
-// Obtener ciudadanos para testigos y jurado
 export async function getCitizens() {
     try {
         const usersModule = await import('./users.js')
@@ -138,7 +135,6 @@ export async function getCitizens() {
     }
 }
 
-// Obtener todos los usuarios activos (para búsqueda general)
 export async function getActiveUsers() {
     try {
         const usersModule = await import('./users.js')

@@ -17,15 +17,25 @@ import {
     CSpinner
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { cilPlus, cilPencil, cilTrash } from '@coreui/icons'
+import { cilPlus, cilPencil, cilTrash, cilInfo } from '@coreui/icons'
 import ComplaintForm from './ComplaintForm'
+import InfoComplaint from './InfoComplaint'
 import { listComplaints, createComplaint, updateComplaint, deleteComplaint } from 'src/services/complaints'
+import ConfirmationModal from 'src/components/ConfirmationModal'
 
 const Complaints = () => {
     const [data, setData] = useState([])
     const [loading, setLoading] = useState(true)
     const [showForm, setShowForm] = useState(false)
+    const [showInfo, setShowInfo] = useState(false)
     const [editing, setEditing] = useState(null)
+    const [selectedComplaint, setSelectedComplaint] = useState(null)
+
+    const [deleteModal, setDeleteModal] = useState({
+        visible: false,
+        complaintId: null,
+        complaintTitle: ''
+    })
 
     useEffect(() => { 
         console.log('Complaints component mounted')
@@ -64,16 +74,30 @@ const Complaints = () => {
         }
     }
 
+    const showDeleteConfirmation = (id, title) => {
+        setDeleteModal({
+            visible: true,
+            complaintId: id,
+            complaintTitle: title
+        })
+    }
+
     async function handleDelete(id) {
-        if (!window.confirm('Are you sure you want to delete this complaint?')) return
-        
         try {
             await deleteComplaint(id)
             await fetchData()
+            console.log('Complaint deleted successfully')
         } catch (error) {
             console.error('Error deleting complaint:', error)
             alert('Error deleting complaint: ' + error.message)
         }
+    }
+
+    const confirmDelete = () => {
+        if (deleteModal.complaintId) {
+            handleDelete(deleteModal.complaintId)
+        }
+        setDeleteModal({ visible: false, complaintId: null, complaintTitle: '' })
     }
 
     const getStatusBadge = (status) => {
@@ -99,6 +123,11 @@ const Complaints = () => {
         
         const config = priorityConfig[priority] || { color: 'secondary', text: priority }
         return <CBadge color={config.color}>{config.text}</CBadge>
+    }
+
+    const handleShowInfo = (complaint) => {
+        setSelectedComplaint(complaint)
+        setShowInfo(true)
     }
 
     return (
@@ -175,6 +204,15 @@ const Complaints = () => {
                                                             <div className="d-flex gap-2">
                                                                 <CButton 
                                                                     size="sm" 
+                                                                    color="success" 
+                                                                    variant="outline"
+                                                                    onClick={() => handleShowInfo(complaint)}
+                                                                    title="View complaint details"
+                                                                >
+                                                                    <CIcon icon={cilInfo} />
+                                                                </CButton>
+                                                                <CButton 
+                                                                    size="sm" 
                                                                     color="primary" 
                                                                     variant="outline"
                                                                     onClick={() => { 
@@ -188,7 +226,7 @@ const Complaints = () => {
                                                                     size="sm" 
                                                                     color="danger" 
                                                                     variant="outline"
-                                                                    onClick={() => handleDelete(complaint.id)}
+                                                                    onClick={() => showDeleteConfirmation(complaint.id, complaint.title)}
                                                                 >
                                                                     <CIcon icon={cilTrash} />
                                                                 </CButton>
@@ -230,6 +268,24 @@ const Complaints = () => {
                 }} 
                 onSave={handleSave} 
                 initial={editing} 
+            />
+
+            <InfoComplaint 
+                visible={showInfo}
+                onClose={() => {
+                    setShowInfo(false)
+                    setSelectedComplaint(null)
+                }}
+                complaint={selectedComplaint}
+            />
+            <ConfirmationModal
+                visible={deleteModal.visible}
+                onClose={() => setDeleteModal({ visible: false, complaintId: null, complaintTitle: '' })}
+                onConfirm={confirmDelete}
+                title="Delete Complaint"
+                message={`Are you sure you want to delete the complaint "${deleteModal.complaintTitle}"? This action cannot be undone.`}
+                confirmText="Delete"
+                type="danger"
             />
         </CContainer>
     )

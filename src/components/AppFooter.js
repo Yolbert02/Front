@@ -1,4 +1,3 @@
-// src/components/AppFooter.js (Versión Minimalista)
 import React from 'react'
 import { CFooter, CContainer, CRow, CCol, CLink } from '@coreui/react'
 import CIcon from '@coreui/icons-react'

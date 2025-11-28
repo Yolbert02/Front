@@ -1,6 +1,5 @@
 const KEY = 'mock_complaints_v1'
 
-// Datos iniciales
 const initialComplaints = [
     {
         id: 1,

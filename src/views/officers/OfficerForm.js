@@ -20,13 +20,12 @@ const OfficerForm = ({ visible, onClose, onSave, initial = null }) => {
     const [unit, setUnit] = useState('')
     const [email, setEmail] = useState('')
     const [phone, setPhone] = useState('')
+    const [rank, setRank] = useState('')
     const [status, setStatus] = useState('Active')
 
-    // Resetear el formulario cuando se abre/cierra
     useEffect(() => {
         if (visible) {
             if (initial) {
-                // Modo edición
                 console.log('Editing officer:', initial)
                 setName(initial.name || '')
                 setLastName(initial.lastName || '')
@@ -34,9 +33,9 @@ const OfficerForm = ({ visible, onClose, onSave, initial = null }) => {
                 setUnit(initial.unit || '')
                 setEmail(initial.email || '')
                 setPhone(initial.phone || '')
+                setRank(initial.rank || '') 
                 setStatus(initial.status || 'Active')
             } else {
-                // Modo nuevo - limpiar todo
                 console.log('Creating new officer')
                 setName('')
                 setLastName('')
@@ -44,6 +43,7 @@ const OfficerForm = ({ visible, onClose, onSave, initial = null }) => {
                 setUnit('')
                 setEmail('')
                 setPhone('')
+                setRank('')
                 setStatus('Active')
             }
         }
@@ -51,9 +51,8 @@ const OfficerForm = ({ visible, onClose, onSave, initial = null }) => {
 
     const handleSubmit = (e) => {
         e.preventDefault()
-        console.log('Form submitted with:', { name, lastName, idNumber, unit, email, phone, status })
+        console.log('Form submitted with:', { name, lastName, idNumber, unit, email, phone, rank, status })
         
-        // Validaciones básicas
         if (!name.trim() || !lastName.trim()) {
             alert('Name and Last Name are required')
             return
@@ -66,11 +65,24 @@ const OfficerForm = ({ visible, onClose, onSave, initial = null }) => {
             unit: unit.trim(),
             email: email.trim(),
             phone: phone.trim(),
+            rank: rank.trim(),
             status 
         }
         
         onSave(payload)
     }
+
+    const rankOptions = [
+        'Cadet',
+        'Officer',
+        'Detective',
+        'Sergeant',
+        'Lieutenant',
+        'Captain',
+        'Commander',
+        'Deputy Chief',
+        'Chief'
+    ]
 
     return (
         <CModal size="lg" visible={visible} onClose={onClose}>
@@ -110,16 +122,29 @@ const OfficerForm = ({ visible, onClose, onSave, initial = null }) => {
                             />
                         </CCol>
                         <CCol md={6}>
-                            <CFormInput 
-                                label="Unit" 
-                                placeholder="CICPC - Homicides"
-                                value={unit} 
-                                onChange={(e) => setUnit(e.target.value)}
-                            />
+                            <CFormSelect 
+                                label="Rank"
+                                value={rank}
+                                onChange={(e) => setRank(e.target.value)}
+                            >
+                                <option value="">Select rank</option>
+                                {rankOptions.map(rank => (
+                                    <option key={rank} value={rank}>{rank}</option>
+                                ))}
+                            </CFormSelect>
                         </CCol>
                     </CRow>
 
                     <CRow className="g-3 mt-2">
+                        <CCol md={6}>
+                            <CFormInput 
+                                label="Unit *" 
+                                placeholder="CICPC - Homicides"
+                                value={unit} 
+                                onChange={(e) => setUnit(e.target.value)}
+                                required
+                            />
+                        </CCol>
                         <CCol md={6}>
                             <CFormInput 
                                 label="Email" 
@@ -129,6 +154,9 @@ const OfficerForm = ({ visible, onClose, onSave, initial = null }) => {
                                 onChange={(e) => setEmail(e.target.value)}
                             />
                         </CCol>
+                    </CRow>
+
+                    <CRow className="g-3 mt-2">
                         <CCol md={6}>
                             <CFormInput 
                                 label="Phone" 
@@ -137,20 +165,19 @@ const OfficerForm = ({ visible, onClose, onSave, initial = null }) => {
                                 onChange={(e) => setPhone(e.target.value)}
                             />
                         </CCol>
+                        <CCol md={6}>
+                            <CFormSelect 
+                                label="Status *" 
+                                value={status} 
+                                onChange={(e) => setStatus(e.target.value)}
+                            >
+                                <option value="Active">Active</option>
+                                <option value="Inactive">Inactive</option>
+                                <option value="Training">Training</option>
+                                <option value="Suspended">Suspended</option>
+                            </CFormSelect>
+                        </CCol>
                     </CRow>
-
-                    <div className="mt-3">
-                        <CFormSelect 
-                            label="Status *" 
-                            value={status} 
-                            onChange={(e) => setStatus(e.target.value)}
-                        >
-                            <option value="Active">Active</option>
-                            <option value="Inactive">Inactive</option>
-                            <option value="Training">Training</option>
-                            <option value="Suspended">Suspended</option>
-                        </CFormSelect>
-                    </div>
 
                     <div className="mt-3">
                         <small className="text-muted">* Required fields</small>

@@ -16,7 +16,7 @@ import {
   CSpinner
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { cilLockLocked, cilUser, cilShieldAlt } from '@coreui/icons'
+import { cilLockLocked, cilUser, cilShieldAlt, cilUserPlus } from '@coreui/icons'
 import { login } from 'src/services/auth'
 
 const Login = () => {
@@ -71,7 +71,7 @@ const Login = () => {
                           e.target.style.display = 'none'
                         }}
                       />
-                      <h2 className="text-primary">Welcom</h2>
+                      <h2 className="text-primary">Welcome</h2>
                       <p className="text-body-secondary">Login</p>
                     </div>
                     
@@ -101,7 +101,7 @@ const Login = () => {
                       </CInputGroupText>
                       <CFormInput
                         type="password"
-                        placeholder="password"
+                        placeholder="Password"
                         autoComplete="current-password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
@@ -139,6 +139,17 @@ const Login = () => {
                         </CButton>
                       </CCol>
                     </CRow>
+                    <div className="text-center mt-3">
+                      <CButton 
+                        color="outline-primary"
+                        onClick={() => navigate('/register')}
+                        className="w-100"
+                        disabled={loading}
+                      >
+                        <CIcon icon={cilUserPlus} className="me-2" />
+                        Create Account
+                      </CButton>
+                    </div>
                     
                     {showDemoInfo && (
                       <div className="mt-3 p-3 bg-light rounded">

@@ -47,7 +47,6 @@ const NotificationForm = ({ visible, onClose, onSave, initial = null }) => {
             loadUsers()
             
             if (initial) {
-                // Edit mode
                 setCaseTitle(initial.case_title || '')
                 setCaseDescription(initial.case_description || '')
                 setJudgeId(initial.judge_id || '')
@@ -181,7 +180,6 @@ const NotificationForm = ({ visible, onClose, onSave, initial = null }) => {
             return
         }
 
-        // Find selected judge name
         const selectedJudge = availableOfficials.find(j => j.id === parseInt(judgeId))
         const judgeName = selectedJudge ? `${selectedJudge.first_name} ${selectedJudge.last_name}` : ''
 

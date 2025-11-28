@@ -35,7 +35,6 @@ const AppHeaderDropdown = () => {
   useEffect(() => {
     loadProfile()
     
-    // Escuchar eventos de actualización de foto de perfil
     const handleProfilePictureUpdate = (event) => {
       setProfile(prev => ({
         ...prev,
@@ -43,7 +42,6 @@ const AppHeaderDropdown = () => {
       }))
     }
 
-    // Escuchar eventos de actualización del perfil
     const handleProfileUpdate = (event) => {
       setProfile(prev => ({
         ...prev,
@@ -74,11 +72,9 @@ const AppHeaderDropdown = () => {
   const handleLogout = async () => {
     try {
       await logout()
-      // Redirigir al login
       navigate('/login')
     } catch (error) {
       console.error('Error during logout:', error)
-      // Forzar logout incluso si hay error
       navigate('/login')
     }
   }
@@ -110,8 +106,6 @@ const AppHeaderDropdown = () => {
         <CDropdownHeader className="bg-body-secondary fw-semibold mb-2">
           Cuenta
         </CDropdownHeader>
-        
-        {/* Información del usuario */}
         <CDropdownItem className="d-flex align-items-center" disabled>
           <div className="d-flex align-items-center w-100">
             {profile?.profile_picture ? (
@@ -148,7 +142,6 @@ const AppHeaderDropdown = () => {
           Configuración
         </CDropdownHeader>
         
-        {/* Enlace al perfil */}
         <CDropdownItem 
           className="d-flex align-items-center"
           onClick={handleProfileClick}
@@ -165,7 +158,6 @@ const AppHeaderDropdown = () => {
 
         <CDropdownDivider />
         
-        {/* Cerrar sesión */}
         <CDropdownItem 
           className="d-flex align-items-center text-danger"
           onClick={handleLogout}

@@ -1,6 +1,5 @@
 const KEY = 'mock_officers_v1'
 
-// Datos iniciales garantizados
 const initialOfficers = [
     {
         id: 1,
@@ -10,6 +9,7 @@ const initialOfficers = [
         unit: 'CICPC - Homicidios',
         email: 'carlos.rodriguez@policia.gov',
         phone: '0414-1112233',
+        rank: 'Detective', // Nuevo campo
         status: 'Active',
         active: true
     },
@@ -21,6 +21,7 @@ const initialOfficers = [
         unit: 'Policía Municipal',
         email: 'ana.martinez@mp.gov',
         phone: '0424-4445566',
+        rank: 'Sergeant',
         status: 'Active', 
         active: true
     },
@@ -32,6 +33,7 @@ const initialOfficers = [
         unit: 'PATRI - Antiextorsión',
         email: 'luis.gonzalez@polincia.gov',
         phone: '0412-7788990',
+        rank: 'Officer', 
         status: 'Training',
         active: false
     }
@@ -87,6 +89,7 @@ export async function createOfficer(payload) {
         unit: payload.unit || '',
         email: payload.email || '',
         phone: payload.phone || '',
+        rank: payload.rank || '', 
         status: payload.status || 'Active',
         active: payload.status === 'Active'
     }
@@ -125,8 +128,3 @@ export async function resetToInitial() {
 /*reset del localStorage
 localStorage.removeItem('mock_officers_v1')
 location.reload()  */
-
-export async function getActiveOfficers() {
-    const officers = await listOfficers()
-    return officers.filter(officer => officer.status === 'Active')
-}

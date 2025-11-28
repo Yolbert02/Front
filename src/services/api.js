@@ -17,7 +17,7 @@ class ApiService {
     };
 
     try {
-      console.log(`🔄 API Call: ${url}`, config);
+      console.log(`API Call: ${url}`, config);
       const response = await fetch(url, config);
       
       if (!response.ok) {
@@ -25,10 +25,10 @@ class ApiService {
       }
       
       const data = await response.json();
-      console.log(`✅ API Response:`, data);
+      console.log(`API Response:`, data);
       return data;
     } catch (error) {
-      console.error('❌ API request failed:', error);
+      console.error('API request failed:', error);
       throw error;
     }
   }

@@ -1,4 +1,3 @@
-// src/services/profile.js
 const PROFILE_KEY = 'user_profile_data'
 const initialProfile = {
     id: 1,
@@ -55,7 +54,6 @@ export async function updateProfile(payload) {
     }
     saveProfile(updatedProfile)
     
-    // notificar cambios
     window.dispatchEvent(new CustomEvent('profileUpdated', {
         detail: { 
             first_name: updatedProfile.first_name,
@@ -76,7 +74,6 @@ export async function updateProfilePicture(imageData) {
     }
     saveProfile(updatedProfile)
     
-    // notificar cambios en la foto
     window.dispatchEvent(new CustomEvent('profilePictureUpdated', {
         detail: { profilePicture: updatedProfile.profile_picture }
     }))

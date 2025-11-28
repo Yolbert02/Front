@@ -17,16 +17,26 @@ import {
     CSpinner
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { cilPlus, cilPencil, cilTrash } from '@coreui/icons'
+import { cilPlus, cilPencil, cilTrash, cilInfo } from '@coreui/icons'
 import OfficerForm from './OfficerForm'
+import InfoOfficer from './InfoOfficer'
 import AvatarLetter from 'src/components/AvatarLetter'
 import { listOfficers, createOfficer, updateOfficer, deleteOfficer } from 'src/services/officers'
+import ConfirmationModal from 'src/components/ConfirmationModal'
 
 const Officers = () => {
     const [data, setData] = useState([])
     const [loading, setLoading] = useState(true)
     const [showForm, setShowForm] = useState(false)
+    const [showInfo, setShowInfo] = useState(false)
     const [editing, setEditing] = useState(null)
+    const [selectedOfficer, setSelectedOfficer] = useState(null)
+
+    const [deleteModal, setDeleteModal] = useState({
+        visible: false,
+        officerId: null,
+        officerName: ''
+    })
 
     useEffect(() => { 
         console.log('Officers component mounted')
@@ -65,16 +75,30 @@ const Officers = () => {
         }
     }
 
+    const showDeleteConfirmation = (id, name) => {
+        setDeleteModal({
+            visible: true,
+            officerId: id,
+            officerName: name
+        })
+    }
+
     async function handleDelete(id) {
-        if (!window.confirm('Are you sure you want to delete this officer?')) return
-        
         try {
             await deleteOfficer(id)
             await fetchData()
+            console.log('Officer deleted successfully')
         } catch (error) {
             console.error('Error deleting officer:', error)
             alert('Error deleting officer: ' + error.message)
         }
+    }
+
+    const confirmDelete = () => {
+        if (deleteModal.officerId) {
+            handleDelete(deleteModal.officerId)
+        }
+        setDeleteModal({ visible: false, officerId: null, officerName: '' })
     }
 
     const getStatusBadge = (status) => {
@@ -87,6 +111,11 @@ const Officers = () => {
         
         const config = statusConfig[status] || { color: 'secondary', text: status }
         return <CBadge color={config.color}>{config.text}</CBadge>
+    }
+
+    const handleShowInfo = (officer) => {
+        setSelectedOfficer(officer)
+        setShowInfo(true)
     }
 
     return (
@@ -159,6 +188,15 @@ const Officers = () => {
                                                             <div className="d-flex gap-2">
                                                                 <CButton 
                                                                     size="sm" 
+                                                                    color="success"
+                                                                    variant='outline'
+                                                                    onClick={() => handleShowInfo(officer)}
+                                                                    title="View Officer Information"
+                                                                >
+                                                                    <CIcon icon={cilInfo} />
+                                                                </CButton> 
+                                                                <CButton 
+                                                                    size="sm" 
                                                                     color="primary" 
                                                                     variant="outline"
                                                                     onClick={() => { 
@@ -173,7 +211,7 @@ const Officers = () => {
                                                                     size="sm" 
                                                                     color="danger" 
                                                                     variant="outline"
-                                                                    onClick={() => handleDelete(officer.id)}
+                                                                    onClick={() => showDeleteConfirmation(officer.id, `${officer.name} ${officer.lastName}`)}
                                                                 >
                                                                     <CIcon icon={cilTrash} />
                                                                 </CButton>
@@ -216,6 +254,25 @@ const Officers = () => {
                 }} 
                 onSave={handleSave} 
                 initial={editing} 
+            />
+
+            <InfoOfficer 
+                visible={showInfo}
+                onClose={() => {
+                    setShowInfo(false)
+                    setSelectedOfficer(null)
+                }}
+                officer={selectedOfficer}
+            />
+
+            <ConfirmationModal
+                visible={deleteModal.visible}
+                onClose={() => setDeleteModal({ visible: false, officerId: null, officerName: '' })}
+                onConfirm={confirmDelete}
+                title="Delete Officer"
+                message={`Are you sure you want to delete the officer "${deleteModal.officerName}"? This action cannot be undone.`}
+                confirmText="Delete"
+                type="danger"
             />
         </CContainer>
     )

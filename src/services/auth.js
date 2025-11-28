@@ -1,6 +1,5 @@
 import { apiService } from './api';
 
-// Datos de demo para fallback
 const demoUsers = {
   'admin': { 
     password: 'admin123', 
@@ -30,7 +29,7 @@ const demoUsers = {
 
 export const login = async (username, password) => {
   try {
-    console.log('🔐 Attempting login with Mock Server...');
+    console.log('Attempting login with Mock Server...');
     
     const response = await apiService.post('/api/auth/login', {
       username,
@@ -38,24 +37,21 @@ export const login = async (username, password) => {
     });
     
     if (response.success) {
-      // Guardar en sessionStorage para persistir en Netlify
       sessionStorage.setItem('token', response.token);
       sessionStorage.setItem('user', JSON.stringify(response.user));
       sessionStorage.setItem('isAuthenticated', 'true');
       
-      console.log('✅ Login successful:', response.user);
+      console.log('Login successful:', response.user);
       return response;
     } else {
       throw new Error(response.message || 'Login failed');
     }
   } catch (error) {
-    console.error('❌ Mock Server login failed, using fallback:', error);
-    // Fallback a login local
+    console.error('Mock Server login failed, using fallback:', error);
     return localLogin(username, password);
   }
 };
 
-// Fallback local para cuando el Mock Server falle
 function localLogin(username, password) {
   const user = demoUsers[username];
   

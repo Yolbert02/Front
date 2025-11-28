@@ -26,8 +26,6 @@ const Profile = () => {
     const [saving, setSaving] = useState(false)
     const [activeTab, setActiveTab] = useState('personal')
     const [message, setMessage] = useState({ type: '', text: '' })
-
-    // Estados para el formulario
     const [formData, setFormData] = useState({})
     const [passwordData, setPasswordData] = useState({
         currentPassword: '',
@@ -166,7 +164,6 @@ const Profile = () => {
         <CContainer fluid>
             <CRow>
                 <CCol lg={4} md={12}>
-                    {/* Tarjeta de información del perfil */}
                     <CCard className="mb-4">
                         <CCardBody className="text-center">
                             <div className="position-relative d-inline-block">
@@ -221,7 +218,6 @@ const Profile = () => {
                 </CCol>
 
                 <CCol lg={8} md={12}>
-                    {/* Navegación de pestañas */}
                     <CCard>
                         <CCardHeader>
                             <div className="d-flex border-bottom">
@@ -242,8 +238,6 @@ const Profile = () => {
                                     {message.text}
                                 </CAlert>
                             )}
-
-                            {/* Pestaña de Información Personal */}
                             {activeTab === 'personal' && (
                                 <CForm onSubmit={handleSaveProfile}>
                                     <h5 className="mb-4">Personal Information</h5>
@@ -266,7 +260,6 @@ const Profile = () => {
                                             />
                                         </CCol>
                                     </CRow>
-
                                     <CRow className="g-3 mt-2">
                                         <CCol md={6}>
                                             <CFormInput 
@@ -285,7 +278,6 @@ const Profile = () => {
                                             />
                                         </CCol>
                                     </CRow>
-
                                     <div className="mt-3">
                                         <CFormInput 
                                             label="Department"
@@ -294,7 +286,6 @@ const Profile = () => {
                                             placeholder="Your department or unit"
                                         />
                                     </div>
-
                                     <div className="mt-3">
                                         <CFormInput 
                                             label="Location"
@@ -303,7 +294,6 @@ const Profile = () => {
                                             placeholder="Your city and country"
                                         />
                                     </div>
-
                                     <div className="mt-3">
                                         <CFormTextarea
                                             label="Bio"
@@ -313,7 +303,6 @@ const Profile = () => {
                                             placeholder="Tell us about yourself..."
                                         />
                                     </div>
-
                                     <div className="mt-4">
                                         <CButton type="submit" color="primary" disabled={saving}>
                                             {saving ? <CSpinner size="sm" /> : <CIcon icon={cilSave} />}

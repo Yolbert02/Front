@@ -1,6 +1,5 @@
 const KEY = 'mock_users_v1'
 
-// Datos iniciales de usuarios
 const initialUsers = [
     {
         id: 1,
@@ -139,7 +138,6 @@ export async function deleteUser(id) {
     return Promise.resolve({ success: true })
 }
 
-// Función para cambiar solo el estado
 export async function changeUserStatus(id, newStatus) {
     const items = load()
     const idx = items.findIndex(u => u.id === id)
@@ -154,7 +152,6 @@ export async function changeUserStatus(id, newStatus) {
     return Promise.resolve(items[idx])
 }
 
-// Función para cambiar solo el rol
 export async function changeUserRole(id, newRole) {
     const items = load()
     const idx = items.findIndex(u => u.id === id)

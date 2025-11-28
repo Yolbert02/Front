@@ -21,15 +21,26 @@ import {
     CDropdownItem
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { cilPlus, cilPencil, cilTrash, cilUser, cilShieldAlt, cilPeople, cilBan } from '@coreui/icons'
+import { cilPlus, cilPencil, cilTrash, cilUser, cilShieldAlt, cilPeople, cilBan, cilInfo } from '@coreui/icons'
 import UserForm from './UserForm'
+import InfoUser from './InfoUser'
 import { listUsers, createUser, updateUser, deleteUser, changeUserStatus, changeUserRole } from 'src/services/users'
+import AvatarLetter from 'src/components/AvatarLetter'
+import ConfirmationModal from 'src/components/ConfirmationModal'
 
 const Users = () => {
     const [data, setData] = useState([])
     const [loading, setLoading] = useState(true)
     const [showForm, setShowForm] = useState(false)
+    const [showInfo, setShowInfo] = useState(false)
     const [editing, setEditing] = useState(null)
+    const [selectedUser, setSelectedUser] = useState(null)
+    
+    const [deleteModal, setDeleteModal] = useState({
+        visible: false,
+        userId: null,
+        userName: ''
+    })
 
     useEffect(() => { 
         console.log('Users component mounted')
@@ -68,16 +79,30 @@ const Users = () => {
         }
     }
 
+    const showDeleteConfirmation = (id, name) => {
+        setDeleteModal({
+            visible: true,
+            userId: id,
+            userName: name
+        })
+    }
+
     async function handleDelete(id) {
-        if (!window.confirm('Are you sure you want to delete this user?')) return
-        
         try {
             await deleteUser(id)
             await fetchData()
+            console.log('User deleted successfully')
         } catch (error) {
             console.error('Error deleting user:', error)
             alert('Error deleting user: ' + error.message)
         }
+    }
+
+    const confirmDelete = () => {
+        if (deleteModal.userId) {
+            handleDelete(deleteModal.userId)
+        }
+        setDeleteModal({ visible: false, userId: null, userName: '' })
     }
 
     async function handleStatusChange(userId, newStatus) {
@@ -100,10 +125,15 @@ const Users = () => {
         }
     }
 
+    const handleShowInfo = (user) => {
+        setSelectedUser(user)
+        setShowInfo(true)
+    }
+
     const getRoleBadge = (role) => {
         const roleConfig = {
             'administrador': { color: 'danger', text: 'Administrator', icon: cilShieldAlt },
-            'funcionario': { color: 'info', text: 'funcionary', icon: cilPeople },
+            'funcionario': { color: 'info', text: 'Funcionary', icon: cilPeople },
             'civil': { color: 'success', text: 'Civil', icon: cilUser }
         }
         
@@ -181,6 +211,7 @@ const Users = () => {
                                         <CTable hover responsive>
                                             <CTableHead>
                                                 <CTableRow>
+                                                    <CTableHeaderCell style={{ width: '70px' }}></CTableHeaderCell>
                                                     <CTableHeaderCell>ID</CTableHeaderCell>
                                                     <CTableHeaderCell>Document</CTableHeaderCell>
                                                     <CTableHeaderCell>Name</CTableHeaderCell>
@@ -194,6 +225,12 @@ const Users = () => {
                                             <CTableBody>
                                                 {data.map(user => (
                                                     <CTableRow key={user.id}>
+                                                        <CTableDataCell>
+                                                            <AvatarLetter 
+                                                                name={`${user.first_name}`} 
+                                                                size={40} 
+                                                            />
+                                                        </CTableDataCell>
                                                         <CTableDataCell>#{user.id}</CTableDataCell>
                                                         <CTableDataCell>{user.document}</CTableDataCell>
                                                         <CTableDataCell>
@@ -209,6 +246,16 @@ const Users = () => {
                                                         </CTableDataCell>
                                                         <CTableDataCell>
                                                             <div className="d-flex gap-2">
+                                                                <CButton 
+                                                                    size="sm" 
+                                                                    color="success" 
+                                                                    variant="outline"
+                                                                    onClick={() => handleShowInfo(user)}
+                                                                    title="View user information"
+                                                                >
+                                                                    <CIcon icon={cilInfo} />
+                                                                </CButton>
+                                                                
                                                                 <CDropdown>
                                                                     <CDropdownToggle color="primary" size="sm" variant="outline">
                                                                         <CIcon icon={cilPencil} />
@@ -245,7 +292,7 @@ const Users = () => {
                                                                     size="sm" 
                                                                     color="danger" 
                                                                     variant="outline"
-                                                                    onClick={() => handleDelete(user.id)}
+                                                                    onClick={() => showDeleteConfirmation(user.id, `${user.first_name} ${user.last_name}`)}
                                                                     disabled={user.role === 'administrador'}
                                                                 >
                                                                     <CIcon icon={cilTrash} />
@@ -288,6 +335,25 @@ const Users = () => {
                 }} 
                 onSave={handleSave} 
                 initial={editing} 
+            />
+
+            <InfoUser 
+                visible={showInfo}
+                onClose={() => {
+                    setShowInfo(false)
+                    setSelectedUser(null)
+                }}
+                user={selectedUser}
+            />
+
+            <ConfirmationModal
+                visible={deleteModal.visible}
+                onClose={() => setDeleteModal({ visible: false, userId: null, userName: '' })}
+                onConfirm={confirmDelete}
+                title="Delete User"
+                message={`Are you sure you want to delete the user "${deleteModal.userName}"? This action cannot be undone.`}
+                confirmText="Delete"
+                type="danger"
             />
         </CContainer>
     )

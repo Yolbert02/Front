@@ -28,7 +28,6 @@ const UserForm = ({ visible, onClose, onSave, initial = null }) => {
     useEffect(() => {
         if (visible) {
             if (initial) {
-                // Edit mode
                 setDocument(initial.document || '')
                 setFirstName(initial.first_name || '')
                 setLastName(initial.last_name || '')
@@ -38,7 +37,6 @@ const UserForm = ({ visible, onClose, onSave, initial = null }) => {
                 setRole(initial.role || 'civil')
                 setStatus(initial.status || 'activo')
             } else {
-                // New user mode
                 setDocument('')
                 setFirstName('')
                 setLastName('')
