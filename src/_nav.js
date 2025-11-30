@@ -11,6 +11,7 @@ import {
   cilNotes,
   cilPencil,
   cilPuzzle,
+  cilSpeedometer,
   cilStar,
   cilUser,
   cilPeople,
@@ -34,7 +35,7 @@ const _nav = [
   },
   {component: CNavItem,
     name: 'Users',
-    to: '/user',
+    to: '/users',
     icon: <CIcon icon={cilPeople} customClassName="nav-icon" />,
   },
   {

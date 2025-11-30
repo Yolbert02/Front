@@ -1,4 +1,4 @@
-import React, {  useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { 
     CModal, 
     CModalHeader, 
@@ -14,7 +14,7 @@ import {
     CAlert
 } from '@coreui/react'
 
-const UserForm = ({ onClose, onSave, initial = null }) => {
+const UserForm = ({ visible, onClose, onSave, initial = null }) => {
     const [document, setDocument] = useState('')
     const [first_name, setFirstName] = useState('')
     const [last_name, setLastName] = useState('')
