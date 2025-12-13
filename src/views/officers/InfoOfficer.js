@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react'
-import { 
-    CModal, 
-    CModalHeader, 
-    CModalTitle, 
-    CModalBody, 
+import {
+    CModal,
+    CModalHeader,
+    CModalTitle,
+    CModalBody,
     CModalFooter,
     CButton,
     CRow,
@@ -23,18 +23,19 @@ import {
     CSpinner
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { 
-    cilUser, 
-    cilAddressBook, 
-    cilEnvelopeOpen, 
-    cilPhone, 
+import {
+    cilUser,
+    cilAddressBook,
+    cilEnvelopeOpen,
+    cilPhone,
     cilShieldAlt,
     cilCalendar,
     cilWarning,
     cilListRich
 } from '@coreui/icons'
-import AvatarLetter from 'src/components/AvatarLetter'
+import AvatarLetterXL from 'src/components/AvatarLetterXL'
 import { listComplaints } from 'src/services/complaints'
+import { modalStyles, cardStyles } from 'src/styles/darkModeStyles'
 
 const InfoOfficer = ({ visible, onClose, officer }) => {
     const [complaints, setComplaints] = useState([])
@@ -48,11 +49,11 @@ const InfoOfficer = ({ visible, onClose, officer }) => {
 
     const loadOfficerComplaints = async () => {
         if (!officer) return
-        
+
         setLoadingComplaints(true)
         try {
             const allComplaints = await listComplaints()
-            const officerComplaints = allComplaints.filter(complaint => 
+            const officerComplaints = allComplaints.filter(complaint =>
                 complaint.assignedOfficerId === officer.id
             )
             setComplaints(officerComplaints)
@@ -73,7 +74,7 @@ const InfoOfficer = ({ visible, onClose, officer }) => {
             'Training': { color: 'warning', text: 'Training' },
             'Suspended': { color: 'secondary', text: 'Suspended' }
         }
-        
+
         const config = statusConfig[status] || { color: 'secondary', text: status }
         return <CBadge color={config.color}>{config.text}</CBadge>
     }
@@ -86,7 +87,7 @@ const InfoOfficer = ({ visible, onClose, officer }) => {
             'Closed': { color: 'secondary', text: 'Closed' },
             'Rejected': { color: 'danger', text: 'Rejected' }
         }
-        
+
         const config = statusConfig[status] || { color: 'secondary', text: status }
         return <CBadge color={config.color}>{config.text}</CBadge>
     }
@@ -98,7 +99,7 @@ const InfoOfficer = ({ visible, onClose, officer }) => {
             'High': { color: 'danger', text: 'High' },
             'Urgent': { color: 'danger', text: 'Urgent' }
         }
-        
+
         const config = priorityConfig[priority] || { color: 'secondary', text: priority }
         return <CBadge color={config.color}>{config.text}</CBadge>
     }
@@ -117,29 +118,29 @@ const InfoOfficer = ({ visible, onClose, officer }) => {
     }
 
     return (
-        <CModal size="xl" visible={visible} onClose={onClose}>
-            <CModalHeader>
+        <CModal size="lg" visible={visible} onClose={onClose}>
+            <CModalHeader style={modalStyles.header}>
                 <CModalTitle>
                     <CIcon icon={cilUser} className="me-2" />
                     Officer Information - {officer.name} {officer.lastName}
                 </CModalTitle>
             </CModalHeader>
-            <CModalBody style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+            <CModalBody style={modalStyles.bodyScrollable}>
                 <CRow className="g-3">
                     <CCol md={12}>
-                        <CCard className="mb-4">
-                            <CCardHeader className="bg-light">
+                        <CCard className="mb-4" style={cardStyles.card}>
+                            <CCardHeader style={cardStyles.header}>
                                 <h6 className="mb-0">
                                     <CIcon icon={cilUser} className="me-2" />
                                     Officer Profile
                                 </h6>
                             </CCardHeader>
-                            <CCardBody>
+                            <CCardBody style={cardStyles.body}>
                                 <CRow className="g-3 align-items-center">
                                     <CCol md={3} className="text-center">
-                                        <AvatarLetter 
-                                            name={`${officer.name}`} 
-                                            size={80}
+                                        <AvatarLetterXL
+                                            name={`${officer.name}`}
+                                            size="xl"
                                             className="mb-2"
                                         />
                                         <div className="mt-2">
@@ -175,14 +176,14 @@ const InfoOfficer = ({ visible, onClose, officer }) => {
                         </CCard>
                     </CCol>
                     <CCol md={6}>
-                        <CCard className="h-100">
-                            <CCardHeader className="bg-light">
+                        <CCard className="h-100" style={cardStyles.card}>
+                            <CCardHeader style={cardStyles.header}>
                                 <h6 className="mb-0">
                                     <CIcon icon={cilAddressBook} className="me-2" />
                                     Contact Information
                                 </h6>
                             </CCardHeader>
-                            <CCardBody>
+                            <CCardBody style={cardStyles.body}>
                                 <CListGroup flush>
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
                                         <span className="d-flex align-items-center">
@@ -210,14 +211,14 @@ const InfoOfficer = ({ visible, onClose, officer }) => {
                         </CCard>
                     </CCol>
                     <CCol md={6}>
-                        <CCard className="h-100">
-                            <CCardHeader className="bg-light">
+                        <CCard className="h-100" style={cardStyles.card}>
+                            <CCardHeader style={cardStyles.header}>
                                 <h6 className="mb-0">
                                     <CIcon icon={cilListRich} className="me-2" />
                                     Assignment Statistics
                                 </h6>
                             </CCardHeader>
-                            <CCardBody>
+                            <CCardBody style={cardStyles.body}>
                                 <CListGroup flush>
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
                                         <span>Total Complaints:</span>
@@ -246,14 +247,14 @@ const InfoOfficer = ({ visible, onClose, officer }) => {
                         </CCard>
                     </CCol>
                     <CCol md={12}>
-                        <CCard>
-                            <CCardHeader className="bg-light">
+                        <CCard style={cardStyles.card}>
+                            <CCardHeader style={cardStyles.header}>
                                 <h6 className="mb-0">
                                     <CIcon icon={cilWarning} className="me-2" />
                                     Assigned Complaints ({complaints.length})
                                 </h6>
                             </CCardHeader>
-                            <CCardBody>
+                            <CCardBody style={cardStyles.body}>
                                 {loadingComplaints ? (
                                     <div className="text-center py-4">
                                         <CSpinner color="primary" />
@@ -312,7 +313,7 @@ const InfoOfficer = ({ visible, onClose, officer }) => {
                     </CCol>
                 </CRow>
             </CModalBody>
-            <CModalFooter>
+            <CModalFooter style={modalStyles.footer}>
                 <CButton color="secondary" onClick={onClose}>
                     Close
                 </CButton>

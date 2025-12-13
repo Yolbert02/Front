@@ -16,6 +16,7 @@ import {
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilLockLocked, cilUser, cilEnvelopeClosed, cilArrowLeft } from '@coreui/icons'
+import { authStyles } from 'src/styles/darkModeStyles'
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -36,8 +37,8 @@ const Register = () => {
     setError('')
     setLoading(true)
 
-    if (!formData.username || !formData.password || !formData.confirmPassword || 
-        !formData.first_name || !formData.last_name || !formData.email || !formData.document) {
+    if (!formData.username || !formData.password || !formData.confirmPassword ||
+      !formData.first_name || !formData.last_name || !formData.email || !formData.document) {
       setError('All fields are required')
       setLoading(false)
       return
@@ -54,7 +55,7 @@ const Register = () => {
         alert('Registration successful!')
         navigate('/login')
       }, 1000)
-      
+
     } catch (err) {
       setError('Registration error')
       setLoading(false)
@@ -69,17 +70,17 @@ const Register = () => {
   }
 
   return (
-    <div className="bg-light min-vh-100 d-flex flex-row align-items-center">
+    <div className="min-vh-100 d-flex flex-row align-items-center" style={authStyles.container}>
       <CContainer>
         <CRow className="justify-content-center">
           <CCol md={8} lg={6} xl={5}>
-            <CCard className="p-4 shadow">
-              <CCardBody>
+            <CCard className="p-4 shadow" style={authStyles.card}>
+              <CCardBody style={authStyles.cardBody}>
                 <CForm onSubmit={handleSubmit}>
                   <div className="text-center mb-4">
-                    <img 
-                      src="/newicon.png" 
-                      alt="Logo" 
+                    <img
+                      src="/newicon.png"
+                      alt="Logo"
                       className="mb-2"
                       style={{ width: '100px', height: '100px', objectFit: 'contain' }}
                       onError={(e) => {
@@ -89,7 +90,7 @@ const Register = () => {
                     <h2 className="text-primary">Create Account</h2>
                     <p className="text-body-secondary">User Registration</p>
                   </div>
-                  
+
                   {error && (
                     <CAlert color="danger" className="py-2">
                       <small>{error}</small>
@@ -100,7 +101,7 @@ const Register = () => {
                     <CInputGroupText>
                       <CIcon icon={cilUser} />
                     </CInputGroupText>
-                    <CFormInput 
+                    <CFormInput
                       placeholder="First Name"
                       value={formData.first_name}
                       onChange={(e) => handleInputChange('first_name', e.target.value)}
@@ -113,7 +114,7 @@ const Register = () => {
                     <CInputGroupText>
                       <CIcon icon={cilUser} />
                     </CInputGroupText>
-                    <CFormInput 
+                    <CFormInput
                       placeholder="Last Name"
                       value={formData.last_name}
                       onChange={(e) => handleInputChange('last_name', e.target.value)}
@@ -126,7 +127,7 @@ const Register = () => {
                     <CInputGroupText>
                       <CIcon icon={cilEnvelopeClosed} />
                     </CInputGroupText>
-                    <CFormInput 
+                    <CFormInput
                       type="email"
                       placeholder="Email"
                       value={formData.email}
@@ -140,7 +141,7 @@ const Register = () => {
                     <CInputGroupText>
                       <CIcon icon={cilUser} />
                     </CInputGroupText>
-                    <CFormInput 
+                    <CFormInput
                       placeholder="Document"
                       value={formData.document}
                       onChange={(e) => handleInputChange('document', e.target.value)}
@@ -178,8 +179,8 @@ const Register = () => {
                   </CInputGroup>
 
                   <div className="d-grid mb-3">
-                    <CButton 
-                      color="primary" 
+                    <CButton
+                      color="primary"
                       type="submit"
                       disabled={loading}
                     >
@@ -195,8 +196,8 @@ const Register = () => {
                   </div>
 
                   <div className="text-center">
-                    <CButton 
-                      color="link" 
+                    <CButton
+                      color="link"
                       onClick={() => navigate('/login')}
                       disabled={loading}
                     >

@@ -1,19 +1,20 @@
 import React, { useState, useEffect } from 'react'
-import { 
-    CModal, 
-    CModalHeader, 
-    CModalTitle, 
-    CModalBody, 
-    CForm, 
-    CFormInput, 
-    CModalFooter, 
-    CButton, 
-    CFormSelect, 
-    CRow, 
+import {
+    CModal,
+    CModalHeader,
+    CModalTitle,
+    CModalBody,
+    CForm,
+    CFormInput,
+    CModalFooter,
+    CButton,
+    CFormSelect,
+    CRow,
     CCol,
     CFormTextarea,
     CCard,
-    CCardBody
+    CCardBody,
+    CSpinner
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilPlus, cilTrash } from '@coreui/icons'
@@ -31,21 +32,25 @@ const NotificationForm = ({ visible, onClose, onSave, initial = null }) => {
     const [location, setLocation] = useState('')
     const [status, setStatus] = useState('scheduled')
     const [priority, setPriority] = useState('medium')
-    
+
     const [officials, setOfficials] = useState([])
     const [witnesses, setWitnesses] = useState([])
     const [jury, setJury] = useState([])
-    
+
     // Available users lists
     const [availableOfficials, setAvailableOfficials] = useState([])
     const [availableCitizens, setAvailableCitizens] = useState([])
-    
+
     const [loading, setLoading] = useState(false)
+    const [saving, setSaving] = useState(false)
+
+    const [step, setStep] = useState(1)
 
     useEffect(() => {
         if (visible) {
+            setStep(1)
             loadUsers()
-            
+
             if (initial) {
                 setCaseTitle(initial.case_title || '')
                 setCaseDescription(initial.case_description || '')
@@ -66,6 +71,37 @@ const NotificationForm = ({ visible, onClose, onSave, initial = null }) => {
             }
         }
     }, [visible, initial])
+
+    const validateStep = (currentStep) => {
+        if (currentStep === 1) {
+            if (!caseTitle.trim() || !caseDescription.trim()) {
+                return false
+            }
+            return true
+        }
+        if (currentStep === 2) {
+            // Optional: validate dates logic if needed
+            return true
+        }
+        if (currentStep === 3) {
+            return true
+        }
+        return true
+    }
+
+    const handleNext = (e) => {
+        if (e) e.preventDefault()
+        if (validateStep(step)) {
+            setStep(step + 1)
+        } else {
+            // Optional feedback
+        }
+    }
+
+    const handleBack = (e) => {
+        if (e) e.preventDefault()
+        setStep(step - 1)
+    }
 
     const resetForm = () => {
         setCaseTitle('')
@@ -91,10 +127,10 @@ const NotificationForm = ({ visible, onClose, onSave, initial = null }) => {
                 getFuncionaries(),
                 getCitizens()
             ])
-            
+
             setAvailableOfficials(officials)
             setAvailableCitizens(citizens)
-            
+
         } catch (error) {
             console.error('Error loading users:', error)
         } finally {
@@ -103,9 +139,9 @@ const NotificationForm = ({ visible, onClose, onSave, initial = null }) => {
     }
 
     const addOfficial = () => {
-        setOfficials([...officials, { 
-            user_id: '', 
-            name: '', 
+        setOfficials([...officials, {
+            user_id: '',
+            name: '',
             role: 'Lawyer'
         }])
     }
@@ -121,42 +157,42 @@ const NotificationForm = ({ visible, onClose, onSave, initial = null }) => {
     const updateOfficial = (index, field, value) => {
         const updated = [...officials]
         updated[index][field] = value
-        
+
         if (field === 'user_id' && value) {
             const selectedUser = availableOfficials.find(u => u.id === parseInt(value))
             if (selectedUser) {
                 updated[index].name = `${selectedUser.first_name} ${selectedUser.last_name}`
             }
         }
-        
+
         setOfficials(updated)
     }
 
     const updateWitness = (index, field, value) => {
         const updated = [...witnesses]
         updated[index][field] = value
-        
+
         if (field === 'user_id' && value) {
             const selectedUser = availableCitizens.find(u => u.id === parseInt(value))
             if (selectedUser) {
                 updated[index].name = `${selectedUser.first_name} ${selectedUser.last_name}`
             }
         }
-        
+
         setWitnesses(updated)
     }
 
     const updateJury = (index, field, value) => {
         const updated = [...jury]
         updated[index][field] = value
-        
+
         if (field === 'user_id' && value) {
             const selectedUser = availableCitizens.find(u => u.id === parseInt(value))
             if (selectedUser) {
                 updated[index].name = `${selectedUser.first_name} ${selectedUser.last_name}`
             }
         }
-        
+
         setJury(updated)
     }
 
@@ -172,43 +208,52 @@ const NotificationForm = ({ visible, onClose, onSave, initial = null }) => {
         setJury(jury.filter((_, i) => i !== index))
     }
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault()
-        
-        if (!caseTitle.trim() || !caseDescription.trim()) {
-            alert('Case title and description are required')
+        e.stopPropagation()
+
+        if (!validateStep(3)) {
             return
         }
 
-        const selectedJudge = availableOfficials.find(j => j.id === parseInt(judgeId))
-        const judgeName = selectedJudge ? `${selectedJudge.first_name} ${selectedJudge.last_name}` : ''
+        setSaving(true)
 
-        const payload = { 
-            case_title: caseTitle.trim(),
-            case_description: caseDescription.trim(),
-            judge_id: judgeId ? parseInt(judgeId) : null,
-            judge_name: judgeName,
-            court: court.trim(),
-            hearing_date: hearingDate,
-            hearing_time: hearingTime,
-            trial_date: trialDate,
-            trial_time: trialTime,
-            location: location.trim(),
-            status,
-            priority,
-            officials: officials.filter(f => f.user_id && f.name),
-            witnesses: witnesses.filter(w => w.user_id && w.name),
-            jury: jury.filter(j => j.user_id && j.name)
+        try {
+            const selectedJudge = availableOfficials.find(j => j.id === parseInt(judgeId))
+            const judgeName = selectedJudge ? `${selectedJudge.first_name} ${selectedJudge.last_name}` : ''
+
+            const payload = {
+                case_title: caseTitle.trim(),
+                case_description: caseDescription.trim(),
+                judge_id: judgeId ? parseInt(judgeId) : null,
+                judge_name: judgeName,
+                court: court.trim(),
+                hearing_date: hearingDate,
+                hearing_time: hearingTime,
+                trial_date: trialDate,
+                trial_time: trialTime,
+                location: location.trim(),
+                status,
+                priority,
+                officials: officials.filter(f => f.user_id && f.name),
+                witnesses: witnesses.filter(w => w.user_id && w.name),
+                jury: jury.filter(j => j.user_id && j.name)
+            }
+
+            await onSave(payload)
+            onClose()
+        } catch (error) {
+            console.error('Error saving notification:', error)
+        } finally {
+            setSaving(false)
         }
-        
-        onSave(payload)
     }
 
     const renderOfficials = () => {
         return officials.map((official, index) => (
             <CRow key={index} className="g-3 mb-3 align-items-end">
                 <CCol md={5}>
-                    <CFormSelect 
+                    <CFormSelect
                         label="Official"
                         value={official.user_id}
                         onChange={(e) => updateOfficial(index, 'user_id', e.target.value)}
@@ -222,7 +267,7 @@ const NotificationForm = ({ visible, onClose, onSave, initial = null }) => {
                     </CFormSelect>
                 </CCol>
                 <CCol md={5}>
-                    <CFormSelect 
+                    <CFormSelect
                         label="Role"
                         value={official.role}
                         onChange={(e) => updateOfficial(index, 'role', e.target.value)}
@@ -234,8 +279,8 @@ const NotificationForm = ({ visible, onClose, onSave, initial = null }) => {
                     </CFormSelect>
                 </CCol>
                 <CCol md={2}>
-                    <CButton 
-                        color="danger" 
+                    <CButton
+                        color="danger"
                         variant="outline"
                         onClick={() => removeOfficial(index)}
                     >
@@ -250,7 +295,7 @@ const NotificationForm = ({ visible, onClose, onSave, initial = null }) => {
         return witnesses.map((witness, index) => (
             <CRow key={index} className="g-3 mb-3 align-items-end">
                 <CCol md={5}>
-                    <CFormSelect 
+                    <CFormSelect
                         label="Witness"
                         value={witness.user_id}
                         onChange={(e) => updateWitness(index, 'user_id', e.target.value)}
@@ -264,7 +309,7 @@ const NotificationForm = ({ visible, onClose, onSave, initial = null }) => {
                     </CFormSelect>
                 </CCol>
                 <CCol md={5}>
-                    <CFormInput 
+                    <CFormInput
                         label="Role"
                         value={witness.role}
                         onChange={(e) => updateWitness(index, 'role', e.target.value)}
@@ -272,8 +317,8 @@ const NotificationForm = ({ visible, onClose, onSave, initial = null }) => {
                     />
                 </CCol>
                 <CCol md={2}>
-                    <CButton 
-                        color="danger" 
+                    <CButton
+                        color="danger"
                         variant="outline"
                         onClick={() => removeWitness(index)}
                     >
@@ -288,7 +333,7 @@ const NotificationForm = ({ visible, onClose, onSave, initial = null }) => {
         return jury.map((juryMember, index) => (
             <CRow key={index} className="g-3 mb-3 align-items-end">
                 <CCol md={5}>
-                    <CFormSelect 
+                    <CFormSelect
                         label="Jury Member"
                         value={juryMember.user_id}
                         onChange={(e) => updateJury(index, 'user_id', e.target.value)}
@@ -302,7 +347,7 @@ const NotificationForm = ({ visible, onClose, onSave, initial = null }) => {
                     </CFormSelect>
                 </CCol>
                 <CCol md={5}>
-                    <CFormInput 
+                    <CFormInput
                         label="Role"
                         value={juryMember.role}
                         onChange={(e) => updateJury(index, 'role', e.target.value)}
@@ -310,8 +355,8 @@ const NotificationForm = ({ visible, onClose, onSave, initial = null }) => {
                     />
                 </CCol>
                 <CCol md={2}>
-                    <CButton 
-                        color="danger" 
+                    <CButton
+                        color="danger"
                         variant="outline"
                         onClick={() => removeJury(index)}
                     >
@@ -323,189 +368,220 @@ const NotificationForm = ({ visible, onClose, onSave, initial = null }) => {
     }
 
     return (
-        <CModal size="xl" visible={visible} onClose={onClose}>
+        <CModal size="lg" visible={visible} onClose={onClose}>
             <CModalHeader>
-                <CModalTitle>{initial ? 'Edit Judicial Notification' : 'New Judicial Notification'}</CModalTitle>
+                <CModalTitle>
+                    {initial ? 'Edit Judicial Notification' : 'New Judicial Notification'} - Step {step} of 3
+                </CModalTitle>
             </CModalHeader>
             <CForm onSubmit={handleSubmit}>
                 <CModalBody style={{ maxHeight: '70vh', overflowY: 'auto' }}>
-                    {/* Case Information */}
-                    <h6 className="mb-3 text-primary">Case Information</h6>
-                    <CRow className="g-3">
-                        <CCol md={12}>
-                            <CFormInput 
-                                label="Case Title *" 
-                                placeholder="Robbery in public space"
-                                value={caseTitle} 
-                                onChange={(e) => setCaseTitle(e.target.value)}
-                                required 
-                            />
-                        </CCol>
-                    </CRow>
 
-                    <div className="mt-3">
-                        <CFormTextarea
-                            label="Case Description *"
-                            placeholder="Detailed description of the case..."
-                            rows="3"
-                            value={caseDescription}
-                            onChange={(e) => setCaseDescription(e.target.value)}
-                            required
-                        />
-                    </div>
+                    {/* SECCIÓN 1: CASE INFORMATION */}
+                    {step === 1 && (
+                        <>
+                            <h6 className="mb-3 text-primary">Case Information</h6>
+                            <CRow className="g-3">
+                                <CCol md={12}>
+                                    <CFormInput
+                                        label="Case Title *"
+                                        placeholder="Robbery in public space"
+                                        value={caseTitle}
+                                        onChange={(e) => setCaseTitle(e.target.value)}
+                                        required
+                                    />
+                                </CCol>
+                            </CRow>
 
-                    <CRow className="g-3 mt-2">
-                        <CCol md={6}>
-                            <CFormInput 
-                                label="Court"
-                                placeholder="First Criminal Court"
-                                value={court}
-                                onChange={(e) => setCourt(e.target.value)}
-                            />
-                        </CCol>
-                        <CCol md={6}>
-                            <CFormInput 
-                                label="Location"
-                                placeholder="Justice Palace, Room 4A"
-                                value={location}
-                                onChange={(e) => setLocation(e.target.value)}
-                            />
-                        </CCol>
-                    </CRow>
+                            <div className="mt-3">
+                                <CFormTextarea
+                                    label="Case Description *"
+                                    placeholder="Detailed description of the case..."
+                                    rows="3"
+                                    value={caseDescription}
+                                    onChange={(e) => setCaseDescription(e.target.value)}
+                                    required
+                                />
+                            </div>
 
-                    {/* Important Dates */}
-                    <h6 className="mb-3 mt-4 text-primary">Important Dates</h6>
-                    <CRow className="g-3">
-                        <CCol md={6}>
-                            <CFormInput 
-                                label="Hearing Date"
-                                type="date"
-                                value={hearingDate}
-                                onChange={(e) => setHearingDate(e.target.value)}
-                            />
-                        </CCol>
-                        <CCol md={6}>
-                            <CFormInput 
-                                label="Hearing Time"
-                                type="time"
-                                value={hearingTime}
-                                onChange={(e) => setHearingTime(e.target.value)}
-                            />
-                        </CCol>
-                    </CRow>
+                            <CRow className="g-3 mt-2">
+                                <CCol md={6}>
+                                    <CFormInput
+                                        label="Court"
+                                        placeholder="First Criminal Court"
+                                        value={court}
+                                        onChange={(e) => setCourt(e.target.value)}
+                                    />
+                                </CCol>
+                                <CCol md={6}>
+                                    <CFormInput
+                                        label="Location"
+                                        placeholder="Justice Palace, Room 4A"
+                                        value={location}
+                                        onChange={(e) => setLocation(e.target.value)}
+                                    />
+                                </CCol>
+                            </CRow>
 
-                    <CRow className="g-3 mt-2">
-                        <CCol md={6}>
-                            <CFormInput 
-                                label="Trial Date"
-                                type="date"
-                                value={trialDate}
-                                onChange={(e) => setTrialDate(e.target.value)}
-                            />
-                        </CCol>
-                        <CCol md={6}>
-                            <CFormInput 
-                                label="Trial Time"
-                                type="time"
-                                value={trialTime}
-                                onChange={(e) => setTrialTime(e.target.value)}
-                            />
-                        </CCol>
-                    </CRow>
+                            <h6 className="mb-3 mt-4 text-primary">Main Judge</h6>
+                            <CRow className="g-3">
+                                <CCol md={12}>
+                                    <CFormSelect
+                                        label="Assigned Judge"
+                                        value={judgeId}
+                                        onChange={(e) => setJudgeId(e.target.value)}
+                                        disabled={loading}
+                                    >
+                                        <option value="">Select a judge</option>
+                                        {availableOfficials.map(official => (
+                                            <option key={official.id} value={official.id}>
+                                                {official.first_name} {official.last_name} - {official.document}
+                                            </option>
+                                        ))}
+                                    </CFormSelect>
+                                </CCol>
+                            </CRow>
+                        </>
+                    )}
 
-                    {/* Main Judge */}
-                    <h6 className="mb-3 mt-4 text-primary">Main Judge</h6>
-                    <CRow className="g-3">
-                        <CCol md={12}>
-                            <CFormSelect 
-                                label="Assigned Judge"
-                                value={judgeId}
-                                onChange={(e) => setJudgeId(e.target.value)}
-                                disabled={loading}
-                            >
-                                <option value="">Select a judge</option>
-                                {availableOfficials.map(official => (
-                                    <option key={official.id} value={official.id}>
-                                        {official.first_name} {official.last_name} - {official.document}
-                                    </option>
-                                ))}
-                            </CFormSelect>
-                        </CCol>
-                    </CRow>
+                    {/* SECCIÓN 2: DATES AND STATUS */}
+                    {step === 2 && (
+                        <>
+                            <h6 className="mb-3 text-primary">Important Dates</h6>
+                            <CRow className="g-3">
+                                <CCol md={6}>
+                                    <CFormInput
+                                        label="Hearing Date"
+                                        type="date"
+                                        value={hearingDate}
+                                        onChange={(e) => setHearingDate(e.target.value)}
+                                    />
+                                </CCol>
+                                <CCol md={6}>
+                                    <CFormInput
+                                        label="Hearing Time"
+                                        type="time"
+                                        value={hearingTime}
+                                        onChange={(e) => setHearingTime(e.target.value)}
+                                    />
+                                </CCol>
+                            </CRow>
 
-                    {/* Case Officials */}
-                    <h6 className="mb-3 mt-4 text-primary">Case Officials</h6>
-                    <CCard className="mb-3">
-                        <CCardBody>
-                            {renderOfficials()}
-                            <CButton color="primary" variant="outline" onClick={addOfficial}>
-                                <CIcon icon={cilPlus} className="me-2" />
-                                Add Official
-                            </CButton>
-                        </CCardBody>
-                    </CCard>
+                            <CRow className="g-3 mt-2">
+                                <CCol md={6}>
+                                    <CFormInput
+                                        label="Trial Date"
+                                        type="date"
+                                        value={trialDate}
+                                        onChange={(e) => setTrialDate(e.target.value)}
+                                    />
+                                </CCol>
+                                <CCol md={6}>
+                                    <CFormInput
+                                        label="Trial Time"
+                                        type="time"
+                                        value={trialTime}
+                                        onChange={(e) => setTrialTime(e.target.value)}
+                                    />
+                                </CCol>
+                            </CRow>
 
-                    {/* Witnesses */}
-                    <h6 className="mb-3 mt-4 text-primary">Witnesses</h6>
-                    <CCard className="mb-3">
-                        <CCardBody>
-                            {renderWitnesses()}
-                            <CButton color="primary" variant="outline" onClick={addWitness}>
-                                <CIcon icon={cilPlus} className="me-2" />
-                                Add Witness
-                            </CButton>
-                        </CCardBody>
-                    </CCard>
+                            <h6 className="mb-3 mt-4 text-primary">Status and Priority</h6>
+                            <CRow className="g-3">
+                                <CCol md={6}>
+                                    <CFormSelect
+                                        label="Status"
+                                        value={status}
+                                        onChange={(e) => setStatus(e.target.value)}
+                                    >
+                                        <option value="scheduled">Scheduled</option>
+                                        <option value="in_progress">In Progress</option>
+                                        <option value="completed">Completed</option>
+                                        <option value="cancelled">Cancelled</option>
+                                        <option value="postponed">Postponed</option>
+                                    </CFormSelect>
+                                </CCol>
+                                <CCol md={6}>
+                                    <CFormSelect
+                                        label="Priority"
+                                        value={priority}
+                                        onChange={(e) => setPriority(e.target.value)}
+                                    >
+                                        <option value="high">High</option>
+                                        <option value="medium">Medium</option>
+                                        <option value="low">Low</option>
+                                    </CFormSelect>
+                                </CCol>
+                            </CRow>
+                        </>
+                    )}
 
-                    {/* Jury */}
-                    <h6 className="mb-3 mt-4 text-primary">Jury Members</h6>
-                    <CCard className="mb-3">
-                        <CCardBody>
-                            {renderJury()}
-                            <CButton color="primary" variant="outline" onClick={addJury}>
-                                <CIcon icon={cilPlus} className="me-2" />
-                                Add Member
-                            </CButton>
-                        </CCardBody>
-                    </CCard>
+                    {/* SECCIÓN 3: PARTICIPANTS */}
+                    {step === 3 && (
+                        <>
+                            <h6 className="mb-3 text-primary">Case Officials</h6>
+                            <CCard className="mb-3">
+                                <CCardBody>
+                                    {renderOfficials()}
+                                    <CButton color="primary" variant="outline" onClick={addOfficial}>
+                                        <CIcon icon={cilPlus} className="me-2" />
+                                        Add Official
+                                    </CButton>
+                                </CCardBody>
+                            </CCard>
 
-                    {/* Status and Priority */}
-                    <h6 className="mb-3 mt-4 text-primary">Status and Priority</h6>
-                    <CRow className="g-3">
-                        <CCol md={6}>
-                            <CFormSelect 
-                                label="Status"
-                                value={status}
-                                onChange={(e) => setStatus(e.target.value)}
-                            >
-                                <option value="scheduled">Scheduled</option>
-                                <option value="in_progress">In Progress</option>
-                                <option value="completed">Completed</option>
-                                <option value="cancelled">Cancelled</option>
-                                <option value="postponed">Postponed</option>
-                            </CFormSelect>
-                        </CCol>
-                        <CCol md={6}>
-                            <CFormSelect 
-                                label="Priority"
-                                value={priority}
-                                onChange={(e) => setPriority(e.target.value)}
-                            >
-                                <option value="high">High</option>
-                                <option value="medium">Medium</option>
-                                <option value="low">Low</option>
-                            </CFormSelect>
-                        </CCol>
-                    </CRow>
+                            <h6 className="mb-3 mt-4 text-primary">Witnesses</h6>
+                            <CCard className="mb-3">
+                                <CCardBody>
+                                    {renderWitnesses()}
+                                    <CButton color="primary" variant="outline" onClick={addWitness}>
+                                        <CIcon icon={cilPlus} className="me-2" />
+                                        Add Witness
+                                    </CButton>
+                                </CCardBody>
+                            </CCard>
+
+                            <h6 className="mb-3 mt-4 text-primary">Jury Members</h6>
+                            <CCard className="mb-3">
+                                <CCardBody>
+                                    {renderJury()}
+                                    <CButton color="primary" variant="outline" onClick={addJury}>
+                                        <CIcon icon={cilPlus} className="me-2" />
+                                        Add Member
+                                    </CButton>
+                                </CCardBody>
+                            </CCard>
+                        </>
+                    )}
 
                     <div className="mt-3">
                         <small className="text-muted">* Required fields</small>
                     </div>
                 </CModalBody>
                 <CModalFooter>
-                    <CButton color="secondary" onClick={onClose}>Cancel</CButton>
-                    <CButton type="submit" color="primary">
-                        {initial ? 'Update' : 'Create'} Notification
+                    {step > 1 && (
+                        <CButton type="button" color="secondary" onClick={handleBack}>
+                            Back
+                        </CButton>
+                    )}
+                    {step < 3 ? (
+                        <CButton type="button" color="primary" onClick={handleNext} disabled={saving}>
+                            Next
+                        </CButton>
+                    ) : (
+                        <CButton type="submit" color="success" disabled={saving}>
+                            {saving ? (
+                                <>
+                                    <CSpinner size="sm" className="me-2" />
+                                    Saving...
+                                </>
+                            ) : (
+                                <>{initial ? 'Update' : 'Create'} Notification</>
+                            )}
+                        </CButton>
+                    )}
+                    <CButton type="button" color="light" onClick={onClose} className="ms-auto">
+                        Cancel
                     </CButton>
                 </CModalFooter>
             </CForm>

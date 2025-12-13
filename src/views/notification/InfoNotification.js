@@ -1,9 +1,9 @@
 import React from 'react'
-import { 
-    CModal, 
-    CModalHeader, 
-    CModalTitle, 
-    CModalBody, 
+import {
+    CModal,
+    CModalHeader,
+    CModalTitle,
+    CModalBody,
     CModalFooter,
     CButton,
     CRow,
@@ -16,10 +16,10 @@ import {
     CListGroupItem
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { 
-    cilWarning, 
-    cilUser, 
-    cilLocationPin, 
+import {
+    cilWarning,
+    cilUser,
+    cilLocationPin,
     cilCalendar,
     cilDescription,
     cilEnvelopeOpen,
@@ -27,6 +27,7 @@ import {
     cilBalanceScale,
     cilClock
 } from '@coreui/icons'
+import { modalStyles, cardStyles } from 'src/styles/darkModeStyles'
 
 const InfoNotification = ({ visible, onClose, notification }) => {
     if (!notification) return null
@@ -39,7 +40,7 @@ const InfoNotification = ({ visible, onClose, notification }) => {
             'cancelled': { color: 'danger', text: 'Cancelled' },
             'postponed': { color: 'info', text: 'Postponed' }
         }
-        
+
         const config = statusConfig[status] || { color: 'secondary', text: status }
         return <CBadge color={config.color}>{config.text}</CBadge>
     }
@@ -50,7 +51,7 @@ const InfoNotification = ({ visible, onClose, notification }) => {
             'medium': { color: 'warning', text: 'Medium' },
             'low': { color: 'success', text: 'Low' }
         }
-        
+
         const config = priorityConfig[priority] || { color: 'secondary', text: priority }
         return <CBadge color={config.color}>{config.text}</CBadge>
     }
@@ -82,23 +83,23 @@ const InfoNotification = ({ visible, onClose, notification }) => {
 
     return (
         <CModal size="lg" visible={visible} onClose={onClose}>
-            <CModalHeader>
+            <CModalHeader style={modalStyles.header}>
                 <CModalTitle>
                     <CIcon icon={cilBalanceScale} className="me-2" />
                     Judicial Notification - {notification.case_number}
                 </CModalTitle>
             </CModalHeader>
-            <CModalBody style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+            <CModalBody style={modalStyles.bodyScrollable}>
                 <CRow className="g-3">
                     <CCol md={12}>
-                        <CCard className="mb-4">
-                            <CCardHeader className="bg-light">
+                        <CCard className="mb-4" style={cardStyles.card}>
+                            <CCardHeader style={cardStyles.header}>
                                 <h6 className="mb-0">
                                     <CIcon icon={cilBalanceScale} className="me-2" />
                                     Case Information
                                 </h6>
                             </CCardHeader>
-                            <CCardBody>
+                            <CCardBody style={cardStyles.body}>
                                 <CRow className="g-3">
                                     <CCol md={8}>
                                         <h5>{notification.case_title}</h5>
@@ -125,14 +126,14 @@ const InfoNotification = ({ visible, onClose, notification }) => {
                         </CCard>
                     </CCol>
                     <CCol md={6}>
-                        <CCard className="h-100">
-                            <CCardHeader className="bg-light">
+                        <CCard className="h-100" style={cardStyles.card}>
+                            <CCardHeader style={cardStyles.header}>
                                 <h6 className="mb-0">
                                     <CIcon icon={cilBalanceScale} className="me-2" />
                                     Court Information
                                 </h6>
                             </CCardHeader>
-                            <CCardBody>
+                            <CCardBody style={cardStyles.body}>
                                 <CListGroup flush>
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
                                         <span>Court:</span>
@@ -151,14 +152,14 @@ const InfoNotification = ({ visible, onClose, notification }) => {
                         </CCard>
                     </CCol>
                     <CCol md={6}>
-                        <CCard className="h-100">
-                            <CCardHeader className="bg-light">
+                        <CCard className="h-100" style={cardStyles.card}>
+                            <CCardHeader style={cardStyles.header}>
                                 <h6 className="mb-0">
                                     <CIcon icon={cilUser} className="me-2" />
                                     Participants
                                 </h6>
                             </CCardHeader>
-                            <CCardBody>
+                            <CCardBody style={cardStyles.body}>
                                 <CListGroup flush>
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
                                         <span>Total Participants:</span>
@@ -181,14 +182,14 @@ const InfoNotification = ({ visible, onClose, notification }) => {
                         </CCard>
                     </CCol>
                     <CCol md={6}>
-                        <CCard className="h-100">
-                            <CCardHeader className="bg-light">
+                        <CCard className="h-100" style={cardStyles.card}>
+                            <CCardHeader style={cardStyles.header}>
                                 <h6 className="mb-0">
                                     <CIcon icon={cilCalendar} className="me-2" />
                                     Hearing Information
                                 </h6>
                             </CCardHeader>
-                            <CCardBody>
+                            <CCardBody style={cardStyles.body}>
                                 <CListGroup flush>
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
                                         <span>Date:</span>
@@ -203,14 +204,14 @@ const InfoNotification = ({ visible, onClose, notification }) => {
                         </CCard>
                     </CCol>
                     <CCol md={6}>
-                        <CCard className="h-100">
-                            <CCardHeader className="bg-light">
+                        <CCard className="h-100" style={cardStyles.card}>
+                            <CCardHeader style={cardStyles.header}>
                                 <h6 className="mb-0">
                                     <CIcon icon={cilClock} className="me-2" />
                                     Trial Information
                                 </h6>
                             </CCardHeader>
-                            <CCardBody>
+                            <CCardBody style={cardStyles.body}>
                                 <CListGroup flush>
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
                                         <span>Date:</span>
@@ -226,11 +227,11 @@ const InfoNotification = ({ visible, onClose, notification }) => {
                     </CCol>
                     {notification.officials && notification.officials.length > 0 && (
                         <CCol md={12}>
-                            <CCard>
-                                <CCardHeader className="bg-light">
+                            <CCard style={cardStyles.card}>
+                                <CCardHeader style={cardStyles.header}>
                                     <h6 className="mb-0">Case Officials</h6>
                                 </CCardHeader>
-                                <CCardBody>
+                                <CCardBody style={cardStyles.body}>
                                     <CListGroup flush>
                                         {notification.officials.map((official, index) => (
                                             <CListGroupItem key={index} className="px-0">
@@ -251,11 +252,11 @@ const InfoNotification = ({ visible, onClose, notification }) => {
                     )}
                     {notification.witnesses && notification.witnesses.length > 0 && (
                         <CCol md={12}>
-                            <CCard>
-                                <CCardHeader className="bg-light">
+                            <CCard style={cardStyles.card}>
+                                <CCardHeader style={cardStyles.header}>
                                     <h6 className="mb-0">Witnesses</h6>
                                 </CCardHeader>
-                                <CCardBody>
+                                <CCardBody style={cardStyles.body}>
                                     <CListGroup flush>
                                         {notification.witnesses.map((witness, index) => (
                                             <CListGroupItem key={index} className="px-0">
@@ -276,11 +277,11 @@ const InfoNotification = ({ visible, onClose, notification }) => {
                     )}
                     {notification.jury && notification.jury.length > 0 && (
                         <CCol md={12}>
-                            <CCard>
-                                <CCardHeader className="bg-light">
+                            <CCard style={cardStyles.card}>
+                                <CCardHeader style={cardStyles.header}>
                                     <h6 className="mb-0">Jury Members</h6>
                                 </CCardHeader>
-                                <CCardBody>
+                                <CCardBody style={cardStyles.body}>
                                     <CListGroup flush>
                                         {notification.jury.map((juryMember, index) => (
                                             <CListGroupItem key={index} className="px-0">
@@ -301,7 +302,7 @@ const InfoNotification = ({ visible, onClose, notification }) => {
                     )}
                 </CRow>
             </CModalBody>
-            <CModalFooter>
+            <CModalFooter style={modalStyles.footer}>
                 <CButton color="secondary" onClick={onClose}>
                     Close
                 </CButton>

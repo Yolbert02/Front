@@ -1,9 +1,9 @@
 import React from 'react'
-import { 
-    CModal, 
-    CModalHeader, 
-    CModalTitle, 
-    CModalBody, 
+import {
+    CModal,
+    CModalHeader,
+    CModalTitle,
+    CModalBody,
     CModalFooter,
     CButton,
     CRow,
@@ -16,16 +16,17 @@ import {
     CListGroupItem
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { 
-    cilUser, 
-    cilAddressBook, 
-    cilEnvelopeOpen, 
-    cilPhone, 
+import {
+    cilUser,
+    cilAddressBook,
+    cilEnvelopeOpen,
+    cilPhone,
     cilShieldAlt,
     cilCalendar,
     cilPeople
 } from '@coreui/icons'
-import AvatarLetter from 'src/components/AvatarLetter'
+import AvatarLetterXL from 'src/components/AvatarLetterXL'
+import { modalStyles, cardStyles, containerStyles } from 'src/styles/darkModeStyles'
 
 const InfoUser = ({ visible, onClose, user }) => {
     if (!user) return null
@@ -36,7 +37,7 @@ const InfoUser = ({ visible, onClose, user }) => {
             'funcionario': { color: 'info', text: 'Funcionary', icon: cilPeople },
             'civil': { color: 'success', text: 'Civil', icon: cilUser }
         }
-        
+
         const config = roleConfig[role] || { color: 'secondary', text: role, icon: cilUser }
         return (
             <CBadge color={config.color}>
@@ -52,7 +53,7 @@ const InfoUser = ({ visible, onClose, user }) => {
             'suspendido': { color: 'warning', text: 'Suspended' },
             'eliminado': { color: 'danger', text: 'Deleted' }
         }
-        
+
         const config = statusConfig[status] || { color: 'secondary', text: status }
         return <CBadge color={config.color}>{config.text}</CBadge>
     }
@@ -72,29 +73,28 @@ const InfoUser = ({ visible, onClose, user }) => {
 
     return (
         <CModal size="lg" visible={visible} onClose={onClose}>
-            <CModalHeader>
+            <CModalHeader style={modalStyles.header}>
                 <CModalTitle>
                     <CIcon icon={cilUser} className="me-2" />
                     User Information - {user.first_name} {user.last_name}
                 </CModalTitle>
             </CModalHeader>
-            <CModalBody>
+            <CModalBody style={modalStyles.body}>
                 <CRow className="g-3">
-                    {/* Profile Section */}
                     <CCol md={12}>
-                        <CCard className="mb-4">
-                            <CCardHeader className="bg-light">
+                        <CCard className="mb-4" style={cardStyles.card}>
+                            <CCardHeader style={cardStyles.header}>
                                 <h6 className="mb-0">
                                     <CIcon icon={cilUser} className="me-2" />
                                     Profile Information
                                 </h6>
                             </CCardHeader>
-                            <CCardBody>
+                            <CCardBody style={cardStyles.body}>
                                 <CRow className="g-3 align-items-center">
                                     <CCol md={3} className="text-center">
-                                        <AvatarLetter 
-                                            name={`${user.first_name}`} 
-                                            size={80}
+                                        <AvatarLetterXL
+                                            name={`${user.first_name}`}
+                                            size="xl"
                                             className="mb-2"
                                         />
                                         <div className="mt-2">
@@ -132,14 +132,14 @@ const InfoUser = ({ visible, onClose, user }) => {
 
                     {/* Contact Information */}
                     <CCol md={6}>
-                        <CCard className="h-100">
-                            <CCardHeader className="bg-light">
+                        <CCard className="h-100" style={cardStyles.card}>
+                            <CCardHeader style={cardStyles.header}>
                                 <h6 className="mb-0">
                                     <CIcon icon={cilAddressBook} className="me-2" />
                                     Identification & Contact
                                 </h6>
                             </CCardHeader>
-                            <CCardBody>
+                            <CCardBody style={cardStyles.body}>
                                 <CListGroup flush>
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
                                         <span className="d-flex align-items-center">
@@ -169,14 +169,14 @@ const InfoUser = ({ visible, onClose, user }) => {
 
                     {/* System Information */}
                     <CCol md={6}>
-                        <CCard className="h-100">
-                            <CCardHeader className="bg-light">
+                        <CCard className="h-100" style={cardStyles.card}>
+                            <CCardHeader style={cardStyles.header}>
                                 <h6 className="mb-0">
                                     <CIcon icon={cilShieldAlt} className="me-2" />
                                     System Information
                                 </h6>
                             </CCardHeader>
-                            <CCardBody>
+                            <CCardBody style={cardStyles.body}>
                                 <CListGroup flush>
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
                                         <span>Role:</span>
@@ -210,11 +210,11 @@ const InfoUser = ({ visible, onClose, user }) => {
                     </CCol>
                     {(user.department || user.location || user.bio) && (
                         <CCol md={12}>
-                            <CCard>
-                                <CCardHeader className="bg-light">
+                            <CCard style={cardStyles.card}>
+                                <CCardHeader style={cardStyles.header}>
                                     <h6 className="mb-0">Additional Information</h6>
                                 </CCardHeader>
-                                <CCardBody>
+                                <CCardBody style={cardStyles.body}>
                                     <CRow className="g-3">
                                         {user.department && (
                                             <CCol md={6}>
@@ -231,7 +231,7 @@ const InfoUser = ({ visible, onClose, user }) => {
                                         {user.bio && (
                                             <CCol md={12}>
                                                 <strong>Bio:</strong>
-                                                <div className="text-muted mt-1 p-2 bg-light rounded">
+                                                <div className="text-muted mt-1 p-2 rounded" style={containerStyles.lightBg}>
                                                     {user.bio}
                                                 </div>
                                             </CCol>
@@ -243,7 +243,7 @@ const InfoUser = ({ visible, onClose, user }) => {
                     )}
                 </CRow>
             </CModalBody>
-            <CModalFooter>
+            <CModalFooter style={modalStyles.footer}>
                 <CButton color="secondary" onClick={onClose}>
                     Close
                 </CButton>

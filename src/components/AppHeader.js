@@ -23,6 +23,7 @@ import {
   cilMenu,
   cilMoon,
   cilSun,
+  cilShieldAlt,
 } from '@coreui/icons'
 
 import { AppBreadcrumb } from './index'
@@ -46,32 +47,55 @@ const AppHeader = () => {
   }, [])
 
   return (
-    <CHeader position="sticky" className="mb-4 p-0" ref={headerRef}>
-      <CContainer className="border-bottom px-4" fluid>
+    <CHeader position="sticky" className="mb-4 p-0 shadow-sm border-0" ref={headerRef} style={{ zIndex: 1030 }}>
+      <div style={{ height: '4px', width: '100%', background: 'linear-gradient(90deg, #1a237e 0%, #0d47a1 100%)' }}></div>
+
+      <CContainer className="border-bottom px-4 py-2" fluid>
         <CHeaderToggler
           onClick={() => dispatch({ type: 'set', sidebarShow: !sidebarShow })}
-          style={{ marginInlineStart: '-14px' }}
+          style={{ marginInlineStart: '-14px', color: 'var(--cui-header-color)' }}
+          className="border-0"
         >
           <CIcon icon={cilMenu} size="lg" />
         </CHeaderToggler>
-        <CHeaderNav className="d-none d-md-flex">
+
+        <CHeaderNav className="d-none d-md-flex align-items-center gap-4 ms-3">
           <CNavItem>
-            <CNavLink to="/dashboard" as={NavLink}>
+            <CNavLink
+              to="/dashboard"
+              as={NavLink}
+              className="fw-semibold"
+              style={({ isActive }) => ({
+                fontWeight: isActive ? '700' : '500'
+              })}
+            >
               Dashboard
             </CNavLink>
           </CNavItem>
           <CNavItem>
-            <CNavLink to="/users" as={NavLink}>Users</CNavLink>
+            <CNavLink
+              to="/users"
+              as={NavLink}
+              className="fw-semibold"
+              style={({ isActive }) => ({
+                fontWeight: isActive ? '700' : '500'
+              })}
+            >
+              Users
+            </CNavLink>
           </CNavItem>
         </CHeaderNav>
+
         <CHeaderNav className="ms-auto">
         </CHeaderNav>
-        <CHeaderNav>
+
+        <CHeaderNav className="align-items-center gap-2">
           <li className="nav-item py-1">
-            <div className="vr h-100 mx-2 text-body text-opacity-75"></div>
+            <div className="vr h-100 mx-2 text-body text-opacity-25"></div>
           </li>
+
           <CDropdown variant="nav-item" placement="bottom-end">
-            <CDropdownToggle caret={false}>
+            <CDropdownToggle caret={false} className="text-secondary">
               {colorMode === 'dark' ? (
                 <CIcon icon={cilMoon} size="lg" />
               ) : colorMode === 'auto' ? (
@@ -87,6 +111,7 @@ const AppHeader = () => {
                 as="button"
                 type="button"
                 onClick={() => setColorMode('light')}
+                style={{ cursor: 'pointer' }}
               >
                 <CIcon className="me-2" icon={cilSun} size="lg" /> Light
               </CDropdownItem>
@@ -96,6 +121,7 @@ const AppHeader = () => {
                 as="button"
                 type="button"
                 onClick={() => setColorMode('dark')}
+                style={{ cursor: 'pointer' }}
               >
                 <CIcon className="me-2" icon={cilMoon} size="lg" /> Dark
               </CDropdownItem>
@@ -105,18 +131,21 @@ const AppHeader = () => {
                 as="button"
                 type="button"
                 onClick={() => setColorMode('auto')}
+                style={{ cursor: 'pointer' }}
               >
                 <CIcon className="me-2" icon={cilContrast} size="lg" /> Auto
               </CDropdownItem>
             </CDropdownMenu>
           </CDropdown>
+
           <li className="nav-item py-1">
-            <div className="vr h-100 mx-2 text-body text-opacity-75"></div>
+            <div className="vr h-100 mx-2 text-body text-opacity-25"></div>
           </li>
+
           <AppHeaderDropdown />
         </CHeaderNav>
       </CContainer>
-      <CContainer className="px-4" fluid>
+      <CContainer className="px-4 py-2 border-bottom" fluid>
         <AppBreadcrumb />
       </CContainer>
     </CHeader>

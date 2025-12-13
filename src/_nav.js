@@ -18,7 +18,8 @@ import {
   cilLibrary,
   cilInstitution,
   cilHome,
-  cilFindInPage
+  cilMap,
+  cilFindInPage,
 } from '@coreui/icons'
 import { CNavGroup, CNavItem, CNavTitle } from '@coreui/react'
 
@@ -32,11 +33,6 @@ const _nav = [
       color: 'info',
       text: 'NEW',
     },
-  },
-  {component: CNavItem,
-    name: 'Users',
-    to: '/users',
-    icon: <CIcon icon={cilPeople} customClassName="nav-icon" />,
   },
   {
     component: CNavItem,
@@ -56,15 +52,11 @@ const _nav = [
     to: '/notification',
     icon: <CIcon icon={cilInstitution} customClassName="nav-icon" />,
   },
-  {component: CNavItem,
-    name: 'Login',
-    to: '/Login',
-    icon: <CIcon icon={cilUser} customClassName="nav-icon" />,
-  },
-{component: CNavItem,
-    name: 'Register',
-    to: '/register',
-    icon: <CIcon icon={cilUser} customClassName="nav-icon" />,
+  {
+    component: CNavItem,
+    name: 'Zones',
+    to: '/zones',
+    icon: <CIcon icon={cilMap} customClassName="nav-icon" />,
   }
 ]
 

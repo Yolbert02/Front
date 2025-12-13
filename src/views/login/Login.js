@@ -18,6 +18,7 @@ import {
 import CIcon from '@coreui/icons-react'
 import { cilLockLocked, cilUser, cilShieldAlt, cilUserPlus } from '@coreui/icons'
 import { login } from 'src/services/auth'
+import { authStyles, containerStyles } from 'src/styles/darkModeStyles'
 
 const Login = () => {
   const [username, setUsername] = useState('')
@@ -41,7 +42,7 @@ const Login = () => {
 
     try {
       const result = await login(username, password)
-      
+
       if (result.success) {
         navigate('/dashboard')
       }
@@ -53,18 +54,18 @@ const Login = () => {
   }
 
   return (
-    <div className="bg-light min-vh-100 d-flex flex-row align-items-center login-background">
+    <div className="min-vh-100 d-flex flex-row align-items-center login-background" style={authStyles.container}>
       <CContainer>
         <CRow className="justify-content-center">
           <CCol md={8} lg={6} xl={5}>
             <CCardGroup>
-              <CCard className="p-4 shadow">
-                <CCardBody>
+              <CCard className="p-4 shadow" style={authStyles.card}>
+                <CCardBody style={authStyles.cardBody}>
                   <CForm onSubmit={handleSubmit}>
                     <div className="text-center mb-4">
-                      <img 
-                        src="/newicon.png" 
-                        alt="Logo" 
+                      <img
+                        src="/newicon.png"
+                        alt="Logo"
                         className="mb-2"
                         style={{ width: '100px', height: '100px', objectFit: 'contain' }}
                         onError={(e) => {
@@ -74,19 +75,19 @@ const Login = () => {
                       <h2 className="text-primary">Welcome</h2>
                       <p className="text-body-secondary">Login</p>
                     </div>
-                    
+
                     {error && (
                       <CAlert color="danger" className="py-2">
                         <small>{error}</small>
                       </CAlert>
                     )}
-                    
+
                     <CInputGroup className="mb-3">
                       <CInputGroupText>
                         <CIcon icon={cilUser} />
                       </CInputGroupText>
-                      <CFormInput 
-                        placeholder="Usuario" 
+                      <CFormInput
+                        placeholder="Usuario"
                         autoComplete="username"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
@@ -94,7 +95,7 @@ const Login = () => {
                         required
                       />
                     </CInputGroup>
-                    
+
                     <CInputGroup className="mb-4">
                       <CInputGroupText>
                         <CIcon icon={cilLockLocked} />
@@ -109,12 +110,12 @@ const Login = () => {
                         required
                       />
                     </CInputGroup>
-                    
+
                     <CRow>
                       <CCol xs={6}>
-                        <CButton 
-                          color="primary" 
-                          className="px-4 w-100" 
+                        <CButton
+                          color="primary"
+                          className="px-4 w-100"
                           type="submit"
                           disabled={loading}
                         >
@@ -129,8 +130,8 @@ const Login = () => {
                         </CButton>
                       </CCol>
                       <CCol xs={6} className="text-end">
-                        <CButton 
-                          color="link" 
+                        <CButton
+                          color="link"
                           className="px-0"
                           onClick={() => setShowDemoInfo(!showDemoInfo)}
                           disabled={loading}
@@ -140,7 +141,7 @@ const Login = () => {
                       </CCol>
                     </CRow>
                     <div className="text-center mt-3">
-                      <CButton 
+                      <CButton
                         color="outline-primary"
                         onClick={() => navigate('/register')}
                         className="w-100"
@@ -150,22 +151,22 @@ const Login = () => {
                         Create Account
                       </CButton>
                     </div>
-                    
+
                     {showDemoInfo && (
-                      <div className="mt-3 p-3 bg-light rounded">
+                      <div className="mt-3 p-3 rounded" style={containerStyles.lightBg}>
                         <h6 className="mb-2">
                           <CIcon icon={cilShieldAlt} className="me-2" />
                           Recover Password
                         </h6>
                         <div className="d-grid gap-2">
-                          <CFormInput 
-                            placeholder="Email" 
+                          <CFormInput
+                            placeholder="Email"
                             type="email"
                             autoComplete="email"
                             required
                           />
-                          <CButton 
-                            color="primary" 
+                          <CButton
+                            color="primary"
                             disabled={loading}
                           >
                             Send recovery code

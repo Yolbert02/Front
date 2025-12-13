@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
-import { 
-    CCard, 
-    CCardBody, 
+import {
+    CCard,
+    CCardBody,
     CCardHeader,
     CContainer,
     CRow,
@@ -33,7 +33,7 @@ const Profile = () => {
         confirmPassword: ''
     })
 
-    useEffect(() => { 
+    useEffect(() => {
         loadProfileData()
     }, [])
 
@@ -68,7 +68,7 @@ const Profile = () => {
             return
         }
 
-        if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        if (file.size > 5 * 1024 * 1024) {
             setMessage({ type: 'danger', text: 'Image size should be less than 5MB' })
             return
         }
@@ -94,7 +94,7 @@ const Profile = () => {
     const handleSaveProfile = async (e) => {
         e.preventDefault()
         setSaving(true)
-        
+
         try {
             const updatedProfile = await updateProfile(formData)
             setProfile(updatedProfile)
@@ -109,7 +109,7 @@ const Profile = () => {
 
     const handleChangePassword = async (e) => {
         e.preventDefault()
-        
+
         if (passwordData.newPassword !== passwordData.confirmPassword) {
             setMessage({ type: 'danger', text: 'New passwords do not match' })
             return
@@ -144,7 +144,7 @@ const Profile = () => {
             'funcionario': { color: 'info', text: 'Official' },
             'civil': { color: 'success', text: 'Civil' }
         }
-        
+
         const config = roleConfig[role] || { color: 'secondary', text: role }
         return <CBadge color={config.color}>{config.text}</CBadge>
     }
@@ -168,23 +168,23 @@ const Profile = () => {
                         <CCardBody className="text-center">
                             <div className="position-relative d-inline-block">
                                 {profile?.profile_picture ? (
-                                    <CImage 
-                                        src={profile.profile_picture} 
-                                        alt="Profile" 
+                                    <CImage
+                                        src={profile.profile_picture}
+                                        alt="Profile"
                                         className="rounded-circle mb-3"
                                         width={150}
                                         height={150}
                                         style={{ objectFit: 'cover' }}
                                     />
                                 ) : (
-                                    <div 
+                                    <div
                                         className="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white mb-3 mx-auto"
                                         style={{ width: 150, height: 150 }}
                                     >
                                         <CIcon icon={cilUser} size="3xl" />
                                     </div>
                                 )}
-                                <label 
+                                <label
                                     htmlFor="profile-picture-upload"
                                     className="btn btn-primary btn-sm rounded-circle position-absolute"
                                     style={{ bottom: '20px', right: '20px', cursor: 'pointer' }}
@@ -201,11 +201,11 @@ const Profile = () => {
                                     />
                                 </label>
                             </div>
-                            
+
                             <h4>{profile?.first_name} {profile?.last_name}</h4>
                             <p className="text-muted">{profile?.gmail}</p>
                             {profile?.role && getRoleBadge(profile.role)}
-                            
+
                             <div className="mt-3 text-start">
                                 <p><strong>Document:</strong> {profile?.document}</p>
                                 <p><strong>Phone:</strong> {profile?.number_phone}</p>
@@ -221,8 +221,8 @@ const Profile = () => {
                     <CCard>
                         <CCardHeader>
                             <div className="d-flex border-bottom">
-                                <CButton 
-                                    color="link" 
+                                <CButton
+                                    color="link"
                                     className={`me-3 ${activeTab === 'personal' ? 'text-primary border-primary border-bottom' : 'text-muted'}`}
                                     onClick={() => setActiveTab('personal')}
                                 >
@@ -231,7 +231,7 @@ const Profile = () => {
                                 </CButton>
                             </div>
                         </CCardHeader>
-                        
+
                         <CCardBody>
                             {message.text && (
                                 <CAlert color={message.type} className="mb-3">
@@ -241,56 +241,56 @@ const Profile = () => {
                             {activeTab === 'personal' && (
                                 <CForm onSubmit={handleSaveProfile}>
                                     <h5 className="mb-4">Personal Information</h5>
-                                    
+
                                     <CRow className="g-3">
                                         <CCol md={6}>
-                                            <CFormInput 
+                                            <CFormInput
                                                 label="First Name *"
                                                 value={formData.first_name || ''}
-                                                onChange={(e) => setFormData({...formData, first_name: e.target.value})}
+                                                onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
                                                 required
                                             />
                                         </CCol>
                                         <CCol md={6}>
-                                            <CFormInput 
+                                            <CFormInput
                                                 label="Last Name *"
                                                 value={formData.last_name || ''}
-                                                onChange={(e) => setFormData({...formData, last_name: e.target.value})}
+                                                onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
                                                 required
                                             />
                                         </CCol>
                                     </CRow>
                                     <CRow className="g-3 mt-2">
                                         <CCol md={6}>
-                                            <CFormInput 
+                                            <CFormInput
                                                 label="Email *"
                                                 type="email"
                                                 value={formData.gmail || ''}
-                                                onChange={(e) => setFormData({...formData, gmail: e.target.value})}
+                                                onChange={(e) => setFormData({ ...formData, gmail: e.target.value })}
                                                 required
                                             />
                                         </CCol>
                                         <CCol md={6}>
-                                            <CFormInput 
+                                            <CFormInput
                                                 label="Phone Number"
                                                 value={formData.number_phone || ''}
-                                                onChange={(e) => setFormData({...formData, number_phone: e.target.value})}
+                                                onChange={(e) => setFormData({ ...formData, number_phone: e.target.value })}
                                             />
                                         </CCol>
                                     </CRow>
                                     <div className="mt-3">
-                                        <CFormInput 
+                                        <CFormInput
                                             label="Department"
                                             value={formData.department || ''}
-                                            onChange={(e) => setFormData({...formData, department: e.target.value})}
+                                            onChange={(e) => setFormData({ ...formData, department: e.target.value })}
                                             placeholder="Your department or unit"
                                         />
                                     </div>
                                     <div className="mt-3">
-                                        <CFormInput 
+                                        <CFormInput
                                             label="Location"
                                             value={formData.location || ''}
-                                            onChange={(e) => setFormData({...formData, location: e.target.value})}
+                                            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                                             placeholder="Your city and country"
                                         />
                                     </div>
@@ -299,7 +299,7 @@ const Profile = () => {
                                             label="Bio"
                                             rows="3"
                                             value={formData.bio || ''}
-                                            onChange={(e) => setFormData({...formData, bio: e.target.value})}
+                                            onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                                             placeholder="Tell us about yourself..."
                                         />
                                     </div>
