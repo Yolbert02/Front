@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { useDispatch } from 'react-redux'
 import {
     CButton,
     CTable,
@@ -33,6 +34,7 @@ const Officers = () => {
     const [showInfo, setShowInfo] = useState(false)
     const [editing, setEditing] = useState(null)
     const [selectedOfficer, setSelectedOfficer] = useState(null)
+    const dispatch = useDispatch()
 
     const [currentPage, setCurrentPage] = useState(1)
     const [itemsPerPage] = useState(6)
@@ -97,15 +99,38 @@ const Officers = () => {
         try {
             if (editing && editing.id) {
                 await updateOfficer(editing.id, payload)
+                dispatch({
+                    type: 'set',
+                    appAlert: {
+                        visible: true,
+                        color: 'success',
+                        message: 'Officer updated successfully',
+                    },
+                })
             } else {
                 await createOfficer(payload)
+                dispatch({
+                    type: 'set',
+                    appAlert: {
+                        visible: true,
+                        color: 'success',
+                        message: 'Officer created successfully',
+                    },
+                })
             }
             setShowForm(false)
             setEditing(null)
             await fetchData()
         } catch (error) {
             console.error('Error saving officer:', error)
-            alert('Error saving officer: ' + error.message)
+            dispatch({
+                type: 'set',
+                appAlert: {
+                    visible: true,
+                    color: 'danger',
+                    message: 'Error saving officer: ' + error.message,
+                },
+            })
         }
     }
 
@@ -122,9 +147,24 @@ const Officers = () => {
             await deleteOfficer(id)
             await fetchData()
             console.log('Officer deleted successfully')
+            dispatch({
+                type: 'set',
+                appAlert: {
+                    visible: true,
+                    color: 'warning',
+                    message: 'Officer deleted successfully',
+                },
+            })
         } catch (error) {
             console.error('Error deleting officer:', error)
-            alert('Error deleting officer: ' + error.message)
+            dispatch({
+                type: 'set',
+                appAlert: {
+                    visible: true,
+                    color: 'danger',
+                    message: 'Error deleting officer: ' + error.message,
+                },
+            })
         }
     }
 

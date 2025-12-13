@@ -3,6 +3,13 @@ import { legacy_createStore as createStore } from 'redux'
 const initialState = {
   sidebarShow: true,
   theme: 'light',
+
+  appAlert: {
+    visible: false,
+    color: 'primary',
+    message: '',
+    type: 'toast'
+  }
 }
 
 const changeState = (state = initialState, { type, ...rest }) => {

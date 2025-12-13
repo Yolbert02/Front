@@ -8,8 +8,10 @@ import DocsComponents from './DocsComponents'
 import DocsIcons from './DocsIcons'
 import DocsLink from './DocsLink'
 import DocsExample from './DocsExample'
+import AppAlert from './AppAlert'
 
 export {
+  AppAlert,
   AppBreadcrumb,
   AppContent,
   AppFooter,

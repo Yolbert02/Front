@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { useDispatch } from 'react-redux'
 import {
     CButton,
     CTable,
@@ -32,6 +33,7 @@ const Complaints = () => {
     const [showInfo, setShowInfo] = useState(false)
     const [editing, setEditing] = useState(null)
     const [selectedComplaint, setSelectedComplaint] = useState(null)
+    const dispatch = useDispatch()
 
     const [currentPage, setCurrentPage] = useState(1)
     const [itemsPerPage, setItemsPerPage] = useState(6)
@@ -101,15 +103,38 @@ const Complaints = () => {
         try {
             if (editing && editing.id) {
                 await updateComplaint(editing.id, payload)
+                dispatch({
+                    type: 'set',
+                    appAlert: {
+                        visible: true,
+                        color: 'success',
+                        message: 'Complaint updated successfully',
+                    },
+                })
             } else {
                 await createComplaint(payload)
+                dispatch({
+                    type: 'set',
+                    appAlert: {
+                        visible: true,
+                        color: 'success',
+                        message: 'Complaint created successfully',
+                    },
+                })
             }
             setShowForm(false)
             setEditing(null)
             await fetchData()
         } catch (error) {
             console.error('Error saving complaint:', error)
-            alert('Error saving complaint: ' + error.message)
+            dispatch({
+                type: 'set',
+                appAlert: {
+                    visible: true,
+                    color: 'danger',
+                    message: 'Error saving complaint: ' + error.message,
+                },
+            })
         }
     }
 
@@ -126,9 +151,24 @@ const Complaints = () => {
             await deleteComplaint(id)
             await fetchData()
             console.log('Complaint deleted successfully')
+            dispatch({
+                type: 'set',
+                appAlert: {
+                    visible: true,
+                    color: 'warning',
+                    message: 'Complaint deleted successfully',
+                },
+            })
         } catch (error) {
             console.error('Error deleting complaint:', error)
-            alert('Error deleting complaint: ' + error.message)
+            dispatch({
+                type: 'set',
+                appAlert: {
+                    visible: true,
+                    color: 'danger',
+                    message: 'Error deleting complaint: ' + error.message,
+                },
+            })
         }
     }
 

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { useDispatch } from 'react-redux'
 import {
     CCard, CCardBody, CCardHeader, CContainer, CRow, CCol,
     CButton, CTable, CTableHead, CTableRow, CTableHeaderCell,
@@ -22,6 +23,7 @@ const Users = () => {
     const [showInfo, setShowInfo] = useState(false)
     const [editing, setEditing] = useState(null)
     const [selectedUser, setSelectedUser] = useState(null)
+    const dispatch = useDispatch()
 
     const [currentPage, setCurrentPage] = useState(1)
     const [itemsPerPage] = useState(8)
@@ -86,15 +88,38 @@ const Users = () => {
         try {
             if (editing && editing.id) {
                 await updateUser(editing.id, payload)
+                dispatch({
+                    type: 'set',
+                    appAlert: {
+                        visible: true,
+                        color: 'success',
+                        message: 'Usuario actualizado correctamente',
+                    },
+                })
             } else {
                 await createUser(payload)
+                dispatch({
+                    type: 'set',
+                    appAlert: {
+                        visible: true,
+                        color: 'success',
+                        message: 'Usuario creado exitosamente',
+                    },
+                })
             }
             setShowForm(false)
             setEditing(null)
             await fetchData()
         } catch (error) {
             console.error('Error saving user:', error)
-            alert('Error saving user: ' + error.message)
+            dispatch({
+                type: 'set',
+                appAlert: {
+                    visible: true,
+                    color: 'danger',
+                    message: 'Error al guardar usuario: ' + error.message,
+                },
+            })
         }
     }
 
@@ -111,9 +136,24 @@ const Users = () => {
             await deleteUser(id)
             await fetchData()
             console.log('User deleted successfully')
+            dispatch({
+                type: 'set',
+                appAlert: {
+                    visible: true,
+                    color: 'warning',
+                    message: 'Usuario eliminado del sistema',
+                },
+            })
         } catch (error) {
             console.error('Error deleting user:', error)
-            alert('Error deleting user: ' + error.message)
+            dispatch({
+                type: 'set',
+                appAlert: {
+                    visible: true,
+                    color: 'danger',
+                    message: 'Error al eliminar usuario: ' + error.message,
+                },
+            })
         }
     }
 

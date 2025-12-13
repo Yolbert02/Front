@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { useDispatch } from 'react-redux'
 import {
     CCard, CCardBody, CCardHeader, CContainer, CRow, CCol,
     CButton, CBadge, CSpinner,
@@ -30,6 +31,7 @@ const Notifications = () => {
     const [showInfo, setShowInfo] = useState(false)
     const [editing, setEditing] = useState(null)
     const [selectedNotification, setSelectedNotification] = useState(null)
+    const dispatch = useDispatch()
 
     const [currentPage, setCurrentPage] = useState(1)
     const [itemsPerPage, setItemsPerPage] = useState(6)
@@ -109,15 +111,38 @@ const Notifications = () => {
         try {
             if (editing?.id) {
                 await updateNotification(editing.id, payload)
+                dispatch({
+                    type: 'set',
+                    appAlert: {
+                        visible: true,
+                        color: 'success',
+                        message: 'Notification updated successfully',
+                    },
+                })
             } else {
                 await createNotification(payload)
+                dispatch({
+                    type: 'set',
+                    appAlert: {
+                        visible: true,
+                        color: 'success',
+                        message: 'Notification created successfully',
+                    },
+                })
             }
             setShowForm(false)
             setEditing(null)
             await fetchData()
         } catch (error) {
             console.error('Error saving notification:', error)
-            alert('Error saving notification: ' + error.message)
+            dispatch({
+                type: 'set',
+                appAlert: {
+                    visible: true,
+                    color: 'danger',
+                    message: 'Error saving notification: ' + error.message,
+                },
+            })
         }
     }
 
@@ -134,9 +159,24 @@ const Notifications = () => {
             await deleteNotification(id)
             await fetchData()
             console.log('Notification deleted successfully')
+            dispatch({
+                type: 'set',
+                appAlert: {
+                    visible: true,
+                    color: 'warning',
+                    message: 'Notification deleted successfully',
+                },
+            })
         } catch (error) {
             console.error('Error deleting notification:', error)
-            alert('Error deleting notification: ' + error.message)
+            dispatch({
+                type: 'set',
+                appAlert: {
+                    visible: true,
+                    color: 'danger',
+                    message: 'Error deleting notification: ' + error.message,
+                },
+            })
         }
     }
 
