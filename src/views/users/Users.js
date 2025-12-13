@@ -3,9 +3,9 @@ import {
     CCard, CCardBody, CCardHeader, CContainer, CRow, CCol,
     CButton, CTable, CTableHead, CTableRow, CTableHeaderCell,
     CTableBody, CTableDataCell, CBadge, CSpinner, CDropdown,
-    CDropdownToggle, CDropdownMenu, CDropdownItem, CFormInput,
-    CInputGroup, CInputGroupText
+    CDropdownToggle, CDropdownMenu, CDropdownItem
 } from '@coreui/react'
+import SearchInput from 'src/components/SearchInput'
 import CIcon from '@coreui/icons-react'
 import { cilPlus, cilPencil, cilTrash, cilUser, cilShieldAlt, cilPeople, cilBan, cilInfo, cilSearch, cilCheckCircle } from '@coreui/icons'
 import UserForm from './UserForm'
@@ -253,20 +253,13 @@ const Users = () => {
                                         </div>
 
                                         <div style={{ maxWidth: '350px', width: '100%' }}>
-                                            <CInputGroup>
-                                                <CInputGroupText className="border-end-0 text-muted">
-                                                    <CIcon icon={cilSearch} />
-                                                </CInputGroupText>
-                                                <CFormInput
-                                                    className="border-start-0 ps-0"
-                                                    placeholder="Search"
-                                                    value={searchTerm}
-                                                    onChange={(e) => {
-                                                        setSearchTerm(e.target.value)
-                                                        setCurrentPage(1)
-                                                    }}
-                                                />
-                                            </CInputGroup>
+                                            <SearchInput
+                                                value={searchTerm}
+                                                onChange={(e) => {
+                                                    setSearchTerm(e.target.value)
+                                                    setCurrentPage(1)
+                                                }}
+                                            />
                                         </div>
                                     </div>
 

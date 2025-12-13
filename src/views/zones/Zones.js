@@ -8,7 +8,7 @@ import {
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilMap } from '@coreui/icons'
-import { MapContainer, TileLayer, Polygon, Tooltip, Marker, Popup } from 'react-leaflet'
+import { MapContainer, TileLayer, Polygon, Tooltip, Marker, Popup, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
@@ -26,12 +26,24 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 })
 
+const MapUpdater = ({ center, zoom }) => {
+  const map = useMap()
+  useEffect(() => {
+    if (center) {
+      map.flyTo(center, zoom)
+    }
+  }, [center, zoom, map])
+  return null
+}
+
 const Zones = () => {
   const position = [7.7669, -72.225]
   const [complaints, setComplaints] = useState([])
   const [selectedZone, setSelectedZone] = useState(null)
   const [showInfo, setShowInfo] = useState(false)
   const [zones, setZones] = useState([])
+  const [mapCenter, setMapCenter] = useState(null)
+  const [mapZoom, setMapZoom] = useState(12)
 
   useEffect(() => {
     fetchComplaints()
@@ -61,6 +73,13 @@ const Zones = () => {
     setShowInfo(true)
   }
 
+  const handleLocateComplaint = (complaint) => {
+    if (complaint.lat && complaint.lng) {
+      setMapCenter([complaint.lat, complaint.lng])
+      setMapZoom(16)
+    }
+  }
+
   return (
     <CRow>
       <CCol xs={12} md={8}>
@@ -83,6 +102,7 @@ const Zones = () => {
           <CCardBody className="px-4 pb-4">
             <div className="border rounded-3 overflow-hidden shadow-sm">
               <MapContainer center={position} zoom={12} style={{ height: '550px', width: '100%' }}>
+                <MapUpdater center={mapCenter} zoom={mapZoom} />
                 <TileLayer
                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -139,7 +159,7 @@ const Zones = () => {
         </CCard>
       </CCol>
       <CCol xs={12} md={4}>
-        <ZoneSiderbar />
+        <ZoneSiderbar onLocate={handleLocateComplaint} />
       </CCol>
       <InfoZone
         visible={showInfo}
@@ -150,5 +170,6 @@ const Zones = () => {
     </CRow>
   )
 }
+
 
 export default Zones

@@ -14,11 +14,9 @@ import {
     CContainer,
     CRow,
     CCol,
-    CSpinner,
-    CInputGroup,
-    CInputGroupText,
-    CFormInput
+    CSpinner
 } from '@coreui/react'
+import SearchInput from 'src/components/SearchInput'
 import CIcon from '@coreui/icons-react'
 import { cilPlus, cilPencil, cilTrash, cilInfo, cilFolderOpen, cilMap, cilUser, cilSearch, cilWarning, cilCheckCircle, cilBan, cilFile } from '@coreui/icons'
 import ComplaintForm from './ComplaintForm'
@@ -194,7 +192,6 @@ const Complaints = () => {
             <CRow>
                 <CCol>
                     <CCard className="shadow-sm border-0 mb-4" style={{ borderRadius: '12px', overflow: 'hidden' }}>
-                        {/* Premium Gradient Header */}
                         <div style={{ height: '5px', background: 'linear-gradient(90deg, #1a237e 0%, #0d47a1 100%)' }}></div>
 
 
@@ -242,17 +239,10 @@ const Complaints = () => {
                                         </div>
 
                                         <div style={{ maxWidth: '400px', width: '100%' }}>
-                                            <CInputGroup>
-                                                <CInputGroupText className="border-end-0 text-muted">
-                                                    <CIcon icon={cilSearch} />
-                                                </CInputGroupText>
-                                                <CFormInput
-                                                    className="border-start-0 ps-0"
-                                                    placeholder="Search"
-                                                    value={searchTerm}
-                                                    onChange={(e) => handleSearch(e.target.value)}
-                                                />
-                                            </CInputGroup>
+                                            <SearchInput
+                                                value={searchTerm}
+                                                onChange={(e) => handleSearch(e.target.value)}
+                                            />
                                         </div>
                                     </div>
 

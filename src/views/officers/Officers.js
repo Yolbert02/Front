@@ -14,11 +14,9 @@ import {
     CContainer,
     CRow,
     CCol,
-    CSpinner,
-    CInputGroup,
-    CInputGroupText,
-    CFormInput
+    CSpinner
 } from '@coreui/react'
+import SearchInput from 'src/components/SearchInput'
 import CIcon from '@coreui/icons-react'
 import { cilPlus, cilPencil, cilTrash, cilInfo, cilShieldAlt, cilSearch, cilCheckCircle, cilBan, cilWarning } from '@coreui/icons'
 import OfficerForm from './OfficerForm'
@@ -217,20 +215,13 @@ const Officers = () => {
                                         </div>
 
                                         <div style={{ maxWidth: '350px', width: '100%' }}>
-                                            <CInputGroup>
-                                                <CInputGroupText className="border-end-0 text-muted">
-                                                    <CIcon icon={cilSearch} />
-                                                </CInputGroupText>
-                                                <CFormInput
-                                                    className="border-start-0 ps-0"
-                                                    placeholder="Search"
-                                                    value={searchTerm}
-                                                    onChange={(e) => {
-                                                        setSearchTerm(e.target.value)
-                                                        setCurrentPage(1)
-                                                    }}
-                                                />
-                                            </CInputGroup>
+                                            <SearchInput
+                                                value={searchTerm}
+                                                onChange={(e) => {
+                                                    setSearchTerm(e.target.value)
+                                                    setCurrentPage(1)
+                                                }}
+                                            />
                                         </div>
                                     </div>
 

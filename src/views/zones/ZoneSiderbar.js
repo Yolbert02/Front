@@ -19,7 +19,7 @@ import { listComplaints } from 'src/services/complaints'
 import './ZoneSiderbar.css'
 import InfoComplaint from '../complaints/InfoComplaint'
 
-const ZoneSiderbar = () => {
+const ZoneSiderbar = ({ onLocate }) => {
     const [complaints, setComplaints] = useState([])
     const [loading, setLoading] = useState(true)
     const [selectedComplaint, setSelectedComplaint] = useState(null)
@@ -130,6 +130,7 @@ const ZoneSiderbar = () => {
                                                                 className="text-success shadow-sm"
                                                                 title="View Location"
                                                                 shape="rounded-pill"
+                                                                onClick={() => onLocate && onLocate(complaint)}
                                                             >
                                                                 <CIcon icon={cilLocationPin} />
                                                             </CButton>

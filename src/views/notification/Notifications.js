@@ -2,11 +2,12 @@ import React, { useEffect, useState } from 'react'
 import {
     CCard, CCardBody, CCardHeader, CContainer, CRow, CCol,
     CButton, CBadge, CSpinner,
-    CFormInput, CInputGroup, CInputGroupText, CCardTitle, CCardText,
+    CCardTitle, CCardText,
     CCardFooter, CTooltip,
     CTable, CTableHead, CTableRow, CTableHeaderCell,
     CTableBody, CTableDataCell
 } from '@coreui/react'
+import SearchInput from 'src/components/SearchInput'
 import CIcon from '@coreui/icons-react'
 import {
     cilPlus, cilPencil, cilTrash, cilCalendar, cilUser,
@@ -450,17 +451,10 @@ const Notifications = () => {
                                         </div>
 
                                         <div style={{ maxWidth: '400px', width: '100%' }}>
-                                            <CInputGroup>
-                                                <CInputGroupText className="border-end-0 text-muted">
-                                                    <CIcon icon={cilSearch} />
-                                                </CInputGroupText>
-                                                <CFormInput
-                                                    className="border-start-0 ps-0"
-                                                    placeholder="Search"
-                                                    value={searchTerm}
-                                                    onChange={(e) => handleSearch(e.target.value)}
-                                                />
-                                            </CInputGroup>
+                                            <SearchInput
+                                                value={searchTerm}
+                                                onChange={(e) => handleSearch(e.target.value)}
+                                            />
                                         </div>
                                     </div>
 

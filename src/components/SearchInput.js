@@ -1,62 +1,45 @@
-import React, { useState } from 'react'
-import { CFormInput, CButton, CInputGroup } from '@coreui/react'
+import React from 'react'
+import { CFormInput, CInputGroup, CInputGroupText, CButton } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilSearch, cilX } from '@coreui/icons'
 
-const SearchInput = ({ 
-    placeholder = "Search...", 
-    onSearch,
-    size = "md",
+const SearchInput = ({
+    value,
+    onChange,
+    placeholder = "Search",
     className = ""
 }) => {
-    const [searchTerm, setSearchTerm] = useState('')
-
-    const handleSearch = () => {
-        if (onSearch) {
-            onSearch(searchTerm.trim())
-        }
-    }
 
     const handleClear = () => {
-        setSearchTerm('')
-        if (onSearch) {
-            onSearch('')
-        }
-    }
-
-    const handleKeyPress = (e) => {
-        if (e.key === 'Enter') {
-            handleSearch()
+        if (onChange) {
+            onChange({ target: { value: '' } })
         }
     }
 
     return (
         <CInputGroup className={className}>
+            <CInputGroupText className="border-end-0 text-muted bg-white dark:bg-dark-subtle">
+                <CIcon icon={cilSearch} />
+            </CInputGroupText>
             <CFormInput
-                type="text"
-                size={size}
+                className="border-start-0 ps-0 border-end-0"
                 placeholder={placeholder}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyPress={handleKeyPress}
+                value={value}
+                onChange={onChange}
             />
-            {searchTerm && (
-                <CButton 
-                    color="secondary" 
-                    variant="outline"
-                    onClick={handleClear}
-                    title="Clear search"
-            >
-            <CIcon icon={cilX} />
-                </CButton>
+            {value && (
+                <CInputGroupText className="border-start-0 bg-white dark:bg-dark-subtle p-0">
+                    <CButton
+                        color="secondary"
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleClear}
+                        className="py-1 px-2 text-muted"
+                    >
+                        <CIcon icon={cilX} />
+                    </CButton>
+                </CInputGroupText>
             )}
-        <CButton 
-            color="primary" 
-            onClick={handleSearch}
-            title="Search"
-        >
-        <CIcon icon={cilSearch} />
-            </CButton>
         </CInputGroup>
     )
 }
