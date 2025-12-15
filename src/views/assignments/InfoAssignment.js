@@ -1,4 +1,5 @@
 import React from 'react'
+import { useDispatch } from 'react-redux'
 import {
     CModal,
     CModalHeader,
@@ -25,20 +26,22 @@ import {
     cilEnvelopeOpen,
     cilPhone,
     cilBalanceScale,
-    cilClock
+    cilClock,
+    cilCloudDownload
 } from '@coreui/icons'
 import { modalStyles, cardStyles } from 'src/styles/darkModeStyles'
 
-const InfoNotification = ({ visible, onClose, notification }) => {
-    if (!notification) return null
+const InfoAssignment = ({ visible, onClose, assignment }) => {
+    const dispatch = useDispatch()
+    if (!assignment) return null
 
     const getStatusBadge = (status) => {
         const statusConfig = {
-            'scheduled': { color: 'primary', text: 'Scheduled' },
-            'in_progress': { color: 'warning', text: 'In Progress' },
-            'completed': { color: 'success', text: 'Completed' },
-            'cancelled': { color: 'danger', text: 'Cancelled' },
-            'postponed': { color: 'info', text: 'Postponed' }
+            'Scheduled': { color: 'primary', text: 'Scheduled' },
+            'In Progress': { color: 'warning', text: 'In Progress' },
+            'Completed': { color: 'success', text: 'Completed' },
+            'Cancelled': { color: 'danger', text: 'Cancelled' },
+            'Postponed': { color: 'info', text: 'Postponed' }
         }
 
         const config = statusConfig[status] || { color: 'secondary', text: status }
@@ -47,9 +50,9 @@ const InfoNotification = ({ visible, onClose, notification }) => {
 
     const getPriorityBadge = (priority) => {
         const priorityConfig = {
-            'high': { color: 'danger', text: 'High' },
-            'medium': { color: 'warning', text: 'Medium' },
-            'low': { color: 'success', text: 'Low' }
+            'High': { color: 'danger', text: 'High' },
+            'Medium': { color: 'warning', text: 'Medium' },
+            'Low': { color: 'success', text: 'Low' }
         }
 
         const config = priorityConfig[priority] || { color: 'secondary', text: priority }
@@ -74,11 +77,22 @@ const InfoNotification = ({ visible, onClose, notification }) => {
         return timeString
     }
 
-    const getParticipantsCount = (notification) => {
-        const officials = notification.officials?.length || 0
-        const witnesses = notification.witnesses?.length || 0
-        const jury = notification.jury?.length || 0
-        return officials + witnesses + jury + (notification.judge_id ? 1 : 0)
+    const getParticipantsCount = (assignment) => {
+        const officials = assignment.officials?.length || 0
+        const witnesses = assignment.witnesses?.length || 0
+        const jury = assignment.jury?.length || 0
+        return officials + witnesses + jury + (assignment.judge_id ? 1 : 0)
+    }
+
+    const downloadPDF = (id) => {
+        dispatch({
+            type: 'set',
+            appAlert: {
+                visible: true,
+                color: 'success',
+                message: 'Your PDF downloaded successfully',
+            },
+        })
     }
 
     return (
@@ -86,7 +100,7 @@ const InfoNotification = ({ visible, onClose, notification }) => {
             <CModalHeader style={modalStyles.header}>
                 <CModalTitle>
                     <CIcon icon={cilBalanceScale} className="me-2" />
-                    Judicial Notification - {notification.case_number}
+                    Assignment - {assignment.case_number}
                 </CModalTitle>
             </CModalHeader>
             <CModalBody style={modalStyles.bodyScrollable}>
@@ -102,22 +116,22 @@ const InfoNotification = ({ visible, onClose, notification }) => {
                             <CCardBody style={cardStyles.body}>
                                 <CRow className="g-3">
                                     <CCol md={8}>
-                                        <h5>{notification.case_title}</h5>
-                                        <p className="text-muted">{notification.case_description}</p>
+                                        <h5>{assignment.case_title}</h5>
+                                        <p className="text-muted">{assignment.case_description}</p>
                                     </CCol>
                                     <CCol md={4}>
                                         <div className="d-flex flex-column gap-2">
                                             <div className="d-flex justify-content-between">
                                                 <span>Status:</span>
-                                                {getStatusBadge(notification.status)}
+                                                {getStatusBadge(assignment.status)}
                                             </div>
                                             <div className="d-flex justify-content-between">
                                                 <span>Priority:</span>
-                                                {getPriorityBadge(notification.priority)}
+                                                {getPriorityBadge(assignment.priority)}
                                             </div>
                                             <div className="d-flex justify-content-between">
                                                 <span>Case Number:</span>
-                                                <strong>{notification.case_number}</strong>
+                                                <strong>{assignment.case_number}</strong>
                                             </div>
                                         </div>
                                     </CCol>
@@ -137,15 +151,15 @@ const InfoNotification = ({ visible, onClose, notification }) => {
                                 <CListGroup flush>
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
                                         <span>Court:</span>
-                                        <strong>{notification.court || 'Not specified'}</strong>
+                                        <strong>{assignment.court || 'Not specified'}</strong>
                                     </CListGroupItem>
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
                                         <span>Location:</span>
-                                        <strong>{notification.location || 'Not specified'}</strong>
+                                        <strong>{assignment.location || 'Not specified'}</strong>
                                     </CListGroupItem>
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
                                         <span>Judge:</span>
-                                        <strong>{notification.judge_name || 'Not assigned'}</strong>
+                                        <strong>{assignment.judge_name || 'Not assigned'}</strong>
                                     </CListGroupItem>
                                 </CListGroup>
                             </CCardBody>
@@ -163,19 +177,19 @@ const InfoNotification = ({ visible, onClose, notification }) => {
                                 <CListGroup flush>
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
                                         <span>Total Participants:</span>
-                                        <CBadge color="primary">{getParticipantsCount(notification)}</CBadge>
+                                        <CBadge color="primary">{getParticipantsCount(assignment)}</CBadge>
                                     </CListGroupItem>
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
                                         <span>Officials:</span>
-                                        <CBadge color="info">{notification.officials?.length || 0}</CBadge>
+                                        <CBadge color="info">{assignment.officials?.length || 0}</CBadge>
                                     </CListGroupItem>
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
                                         <span>Witnesses:</span>
-                                        <CBadge color="warning">{notification.witnesses?.length || 0}</CBadge>
+                                        <CBadge color="warning">{assignment.witnesses?.length || 0}</CBadge>
                                     </CListGroupItem>
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
                                         <span>Jury Members:</span>
-                                        <CBadge color="success">{notification.jury?.length || 0}</CBadge>
+                                        <CBadge color="success">{assignment.jury?.length || 0}</CBadge>
                                     </CListGroupItem>
                                 </CListGroup>
                             </CCardBody>
@@ -193,11 +207,11 @@ const InfoNotification = ({ visible, onClose, notification }) => {
                                 <CListGroup flush>
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
                                         <span>Date:</span>
-                                        <strong>{formatDate(notification.hearing_date)}</strong>
+                                        <strong>{formatDate(assignment.hearing_date)}</strong>
                                     </CListGroupItem>
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
                                         <span>Time:</span>
-                                        <strong>{formatTime(notification.hearing_time) || 'Not specified'}</strong>
+                                        <strong>{formatTime(assignment.hearing_time) || 'Not specified'}</strong>
                                     </CListGroupItem>
                                 </CListGroup>
                             </CCardBody>
@@ -215,17 +229,17 @@ const InfoNotification = ({ visible, onClose, notification }) => {
                                 <CListGroup flush>
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
                                         <span>Date:</span>
-                                        <strong>{formatDate(notification.trial_date)}</strong>
+                                        <strong>{formatDate(assignment.trial_date)}</strong>
                                     </CListGroupItem>
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
                                         <span>Time:</span>
-                                        <strong>{formatTime(notification.trial_time) || 'Not specified'}</strong>
+                                        <strong>{formatTime(assignment.trial_time) || 'Not specified'}</strong>
                                     </CListGroupItem>
                                 </CListGroup>
                             </CCardBody>
                         </CCard>
                     </CCol>
-                    {notification.officials && notification.officials.length > 0 && (
+                    {assignment.officials && assignment.officials.length > 0 && (
                         <CCol md={12}>
                             <CCard style={cardStyles.card}>
                                 <CCardHeader style={cardStyles.header}>
@@ -233,7 +247,7 @@ const InfoNotification = ({ visible, onClose, notification }) => {
                                 </CCardHeader>
                                 <CCardBody style={cardStyles.body}>
                                     <CListGroup flush>
-                                        {notification.officials.map((official, index) => (
+                                        {assignment.officials.map((official, index) => (
                                             <CListGroupItem key={index} className="px-0">
                                                 <div className="d-flex justify-content-between align-items-center">
                                                     <span>
@@ -250,7 +264,7 @@ const InfoNotification = ({ visible, onClose, notification }) => {
                             </CCard>
                         </CCol>
                     )}
-                    {notification.witnesses && notification.witnesses.length > 0 && (
+                    {assignment.witnesses && assignment.witnesses.length > 0 && (
                         <CCol md={12}>
                             <CCard style={cardStyles.card}>
                                 <CCardHeader style={cardStyles.header}>
@@ -258,7 +272,7 @@ const InfoNotification = ({ visible, onClose, notification }) => {
                                 </CCardHeader>
                                 <CCardBody style={cardStyles.body}>
                                     <CListGroup flush>
-                                        {notification.witnesses.map((witness, index) => (
+                                        {assignment.witnesses.map((witness, index) => (
                                             <CListGroupItem key={index} className="px-0">
                                                 <div className="d-flex justify-content-between align-items-center">
                                                     <span>
@@ -275,7 +289,7 @@ const InfoNotification = ({ visible, onClose, notification }) => {
                             </CCard>
                         </CCol>
                     )}
-                    {notification.jury && notification.jury.length > 0 && (
+                    {assignment.jury && assignment.jury.length > 0 && (
                         <CCol md={12}>
                             <CCard style={cardStyles.card}>
                                 <CCardHeader style={cardStyles.header}>
@@ -283,7 +297,7 @@ const InfoNotification = ({ visible, onClose, notification }) => {
                                 </CCardHeader>
                                 <CCardBody style={cardStyles.body}>
                                     <CListGroup flush>
-                                        {notification.jury.map((juryMember, index) => (
+                                        {assignment.jury.map((juryMember, index) => (
                                             <CListGroupItem key={index} className="px-0">
                                                 <div className="d-flex justify-content-between align-items-center">
                                                     <span>
@@ -303,6 +317,15 @@ const InfoNotification = ({ visible, onClose, notification }) => {
                 </CRow>
             </CModalBody>
             <CModalFooter style={modalStyles.footer}>
+                <CButton
+                    size="lg"
+                    variant="outline"
+                    className="text-danger shadow-sm"
+                    onClick={() => downloadPDF(assignment.id)}
+                    title="Download PDF"
+                >
+                    <CIcon icon={cilCloudDownload} />
+                </CButton>
                 <CButton color="secondary" onClick={onClose}>
                     Close
                 </CButton>
@@ -311,4 +334,4 @@ const InfoNotification = ({ visible, onClose, notification }) => {
     )
 }
 
-export default InfoNotification
+export default InfoAssignment

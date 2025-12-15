@@ -35,6 +35,7 @@ const InfoUser = ({ visible, onClose, user }) => {
         const roleConfig = {
             'administrador': { color: 'danger', text: 'Administrator', icon: cilShieldAlt },
             'funcionario': { color: 'info', text: 'Funcionary', icon: cilPeople },
+            'officer': { color: 'primary', text: 'Officer', icon: cilShieldAlt },
             'civil': { color: 'success', text: 'Civil', icon: cilUser }
         }
 
@@ -49,9 +50,9 @@ const InfoUser = ({ visible, onClose, user }) => {
 
     const getStatusBadge = (status) => {
         const statusConfig = {
-            'activo': { color: 'success', text: 'Active' },
-            'suspendido': { color: 'warning', text: 'Suspended' },
-            'eliminado': { color: 'danger', text: 'Deleted' }
+            'Active': { color: 'success', text: 'Active' },
+            'Suspended': { color: 'warning', text: 'Suspended' },
+            'Inactive': { color: 'secondary', text: 'Inactive' }
         }
 
         const config = statusConfig[status] || { color: 'secondary', text: status }

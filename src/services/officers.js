@@ -1,4 +1,5 @@
 const KEY = 'mock_officers_v1'
+import { getUser, listUsers, updateUser } from './users' // Import user services for sync
 
 const initialOfficers = [
     {
@@ -22,7 +23,7 @@ const initialOfficers = [
         email: 'ana.martinez@mp.gov',
         phone: '0424-4445566',
         rank: 'Sergeant',
-        status: 'Active', 
+        status: 'Active',
         active: true
     },
     {
@@ -33,7 +34,7 @@ const initialOfficers = [
         unit: 'PATRI - Antiextorsión',
         email: 'luis.gonzalez@polincia.gov',
         phone: '0412-7788990',
-        rank: 'Officer', 
+        rank: 'Officer',
         status: 'Training',
         active: false
     }
@@ -48,21 +49,21 @@ function load() {
         }
         const parsed = JSON.parse(raw)
         return parsed && parsed.length > 0 ? parsed : initialOfficers
-    } catch (e) { 
+    } catch (e) {
         console.error('Error loading officers, using initial data:', e)
-        return initialOfficers 
+        return initialOfficers
     }
 }
 
-function save(items) { 
-    try { 
-        localStorage.setItem(KEY, JSON.stringify(items)) 
-    } catch(e){ 
-        console.warn('Error saving officers:', e) 
-    } 
+function save(items) {
+    try {
+        localStorage.setItem(KEY, JSON.stringify(items))
+    } catch (e) {
+        console.warn('Error saving officers:', e)
+    }
 }
 
-function nextId(items){ 
+function nextId(items) {
     const maxId = items.reduce((max, item) => Math.max(max, item.id || 0), 0)
     return maxId + 1
 }
@@ -78,6 +79,18 @@ export async function getOfficer(id) {
     return Promise.resolve(items.find(o => o.id === id) || null)
 }
 
+export async function getOfficerByDocument(doc) {
+    const items = load()
+    return Promise.resolve(items.find(o => o.idNumber === doc) || null)
+}
+
+export async function deleteOfficerByDocument(doc) {
+    const items = load()
+    const filtered = items.filter(o => o.idNumber !== doc)
+    save(filtered)
+    return Promise.resolve({ success: true })
+}
+
 export async function createOfficer(payload) {
     const items = load()
     const id = nextId(items)
@@ -89,7 +102,7 @@ export async function createOfficer(payload) {
         unit: payload.unit || '',
         email: payload.email || '',
         phone: payload.phone || '',
-        rank: payload.rank || '', 
+        rank: payload.rank || '',
         status: payload.status || 'Active',
         active: payload.status === 'Active'
     }
@@ -102,14 +115,53 @@ export async function updateOfficer(id, payload) {
     const items = load()
     const idx = items.findIndex(o => o.id === id)
     if (idx === -1) return Promise.reject(new Error('Officer not found'))
-    
+
     items[idx] = {
         ...items[idx],
         ...payload,
         active: payload.status === 'Active'
     }
     save(items)
+
+    // Sync status back to user if linked
+    if (payload.status) {
+        try {
+            // We need to find the user. We can use listUsers and find by document
+            // Avoiding circular dependency issues at runtime might be tricky, but let's try direct import
+            const allUsers = await listUsers()
+            const linkedUser = allUsers.find(u => u.document === items[idx].idNumber)
+            if (linkedUser) {
+                const newStatus = payload.status === 'Active' ? 'activo' : 'suspendido' // Map status
+                // Only update if different
+                if (linkedUser.status !== newStatus) {
+                    // We can't call updateUser from here easily if it imports THIS file.
+                    // Circular dependency risk.
+                    // Best way currently: Manually update user in localStorage to avoid loop or use a lower-level helper.
+                    // For now, I'll implement a 'updateUserStatusByDocument' helper in users.js roughly or just update users localstorage here?
+                    // Accessing localStorage directly for users key is safest to break cycles.
+                    const userKey = 'mock_users_v1'
+                    const rawUsers = localStorage.getItem(userKey)
+                    if (rawUsers) {
+                        const users = JSON.parse(rawUsers)
+                        const uIdx = users.findIndex(u => u.document === items[idx].idNumber)
+                        if (uIdx !== -1) {
+                            users[uIdx].status = newStatus
+                            users[uIdx].updatedAt = new Date().toISOString()
+                            localStorage.setItem(userKey, JSON.stringify(users))
+                        }
+                    }
+                }
+            }
+        } catch (e) {
+            console.error('Error syncing officer status to user:', e)
+        }
+    }
+
     return Promise.resolve(items[idx])
+}
+
+export async function changeOfficerStatus(id, newStatus) {
+    return updateOfficer(id, { status: newStatus })
 }
 
 export async function deleteOfficer(id) {

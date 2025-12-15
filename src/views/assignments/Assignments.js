@@ -6,7 +6,8 @@ import {
     CCardTitle, CCardText,
     CCardFooter, CTooltip,
     CTable, CTableHead, CTableRow, CTableHeaderCell,
-    CTableBody, CTableDataCell
+    CTableBody, CTableDataCell,
+    CDropdown, CDropdownToggle, CDropdownMenu, CDropdownItem
 } from '@coreui/react'
 import SearchInput from 'src/components/SearchInput'
 import CIcon from '@coreui/icons-react'
@@ -15,22 +16,24 @@ import {
     cilBalanceScale, cilInfo, cilSearch, cilCheckCircle, cilBan,
     cilClock, cilWarning, cilPeople, cilListRich, cilApps
 } from '@coreui/icons'
-import NotificationForm from './NotificationForm'
-import InfoNotification from './InfoNotification'
+import AssignmentForm from './AssignmentForm'
+import InfoAssignment from './InfoAssignment'
 import {
-    listNotifications, deleteNotification,
-    updateNotification, createNotification
-} from 'src/services/notifications'
+    listAssignments, deleteAssignment,
+    updateAssignment, createAssignment, changeAssignmentStatus
+} from 'src/services/assignments'
+
+import { colorbutton } from 'src/styles/darkModeStyles'
 import ConfirmationModal from 'src/components/ConfirmationModal'
 import Pagination from 'src/components/Pagination'
 
-const Notifications = () => {
+const Assignments = () => {
     const [data, setData] = useState([])
     const [loading, setLoading] = useState(true)
     const [showForm, setShowForm] = useState(false)
     const [showInfo, setShowInfo] = useState(false)
     const [editing, setEditing] = useState(null)
-    const [selectedNotification, setSelectedNotification] = useState(null)
+    const [selectedAssignment, setSelectedAssignment] = useState(null)
     const dispatch = useDispatch()
 
     const [currentPage, setCurrentPage] = useState(1)
@@ -40,22 +43,22 @@ const Notifications = () => {
 
     const [deleteModal, setDeleteModal] = useState({
         visible: false,
-        notificationId: null,
-        notificationTitle: ''
+        assignmentId: null,
+        assignmentTitle: ''
     })
 
     const statusConfig = {
-        'scheduled': { color: 'primary', text: 'Scheduled', icon: cilCalendar },
-        'in_progress': { color: 'warning', text: 'In Progress', icon: cilClock },
-        'completed': { color: 'success', text: 'Completed', icon: cilCheckCircle },
-        'cancelled': { color: 'danger', text: 'Cancelled', icon: cilBan },
-        'postponed': { color: 'info', text: 'Postponed', icon: cilClock }
+        'Scheduled': { color: 'primary', text: 'Scheduled', icon: cilCalendar },
+        'In Progress': { color: 'warning', text: 'In Progress', icon: cilClock },
+        'Completed': { color: 'success', text: 'Completed', icon: cilCheckCircle },
+        'Cancelled': { color: 'danger', text: 'Cancelled', icon: cilBan },
+        'Postponed': { color: 'info', text: 'Postponed', icon: cilClock }
     }
 
     const priorityConfig = {
-        'high': { color: 'danger', text: 'High' },
-        'medium': { color: 'warning', text: 'Medium' },
-        'low': { color: 'success', text: 'Low' }
+        'High': { color: 'danger', text: 'High' },
+        'Medium': { color: 'warning', text: 'Medium' },
+        'Low': { color: 'success', text: 'Low' }
     }
 
     useEffect(() => {
@@ -65,10 +68,10 @@ const Notifications = () => {
     const fetchData = async () => {
         setLoading(true)
         try {
-            const res = await listNotifications()
+            const res = await listAssignments()
             setData(res || [])
         } catch (error) {
-            console.error('Error fetching notifications:', error)
+            console.error('Error fetching assignments:', error)
             setData([])
         } finally {
             setLoading(false)
@@ -80,28 +83,28 @@ const Notifications = () => {
         setCurrentPage(1)
     }
 
-    const filteredNotifications = data.filter(notification => {
+    const filteredAssignments = data.filter(assignment => {
         if (!searchTerm) return true
 
         const searchLower = searchTerm.toLowerCase()
         return (
-            notification.case_number?.toLowerCase().includes(searchLower) ||
-            notification.judge_name?.toLowerCase().includes(searchLower) ||
-            notification.case_title?.toLowerCase().includes(searchLower)
+            assignment.case_number?.toLowerCase().includes(searchLower) ||
+            assignment.judge_name?.toLowerCase().includes(searchLower) ||
+            assignment.case_title?.toLowerCase().includes(searchLower)
         )
     })
 
     const getCurrentPageData = () => {
-        if (!Array.isArray(filteredNotifications) || filteredNotifications.length === 0) return []
+        if (!Array.isArray(filteredAssignments) || filteredAssignments.length === 0) return []
 
         const startIndex = (currentPage - 1) * itemsPerPage
         const endIndex = startIndex + itemsPerPage
 
-        return filteredNotifications.slice(startIndex, endIndex)
+        return filteredAssignments.slice(startIndex, endIndex)
     }
 
     const currentPageData = getCurrentPageData()
-    const totalPages = Math.ceil(filteredNotifications.length / itemsPerPage)
+    const totalPages = Math.ceil(filteredAssignments.length / itemsPerPage)
 
     const handlePageChange = (page) => {
         setCurrentPage(page)
@@ -110,23 +113,23 @@ const Notifications = () => {
     const handleSave = async (payload) => {
         try {
             if (editing?.id) {
-                await updateNotification(editing.id, payload)
+                await updateAssignment(editing.id, payload)
                 dispatch({
                     type: 'set',
                     appAlert: {
                         visible: true,
                         color: 'success',
-                        message: 'Notification updated successfully',
+                        message: 'Assignment updated successfully',
                     },
                 })
             } else {
-                await createNotification(payload)
+                await createAssignment(payload)
                 dispatch({
                     type: 'set',
                     appAlert: {
                         visible: true,
                         color: 'success',
-                        message: 'Notification created successfully',
+                        message: 'Assignment created successfully',
                     },
                 })
             }
@@ -134,13 +137,13 @@ const Notifications = () => {
             setEditing(null)
             await fetchData()
         } catch (error) {
-            console.error('Error saving notification:', error)
+            console.error('Error saving assignment:', error)
             dispatch({
                 type: 'set',
                 appAlert: {
                     visible: true,
                     color: 'danger',
-                    message: 'Error saving notification: ' + error.message,
+                    message: 'Error saving assignment: ' + error.message,
                 },
             })
         }
@@ -149,50 +152,50 @@ const Notifications = () => {
     const showDeleteConfirmation = (id, title) => {
         setDeleteModal({
             visible: true,
-            notificationId: id,
-            notificationTitle: title
+            assignmentId: id,
+            assignmentTitle: title
         })
     }
 
     const handleDelete = async (id) => {
         try {
-            await deleteNotification(id)
+            await deleteAssignment(id)
             await fetchData()
-            console.log('Notification deleted successfully')
+            console.log('Assignment deleted successfully')
             dispatch({
                 type: 'set',
                 appAlert: {
                     visible: true,
                     color: 'warning',
-                    message: 'Notification deleted successfully',
+                    message: 'Assignment deleted successfully',
                 },
             })
         } catch (error) {
-            console.error('Error deleting notification:', error)
+            console.error('Error deleting assignment:', error)
             dispatch({
                 type: 'set',
                 appAlert: {
                     visible: true,
                     color: 'danger',
-                    message: 'Error deleting notification: ' + error.message,
+                    message: 'Error deleting assignment: ' + error.message,
                 },
             })
         }
     }
 
     const confirmDelete = () => {
-        if (deleteModal.notificationId) {
-            handleDelete(deleteModal.notificationId)
+        if (deleteModal.assignmentId) {
+            handleDelete(deleteModal.assignmentId)
         }
-        setDeleteModal({ visible: false, notificationId: null, notificationTitle: '' })
+        setDeleteModal({ visible: false, assignmentId: null, assignmentTitle: '' })
     }
 
-    const handleEdit = (notification) => {
-        setEditing(notification)
+    const handleEdit = (assignment) => {
+        setEditing(assignment)
         setShowForm(true)
     }
 
-    const handleNewNotification = () => {
+    const handleNewAssignment = () => {
         setEditing(null)
         setShowForm(true)
     }
@@ -202,9 +205,45 @@ const Notifications = () => {
         setEditing(null)
     }
 
-    const handleShowInfo = (notification) => {
-        setSelectedNotification(notification)
+    const handleShowInfo = (assignment) => {
+        setSelectedAssignment(assignment)
         setShowInfo(true)
+    }
+
+    const getStatusOptions = (currentStatus) => {
+        const statuses = [
+            { value: 'Scheduled', label: 'Scheduled' },
+            { value: 'In Progress', label: 'In Progress' },
+            { value: 'Completed', label: 'Completed' },
+            { value: 'Postponed', label: 'Postponed' },
+            { value: 'Cancelled', label: 'Cancelled' }
+        ]
+        return statuses.filter(status => status.value !== currentStatus)
+    }
+
+    async function handleStatusChange(assignmentId, newStatus) {
+        try {
+            await changeAssignmentStatus(assignmentId, newStatus)
+            await fetchData()
+            dispatch({
+                type: 'set',
+                appAlert: {
+                    visible: true,
+                    color: 'success',
+                    message: `Status updated to ${newStatus}`,
+                },
+            })
+        } catch (error) {
+            console.error('Error changing assignment status:', error)
+            dispatch({
+                type: 'set',
+                appAlert: {
+                    visible: true,
+                    color: 'danger',
+                    message: 'Error changing status: ' + error.message,
+                },
+            })
+        }
     }
 
     const getStatusBadge = (status) => {
@@ -240,11 +279,11 @@ const Notifications = () => {
         return dateString ? new Date(dateString).toLocaleDateString('en-US') : 'Not set'
     }
 
-    const getParticipantsCount = (notification) => {
-        const officials = notification.officials?.length || 0
-        const witnesses = notification.witnesses?.length || 0
-        const jury = notification.jury?.length || 0
-        return officials + witnesses + jury + (notification.judge_id ? 1 : 0)
+    const getParticipantsCount = (assignment) => {
+        const officials = assignment.officials?.length || 0
+        const witnesses = assignment.witnesses?.length || 0
+        const jury = assignment.jury?.length || 0
+        return officials + witnesses + jury + (assignment.judge_id ? 1 : 0)
     }
 
     const truncateDescription = (description, maxLength = 100) => {
@@ -268,10 +307,10 @@ const Notifications = () => {
         </CTableDataCell>
     )
 
-    const ParticipantsCell = ({ notification }) => {
-        const officials = notification.officials?.length || 0
-        const witnesses = notification.witnesses?.length || 0
-        const jury = notification.jury?.length || 0
+    const ParticipantsCell = ({ assignment }) => {
+        const officials = assignment.officials?.length || 0
+        const witnesses = assignment.witnesses?.length || 0
+        const jury = assignment.jury?.length || 0
 
         return (
             <CTableDataCell>
@@ -280,8 +319,8 @@ const Notifications = () => {
                         <CIcon icon={cilPeople} size="sm" />
                     </div>
                     <div>
-                        <div className="fw-semibold small">{getParticipantsCount(notification)} Total</div>
-                        <div className="small text-muted" style={{ fontSize: '0.75rem' }}>
+                        <div className="fw-semibold small">{getParticipantsCount(assignment)} Total</div>
+                        <div className="small text-muted" style={{ fontSize: '0.7rem' }}>
                             {officials} Off. / {witnesses} Wit. / {jury} Jur.
                         </div>
                     </div>
@@ -290,16 +329,16 @@ const Notifications = () => {
         )
     }
 
-    const NotificationCard = ({ notification }) => {
-        const participantsCount = getParticipantsCount(notification)
+    const AssignmentCard = ({ assignment }) => {
+        const participantsCount = getParticipantsCount(assignment)
 
         return (
             <CCard className="h-100 shadow-sm border-0" style={{ borderRadius: '12px' }}>
                 <div style={{
                     height: '4px',
-                    background: notification.priority === 'high' ?
+                    background: assignment.priority === 'High' ?
                         'linear-gradient(90deg, #dc3545 0%, #ff6b6b 100%)' :
-                        notification.priority === 'medium' ?
+                        assignment.priority === 'Medium' ?
                             'linear-gradient(90deg, #ffc107 0%, #ffd54f 100%)' :
                             'linear-gradient(90deg, #28a745 0%, #4caf50 100%)'
                 }}></div>
@@ -308,13 +347,13 @@ const Notifications = () => {
                     <div className="d-flex justify-content-between align-items-start mb-3">
                         <div>
                             <CCardTitle className="fw-bold mb-1">
-                                <span className="font-monospace">{notification.case_number}</span>
+                                <span className="font-monospace">{assignment.case_number}</span>
                             </CCardTitle>
                             <CCardText className="text-muted small mb-2">
-                                {truncateDescription(notification.case_title, 60)}
+                                {truncateDescription(assignment.case_title, 60)}
                             </CCardText>
                         </div>
-                        {getStatusBadge(notification.status)}
+                        {getStatusBadge(assignment.status)}
                     </div>
 
                     <div className="mb-3">
@@ -323,7 +362,7 @@ const Notifications = () => {
                             <span className="small fw-semibold">Judge:</span>
                         </div>
                         <CCardText className="mb-0 ps-4 small">
-                            {notification.judge_name || 'Unassigned'}
+                            {assignment.judge_name || 'Unassigned'}
                         </CCardText>
                     </div>
 
@@ -334,9 +373,9 @@ const Notifications = () => {
                                 <span className="small fw-semibold">Hearing</span>
                             </div>
                             <div className="ps-4">
-                                <div className="small fw-semibold">{formatDate(notification.hearing_date)}</div>
-                                {notification.hearing_time && (
-                                    <div className="small text-muted">{notification.hearing_time}</div>
+                                <div className="small fw-semibold">{formatDate(assignment.hearing_date)}</div>
+                                {assignment.hearing_time && (
+                                    <div className="small text-muted">{assignment.hearing_time}</div>
                                 )}
                             </div>
                         </div>
@@ -346,9 +385,9 @@ const Notifications = () => {
                                 <span className="small fw-semibold">Trial</span>
                             </div>
                             <div className="ps-4">
-                                <div className="small fw-semibold">{formatDate(notification.trial_date)}</div>
-                                {notification.trial_time && (
-                                    <div className="small text-muted">{notification.trial_time}</div>
+                                <div className="small fw-semibold">{formatDate(assignment.trial_date)}</div>
+                                {assignment.trial_time && (
+                                    <div className="small text-muted">{assignment.trial_time}</div>
                                 )}
                             </div>
                         </div>
@@ -362,16 +401,16 @@ const Notifications = () => {
                         <div className="ps-4">
                             <div className="small fw-semibold">{participantsCount} Total</div>
                             <div className="small text-muted" style={{ fontSize: '0.7rem' }}>
-                                Officials: {notification.officials?.length || 0} |
-                                Witnesses: {notification.witnesses?.length || 0} |
-                                Jury: {notification.jury?.length || 0}
+                                Officials: {assignment.officials?.length || 0} |
+                                Witnesses: {assignment.witnesses?.length || 0} |
+                                Jury: {assignment.jury?.length || 0}
                             </div>
                         </div>
                     </div>
 
                     <div className="d-flex justify-content-between align-items-center mb-3">
                         <span className="small fw-semibold">Priority:</span>
-                        {getPriorityBadge(notification.priority)}
+                        {getPriorityBadge(assignment.priority)}
                     </div>
                 </CCardBody>
 
@@ -380,10 +419,9 @@ const Notifications = () => {
                         <CTooltip content="View Details">
                             <CButton
                                 size="sm"
-                                color="light"
                                 variant="outline"
                                 className="text-info shadow-sm"
-                                onClick={() => handleShowInfo(notification)}
+                                onClick={() => handleShowInfo(assignment)}
                                 title="View Details"
                                 shape="rounded-pill"
                             >
@@ -391,28 +429,45 @@ const Notifications = () => {
                             </CButton>
                         </CTooltip>
 
-                        <CTooltip content="Edit Notification">
-                            <CButton
+                        <CDropdown variant="btn-group">
+                            <CDropdownToggle
                                 size="sm"
-                                color="light"
+                                shape="rounded-pill"
                                 variant="outline"
                                 className="text-primary shadow-sm"
-                                onClick={() => handleEdit(notification)}
-                                title="Edit Notification"
-                                shape="rounded-pill"
+                                split={false}
                             >
                                 <CIcon icon={cilPencil} />
-                            </CButton>
-                        </CTooltip>
+                            </CDropdownToggle>
+                            <CDropdownMenu>
+                                <CDropdownItem
+                                    onClick={() => handleEdit(assignment)}
+                                    style={{ cursor: 'pointer' }}
+                                >
+                                    Edit Details
+                                </CDropdownItem>
+                                <CDropdownItem divider />
+                                <CDropdownItem header style={{ cursor: 'default' }}>Status Management</CDropdownItem>
+                                {getStatusOptions(assignment.status).map(status => (
+                                    <CDropdownItem
+                                        key={status.value}
+                                        onClick={() => handleStatusChange(assignment.id, status.value)}
+                                        className={status.value === 'Cancelled' ? 'text-danger' : ''}
+                                        style={{ cursor: 'pointer' }}
+                                    >
+                                        Mark as {status.label}
+                                    </CDropdownItem>
+                                ))}
+                            </CDropdownMenu>
+                        </CDropdown>
 
-                        <CTooltip content="Delete Notification">
+                        <CTooltip content="Delete Assignment">
                             <CButton
                                 size="sm"
-                                color="light"
                                 variant="outline"
                                 className="text-danger shadow-sm"
-                                onClick={() => showDeleteConfirmation(notification.id, notification.case_title)}
-                                title="Delete Notification"
+                                onClick={() => showDeleteConfirmation(assignment.id, assignment.case_title)}
+                                title="Delete Assignment"
                                 shape="rounded-pill"
                             >
                                 <CIcon icon={cilTrash} />
@@ -436,10 +491,10 @@ const Notifications = () => {
                                 <div>
                                     <h4 className="mb-1 fw-bold" style={{ letterSpacing: '-0.5px' }}>
                                         <CIcon icon={cilBalanceScale} className="me-2 text-primary" style={{ color: '#1a237e' }} />
-                                        Judicial Notifications
+                                        Assignment Management
                                     </h4>
                                     <p className="text-muted mb-0 small">
-                                        Manage court dates, hearings, and participants
+                                        Manage court cases, hearings, and assignments
                                     </p>
                                 </div>
                                 <div className="d-flex align-items-center gap-2">
@@ -464,14 +519,14 @@ const Notifications = () => {
                                         </CButton>
                                     </div>
                                     <CButton
-                                        color="primary"
-                                        style={{ backgroundColor: '#1a237e', borderColor: '#1a237e' }}
-                                        onClick={handleNewNotification}
+                                        color="primary colorbutton"
+                                        style={colorbutton}
+                                        onClick={handleNewAssignment}
                                         className="d-flex align-items-center px-4 py-2 shadow-sm"
                                         shape="rounded-pill"
                                     >
                                         <CIcon icon={cilPlus} className="me-2 fw-bold" />
-                                        NEW NOTIFICATION
+                                        NEW ASSIGNMENT
                                     </CButton>
                                 </div>
                             </div>
@@ -481,13 +536,13 @@ const Notifications = () => {
                             {loading ? (
                                 <div className="text-center py-5">
                                     <CSpinner color="primary" variant="grow" />
-                                    <div className="mt-3 text-muted">Loading notifications...</div>
+                                    <div className="mt-3 text-muted">Loading assignments...</div>
                                 </div>
                             ) : (
                                 <>
                                     <div className="mb-4 p-3 rounded-3 border d-flex justify-content-between align-items-center gap-3 bg-light-subtle dark:bg-dark-subtle">
                                         <div className="text-muted fw-semibold small">
-                                            Total Records: <span className="fs-6">{filteredNotifications.length}</span>
+                                            Total Records: <span className="fs-6">{filteredAssignments.length}</span>
                                         </div>
 
                                         <div style={{ maxWidth: '400px', width: '100%' }}>
@@ -502,9 +557,9 @@ const Notifications = () => {
                                         <>
                                             {viewMode === 'cards' ? (
                                                 <CRow className="g-4">
-                                                    {currentPageData.map(notification => (
-                                                        <CCol key={notification.id} xs={12} sm={6} lg={4}>
-                                                            <NotificationCard notification={notification} />
+                                                    {currentPageData.map(assignment => (
+                                                        <CCol key={assignment.id} xs={12} sm={6} lg={4}>
+                                                            <AssignmentCard assignment={assignment} />
                                                         </CCol>
                                                     ))}
                                                 </CRow>
@@ -525,57 +580,75 @@ const Notifications = () => {
                                                                 </CTableRow>
                                                             </CTableHead>
                                                             <CTableBody>
-                                                                {currentPageData.map(notification => (
-                                                                    <CTableRow key={notification.id}>
+                                                                {currentPageData.map(assignment => (
+                                                                    <CTableRow key={assignment.id}>
                                                                         <CTableDataCell className="ps-4">
                                                                             <div className="d-flex flex-column">
-                                                                                <span className="font-monospace fw-bold">{notification.case_number}</span>
-                                                                                <span className="small text-muted text-truncate" style={{ maxWidth: '150px' }}>{notification.case_title}</span>
+                                                                                <span className="font-monospace fw-bold">{assignment.case_number}</span>
+                                                                                <span className="small text-muted text-truncate" style={{ maxWidth: '150px' }}>{assignment.case_title}</span>
                                                                             </div>
                                                                         </CTableDataCell>
                                                                         <CTableDataCell>
                                                                             <div className="d-flex align-items-center">
                                                                                 <CIcon icon={cilBalanceScale} size="sm" className="me-2 text-secondary" />
-                                                                                {notification.judge_name || 'Unassigned'}
+                                                                                {assignment.judge_name || 'Unassigned'}
                                                                             </div>
                                                                         </CTableDataCell>
-                                                                        <DateCell date={notification.hearing_date} time={notification.hearing_time} />
-                                                                        <DateCell date={notification.trial_date} time={notification.trial_time} />
-                                                                        <ParticipantsCell notification={notification} />
+                                                                        <DateCell date={assignment.hearing_date} time={assignment.hearing_time} />
+                                                                        <DateCell date={assignment.trial_date} time={assignment.trial_time} />
+                                                                        <ParticipantsCell assignment={assignment} />
                                                                         <CTableDataCell>
-                                                                            {getPriorityBadge(notification.priority)}
+                                                                            {getPriorityBadge(assignment.priority)}
                                                                         </CTableDataCell>
                                                                         <CTableDataCell>
-                                                                            {getStatusBadge(notification.status)}
+                                                                            {getStatusBadge(assignment.status)}
                                                                         </CTableDataCell>
                                                                         <CTableDataCell className="text-end pe-4">
                                                                             <div className="d-flex justify-content-end gap-2">
                                                                                 <CButton
                                                                                     size="sm"
-                                                                                    color="light"
                                                                                     className="text-info shadow-sm"
-                                                                                    onClick={() => handleShowInfo(notification)}
+                                                                                    onClick={() => handleShowInfo(assignment)}
                                                                                     title="View Details"
                                                                                     shape="rounded-pill"
                                                                                 >
                                                                                     <CIcon icon={cilInfo} />
                                                                                 </CButton>
+                                                                                <CDropdown variant="btn-group">
+                                                                                    <CDropdownToggle
+                                                                                        size="sm"
+                                                                                        shape="rounded-pill"
+                                                                                        className="text-primary shadow-sm"
+                                                                                        split={false}
+                                                                                    >
+                                                                                        <CIcon icon={cilPencil} />
+                                                                                    </CDropdownToggle>
+                                                                                    <CDropdownMenu>
+                                                                                        <CDropdownItem
+                                                                                            onClick={() => handleEdit(assignment)}
+                                                                                            style={{ cursor: 'pointer' }}
+                                                                                        >
+                                                                                            Edit Details
+                                                                                        </CDropdownItem>
+                                                                                        <CDropdownItem divider />
+                                                                                        <CDropdownItem header style={{ cursor: 'default' }}>Status Management</CDropdownItem>
+                                                                                        {getStatusOptions(assignment.status).map(status => (
+                                                                                            <CDropdownItem
+                                                                                                key={status.value}
+                                                                                                onClick={() => handleStatusChange(assignment.id, status.value)}
+                                                                                                className={status.value === 'Cancelled' ? 'text-danger' : ''}
+                                                                                                style={{ cursor: 'pointer' }}
+                                                                                            >
+                                                                                                Mark as {status.label}
+                                                                                            </CDropdownItem>
+                                                                                        ))}
+                                                                                    </CDropdownMenu>
+                                                                                </CDropdown>
                                                                                 <CButton
                                                                                     size="sm"
-                                                                                    color="light"
-                                                                                    className="text-primary shadow-sm"
-                                                                                    onClick={() => handleEdit(notification)}
-                                                                                    title="Edit Notification"
-                                                                                    shape="rounded-pill"
-                                                                                >
-                                                                                    <CIcon icon={cilPencil} />
-                                                                                </CButton>
-                                                                                <CButton
-                                                                                    size="sm"
-                                                                                    color="light"
                                                                                     className="text-danger shadow-sm"
-                                                                                    onClick={() => showDeleteConfirmation(notification.id, notification.case_title)}
-                                                                                    title="Delete Notification"
+                                                                                    onClick={() => showDeleteConfirmation(assignment.id, assignment.case_title)}
+                                                                                    title="Delete Assignment"
                                                                                     shape="rounded-pill"
                                                                                 >
                                                                                     <CIcon icon={cilTrash} />
@@ -609,7 +682,7 @@ const Notifications = () => {
                                                 <p className="text-secondary">
                                                     {searchTerm
                                                         ? 'Try verifying the case number or title.'
-                                                        : 'Create a new court notification to get started.'
+                                                        : 'Create a new court assignment to get started.'
                                                     }
                                                 </p>
                                                 {searchTerm && (
@@ -631,28 +704,28 @@ const Notifications = () => {
                 </CCol>
             </CRow>
 
-            <NotificationForm
+            <AssignmentForm
                 visible={showForm}
                 onClose={handleCloseForm}
                 onSave={handleSave}
                 initial={editing}
             />
 
-            <InfoNotification
+            <InfoAssignment
                 visible={showInfo}
                 onClose={() => {
                     setShowInfo(false)
-                    setSelectedNotification(null)
+                    setSelectedAssignment(null)
                 }}
-                notification={selectedNotification}
+                assignment={selectedAssignment}
             />
 
             <ConfirmationModal
                 visible={deleteModal.visible}
-                onClose={() => setDeleteModal({ visible: false, notificationId: null, notificationTitle: '' })}
+                onClose={() => setDeleteModal({ visible: false, assignmentId: null, assignmentTitle: '' })}
                 onConfirm={confirmDelete}
-                title="Delete Notification"
-                message={`Are you sure you want to delete the notification "${deleteModal.notificationTitle}"? This action cannot be undone.`}
+                title="Delete Assignment"
+                message={`Are you sure you want to delete the assignment "${deleteModal.assignmentTitle}"? This action cannot be undone.`}
                 confirmText="Confirm Delete"
                 type="danger"
             />
@@ -660,4 +733,4 @@ const Notifications = () => {
     )
 }
 
-export default Notifications
+export default Assignments

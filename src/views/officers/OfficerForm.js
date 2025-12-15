@@ -13,6 +13,7 @@ import {
     CCol,
     CSpinner
 } from '@coreui/react'
+import { colorbutton } from 'src/styles/darkModeStyles'
 
 const OfficerForm = ({ visible, onClose, onSave, initial = null }) => {
     const [step, setStep] = useState(1)
@@ -115,6 +116,7 @@ const OfficerForm = ({ visible, onClose, onSave, initial = null }) => {
     }
 
     const rankOptions = [
+        'Pending Assignment',
         'Cadet',
         'Officer',
         'Detective',
@@ -244,7 +246,7 @@ const OfficerForm = ({ visible, onClose, onSave, initial = null }) => {
                         </CButton>
                     )}
                     {step < 3 ? (
-                        <CButton type="button" color="primary" onClick={handleNext} disabled={saving}>
+                        <CButton type="button" color="primary colorbutton" style={colorbutton} onClick={handleNext} disabled={saving}>
                             Next
                         </CButton>
                     ) : (

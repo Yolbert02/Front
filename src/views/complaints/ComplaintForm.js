@@ -21,7 +21,7 @@ import {
 import CIcon from '@coreui/icons-react'
 import { cilPaperclip, cilImage, cilFile, cilVideo, cilTrash, cilLocationPin } from '@coreui/icons'
 import { listOfficers } from 'src/services/officers'
-import { containerStyles, textStyles } from 'src/styles/darkModeStyles'
+import { containerStyles, textStyles, colorbutton, upgradebutton } from 'src/styles/darkModeStyles'
 
 const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
     const [title, setTitle] = useState('')
@@ -39,7 +39,6 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
     const [uploadProgress, setUploadProgress] = useState({})
     const [saving, setSaving] = useState(false)
 
-    // Estados para dirección detallada
     const [country, setCountry] = useState('Venezuela')
     const [state, setState] = useState('Táchira')
     const [parish, setParish] = useState('')
@@ -602,7 +601,7 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
                         </CButton>
                     )}
                     {step < 4 ? (
-                        <CButton type="button" color="primary" onClick={handleNext} disabled={saving}>
+                        <CButton type="button" color="primary colorbutton" style={colorbutton} onClick={handleNext} disabled={saving}>
                             Next
                         </CButton>
                     ) : (

@@ -9,7 +9,7 @@ const Officers = React.lazy(() => import('./views/officers/Officers'))
 const Complaints = React.lazy(() => import('./views/complaints/Complaints'))
 const Users = React.lazy(() => import('./views/users/Users'))
 const Profile = React.lazy(() => import('./views/profile/Profile'))
-const Notifications = React.lazy(() => import('./views/notification/Notifications'))
+const Assignments = React.lazy(() => import('./views/assignments/Assignments'))
 const Zones = React.lazy(() => import('./views/zones/Zones'))
 
 const routes = [
@@ -20,7 +20,7 @@ const routes = [
   { path: '/Complaints', name: 'Complaints', element: Complaints, exact: true },
   { path: '/users', name: 'Users', element: Users, exact: true },
   { path: '/profile', name: 'Profile', element: Profile, exact: true },
-  { path: '/notification', name: 'Notifications', element: Notifications, exact: true },
+  { path: '/assignments', name: 'Assignments', element: Assignments, exact: true },
   { path: '/Zones', name: 'Zones', element: Zones, exact: true }
 ]
 

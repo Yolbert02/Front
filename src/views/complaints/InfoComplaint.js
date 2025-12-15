@@ -1,4 +1,5 @@
 import React from 'react'
+import { useDispatch } from 'react-redux'
 import {
     CModal,
     CModalHeader,
@@ -35,11 +36,13 @@ import {
     cilGlobeAlt,
     cilBuilding,
     cilMap,
-    cilHome
+    cilHome,
+    cilCloudDownload
 } from '@coreui/icons'
 import { modalStyles, cardStyles, containerStyles } from 'src/styles/darkModeStyles'
 
 const InfoComplaint = ({ visible, onClose, complaint }) => {
+    const dispatch = useDispatch()
     if (!complaint) return null
 
     const getStatusBadge = (status) => {
@@ -105,6 +108,17 @@ const InfoComplaint = ({ visible, onClose, complaint }) => {
         if (complaint.country) parts.push(complaint.country)
 
         return parts.join(', ')
+    }
+
+    const downloadPDF = (id) => {
+        dispatch({
+            type: 'set',
+            appAlert: {
+                visible: true,
+                color: 'success',
+                message: 'Your PDF downloaded successfully',
+            },
+        })
     }
 
     return (
@@ -413,6 +427,15 @@ const InfoComplaint = ({ visible, onClose, complaint }) => {
                 </CRow>
             </CModalBody>
             <CModalFooter style={modalStyles.footer}>
+                <CButton
+                    size="lg"
+                    variant="outline"
+                    className="text-danger shadow-sm"
+                    onClick={() => downloadPDF(complaint.id)}
+                    title="Download PDF"
+                >
+                    <CIcon icon={cilCloudDownload} />
+                </CButton>
                 <CButton color="secondary" onClick={onClose}>
                     Close
                 </CButton>

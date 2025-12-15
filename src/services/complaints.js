@@ -173,6 +173,10 @@ export async function updateComplaint(id, payload) {
     return Promise.resolve(items[idx])
 }
 
+export async function changeComplaintStatus(id, newStatus) {
+    return updateComplaint(id, { status: newStatus })
+}
+
 export async function deleteComplaint(id) {
     const items = load()
     const filtered = items.filter(c => c.id !== id)

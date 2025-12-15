@@ -112,3 +112,13 @@ export default {
     auth: authStyles,
     text: textStyles
 }
+
+export const colorbutton = {
+    backgroundColor: '#1a237e',
+    borderColor: '#1a237e'
+}
+
+export const upgradebutton = {
+    backgroundColor: '#216e21',
+    borderColor: '#216e21'
+}

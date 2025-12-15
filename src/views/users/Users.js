@@ -12,6 +12,7 @@ import { cilPlus, cilPencil, cilTrash, cilUser, cilShieldAlt, cilPeople, cilBan,
 import UserForm from './UserForm'
 import InfoUser from './InfoUser'
 import { listUsers, createUser, updateUser, deleteUser, changeUserStatus, changeUserRole } from 'src/services/users'
+import { colorbutton } from 'src/styles/darkModeStyles'
 import AvatarLetter from 'src/components/AvatarLetter'
 import ConfirmationModal from 'src/components/ConfirmationModal'
 import Pagination from 'src/components/Pagination'
@@ -193,6 +194,7 @@ const Users = () => {
         const roleConfig = {
             'administrador': { color: 'warning', text: 'ADMINISTRATOR', icon: cilShieldAlt, textColor: 'text-dark' },
             'funcionario': { color: 'primary', text: 'FUNCIONARY', icon: cilShieldAlt, textColor: 'text-white' },
+            'officer': { color: 'info', text: 'OFFICER', icon: cilShieldAlt, textColor: 'text-white' },
             'civil': { color: 'light', text: 'CIVIL', icon: cilUser, textColor: 'text-dark' }
         }
 
@@ -211,9 +213,9 @@ const Users = () => {
 
     const getStatusBadge = (status) => {
         const statusConfig = {
-            'activo': { color: 'success', text: 'Active' },
-            'suspendido': { color: 'warning', text: 'Suspended' },
-            'eliminado': { color: 'danger', text: 'Deleted' }
+            'Active': { color: 'success', text: 'Active' },
+            'Suspended': { color: 'warning', text: 'Suspended' },
+            'Inactive': { color: 'secondary', text: 'Inactive' }
         }
 
         const config = statusConfig[status] || { color: 'secondary', text: status }
@@ -228,6 +230,7 @@ const Users = () => {
         const roles = [
             { value: 'administrador', label: 'Administrator', icon: cilShieldAlt },
             { value: 'funcionario', label: 'Funcionary', icon: cilPeople },
+            { value: 'officer', label: 'Officer', icon: cilPeople },
             { value: 'civil', label: 'Civil', icon: cilUser }
         ]
         return roles.filter(role => role.value !== currentRole)
@@ -235,9 +238,9 @@ const Users = () => {
 
     const getStatusOptions = (currentStatus) => {
         const statuses = [
-            { value: 'activo', label: 'Active' },
-            { value: 'suspendido', label: 'Suspended' },
-            { value: 'eliminado', label: 'Deleted' }
+            { value: 'Active', label: 'Active' },
+            { value: 'Suspended', label: 'Suspended' },
+            { value: 'Inactive', label: 'Inactive' }
         ]
         return statuses.filter(status => status.value !== currentStatus)
     }
@@ -263,8 +266,8 @@ const Users = () => {
                                 </div>
                                 <div>
                                     <CButton
-                                        color="primary"
-                                        style={{ backgroundColor: '#1a237e', borderColor: '#1a237e' }}
+                                        color="primary colorbutton"
+                                        style={colorbutton}
                                         onClick={() => {
                                             setEditing(null);
                                             setShowForm(true)
@@ -347,7 +350,6 @@ const Users = () => {
                                                                 <CTableDataCell className="text-end pe-4">
                                                                     <div className="d-flex justify-content-end gap-2">
                                                                         <CButton
-                                                                            color="light"
                                                                             size="sm"
                                                                             shape="rounded-pill"
                                                                             onClick={() => handleShowInfo(user)}
@@ -359,7 +361,6 @@ const Users = () => {
 
                                                                         <CDropdown variant="btn-group">
                                                                             <CDropdownToggle
-                                                                                color="light"
                                                                                 size="sm"
                                                                                 shape="rounded-pill"
                                                                                 className="text-primary shadow-sm"
@@ -401,7 +402,6 @@ const Users = () => {
                                                                         </CDropdown>
 
                                                                         <CButton
-                                                                            color="light"
                                                                             size="sm"
                                                                             shape="rounded-pill"
                                                                             onClick={() => showDeleteConfirmation(user.id, `${user.first_name} ${user.last_name}`)}

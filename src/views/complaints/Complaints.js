@@ -15,16 +15,21 @@ import {
     CContainer,
     CRow,
     CCol,
-    CSpinner
+    CSpinner,
+    CDropdown,
+    CDropdownToggle,
+    CDropdownMenu,
+    CDropdownItem
 } from '@coreui/react'
 import SearchInput from 'src/components/SearchInput'
 import CIcon from '@coreui/icons-react'
 import { cilPlus, cilPencil, cilTrash, cilInfo, cilFolderOpen, cilMap, cilUser, cilSearch, cilWarning, cilCheckCircle, cilBan, cilFile } from '@coreui/icons'
 import ComplaintForm from './ComplaintForm'
 import InfoComplaint from './InfoComplaint'
-import { listComplaints, createComplaint, updateComplaint, deleteComplaint } from 'src/services/complaints'
+import { listComplaints, createComplaint, updateComplaint, deleteComplaint, changeComplaintStatus } from 'src/services/complaints'
 import ConfirmationModal from 'src/components/ConfirmationModal'
 import Pagination from 'src/components/Pagination'
+import { colorbutton } from 'src/styles/darkModeStyles'
 
 const Complaints = () => {
     const [data, setData] = useState([])
@@ -179,6 +184,42 @@ const Complaints = () => {
         setDeleteModal({ visible: false, complaintId: null, complaintTitle: '' })
     }
 
+    const getStatusOptions = (currentStatus) => {
+        const statuses = [
+            { value: 'Received', label: 'Received' },
+            { value: 'Under Investigation', label: 'Investigation' },
+            { value: 'Resolved', label: 'Resolved' },
+            { value: 'Closed', label: 'Closed' },
+            { value: 'Rejected', label: 'Rejected' }
+        ]
+        return statuses.filter(status => status.value !== currentStatus)
+    }
+
+    async function handleStatusChange(complaintId, newStatus) {
+        try {
+            await changeComplaintStatus(complaintId, newStatus)
+            await fetchData()
+            dispatch({
+                type: 'set',
+                appAlert: {
+                    visible: true,
+                    color: 'success',
+                    message: `Status updated to ${newStatus}`,
+                },
+            })
+        } catch (error) {
+            console.error('Error changing complaint status:', error)
+            dispatch({
+                type: 'set',
+                appAlert: {
+                    visible: true,
+                    color: 'danger',
+                    message: 'Error changing status: ' + error.message,
+                },
+            })
+        }
+    }
+
     const getStatusBadge = (status) => {
         const statusConfig = {
             'Received': { color: 'info', text: 'Received', icon: cilFile },
@@ -248,8 +289,8 @@ const Complaints = () => {
                                 </div>
                                 <div>
                                     <CButton
-                                        color="primary"
-                                        style={{ backgroundColor: '#1a237e', borderColor: '#1a237e' }}
+                                        color="primary colorbutton"
+                                        style={colorbutton}
                                         onClick={() => {
                                             setEditing(null);
                                             setShowForm(true)
@@ -272,7 +313,6 @@ const Complaints = () => {
                                 </div>
                             ) : (
                                 <>
-                                    {/* Filters & Search */}
                                     <div className="mb-4 p-3 rounded-3 border d-flex justify-content-between align-items-center gap-3 bg-light-subtle dark:bg-dark-subtle">
                                         <div className="text-muted fw-semibold small">
                                             Total Cases: <span className="fs-6">{filteredComplaints.length}</span>
@@ -342,7 +382,6 @@ const Complaints = () => {
                                                                     <div className="d-flex justify-content-end gap-2">
                                                                         <CButton
                                                                             size="sm"
-                                                                            color="light"
                                                                             className="text-info shadow-sm"
                                                                             onClick={() => handleShowInfo(complaint)}
                                                                             title="View Details"
@@ -350,22 +389,38 @@ const Complaints = () => {
                                                                         >
                                                                             <CIcon icon={cilInfo} />
                                                                         </CButton>
+                                                                        <CDropdown variant="btn-group">
+                                                                            <CDropdownToggle
+                                                                                size="sm"
+                                                                                shape="rounded-pill"
+                                                                                className="text-primary shadow-sm"
+                                                                                split={false}
+                                                                            >
+                                                                                <CIcon icon={cilPencil} />
+                                                                            </CDropdownToggle>
+                                                                            <CDropdownMenu>
+                                                                                <CDropdownItem
+                                                                                    onClick={() => { setEditing(complaint); setShowForm(true) }}
+                                                                                    style={{ cursor: 'pointer' }}
+                                                                                >
+                                                                                    Edit Details
+                                                                                </CDropdownItem>
+                                                                                <CDropdownItem divider />
+                                                                                <CDropdownItem header style={{ cursor: 'default' }}>Status Management</CDropdownItem>
+                                                                                {getStatusOptions(complaint.status).map(status => (
+                                                                                    <CDropdownItem
+                                                                                        key={status.value}
+                                                                                        onClick={() => handleStatusChange(complaint.id, status.value)}
+                                                                                        className={status.value === 'Rejected' ? 'text-danger' : ''}
+                                                                                        style={{ cursor: 'pointer' }}
+                                                                                    >
+                                                                                        Mark as {status.label}
+                                                                                    </CDropdownItem>
+                                                                                ))}
+                                                                            </CDropdownMenu>
+                                                                        </CDropdown>
                                                                         <CButton
                                                                             size="sm"
-                                                                            color="light"
-                                                                            className="text-primary shadow-sm"
-                                                                            onClick={() => {
-                                                                                setEditing(complaint);
-                                                                                setShowForm(true)
-                                                                            }}
-                                                                            title="Edit Case"
-                                                                            shape="rounded-pill"
-                                                                        >
-                                                                            <CIcon icon={cilPencil} />
-                                                                        </CButton>
-                                                                        <CButton
-                                                                            size="sm"
-                                                                            color="light"
                                                                             className="text-danger shadow-sm"
                                                                             onClick={() => showDeleteConfirmation(complaint.id, complaint.title)}
                                                                             title="Delete Case"

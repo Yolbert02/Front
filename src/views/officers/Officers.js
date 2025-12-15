@@ -15,7 +15,11 @@ import {
     CContainer,
     CRow,
     CCol,
-    CSpinner
+    CSpinner,
+    CDropdown,
+    CDropdownToggle,
+    CDropdownMenu,
+    CDropdownItem
 } from '@coreui/react'
 import SearchInput from 'src/components/SearchInput'
 import CIcon from '@coreui/icons-react'
@@ -23,7 +27,8 @@ import { cilPlus, cilPencil, cilTrash, cilInfo, cilShieldAlt, cilSearch, cilChec
 import OfficerForm from './OfficerForm'
 import InfoOfficer from './InfoOfficer'
 import AvatarLetter from 'src/components/AvatarLetter'
-import { listOfficers, createOfficer, updateOfficer, deleteOfficer } from 'src/services/officers'
+import { listOfficers, createOfficer, updateOfficer, deleteOfficer, changeOfficerStatus } from 'src/services/officers'
+import { colorbutton } from 'src/styles/darkModeStyles'
 import ConfirmationModal from 'src/components/ConfirmationModal'
 import Pagination from 'src/components/Pagination'
 
@@ -175,6 +180,27 @@ const Officers = () => {
         setDeleteModal({ visible: false, officerId: null, officerName: '' })
     }
 
+    const getStatusOptions = (currentStatus) => {
+        const statuses = [
+            { value: 'Active', label: 'Active' },
+            { value: 'Inactive', label: 'Inactive' },
+            { value: 'Training', label: 'Training' },
+            { value: 'Suspended', label: 'Suspended' }
+        ]
+        return statuses.filter(status => status.value !== currentStatus)
+    }
+
+    // Placeholder function for handleStatusChange - needs implementation in services/officers
+    async function handleStatusChange(officerId, newStatus) {
+        try {
+            await changeOfficerStatus(officerId, newStatus)
+            await fetchData()
+        } catch (error) {
+            console.error('Error changing officer status:', error)
+            alert('Error changing status: ' + error.message)
+        }
+    }
+
     const getStatusBadge = (status) => {
         const statusConfig = {
             'Active': { color: 'success', text: 'Active', icon: cilCheckCircle },
@@ -223,8 +249,8 @@ const Officers = () => {
                                 </div>
                                 <div>
                                     <CButton
-                                        color="primary"
-                                        style={{ backgroundColor: '#1a237e', borderColor: '#1a237e' }}
+                                        color="primary colorbutton"
+                                        style={colorbutton}
                                         onClick={() => {
                                             console.log('New officer button clicked')
                                             setEditing(null);
@@ -315,7 +341,6 @@ const Officers = () => {
                                                                     <div className="d-flex justify-content-end gap-2">
                                                                         <CButton
                                                                             size="sm"
-                                                                            color="light"
                                                                             className="text-info shadow-sm"
                                                                             onClick={() => handleShowInfo(officer)}
                                                                             title="View Profile"
@@ -323,22 +348,40 @@ const Officers = () => {
                                                                         >
                                                                             <CIcon icon={cilInfo} />
                                                                         </CButton>
+
+
+                                                                        <CDropdown variant="btn-group">
+                                                                            <CDropdownToggle
+                                                                                size="sm"
+                                                                                shape="rounded-pill"
+                                                                                className="text-primary shadow-sm"
+                                                                                split={false}
+                                                                            >
+                                                                                <CIcon icon={cilPencil} />
+                                                                            </CDropdownToggle>
+                                                                            <CDropdownMenu>
+                                                                                <CDropdownItem
+                                                                                    onClick={() => { setEditing(officer); setShowForm(true) }}
+                                                                                    style={{ cursor: 'pointer' }}
+                                                                                >
+                                                                                    Edit Details
+                                                                                </CDropdownItem>
+                                                                                <CDropdownItem divider />
+                                                                                <CDropdownItem header style={{ cursor: 'default' }}>Status Management</CDropdownItem>
+                                                                                {getStatusOptions(officer.status).map(status => (
+                                                                                    <CDropdownItem
+                                                                                        key={status.value}
+                                                                                        onClick={() => handleStatusChange(officer.id, status.value)}
+                                                                                        className={status.value === 'Suspended' ? 'text-danger' : ''}
+                                                                                        style={{ cursor: 'pointer' }}
+                                                                                    >
+                                                                                        Mark as {status.label}
+                                                                                    </CDropdownItem>
+                                                                                ))}
+                                                                            </CDropdownMenu>
+                                                                        </CDropdown>
                                                                         <CButton
                                                                             size="sm"
-                                                                            color="light"
-                                                                            className="text-primary shadow-sm"
-                                                                            onClick={() => {
-                                                                                setEditing(officer);
-                                                                                setShowForm(true)
-                                                                            }}
-                                                                            title="Edit Record"
-                                                                            shape="rounded-pill"
-                                                                        >
-                                                                            <CIcon icon={cilPencil} />
-                                                                        </CButton>
-                                                                        <CButton
-                                                                            size="sm"
-                                                                            color="light"
                                                                             className="text-danger shadow-sm"
                                                                             onClick={() => showDeleteConfirmation(officer.id, `${officer.name} ${officer.lastName}`)}
                                                                             title="Deactivate/Delete"
@@ -354,7 +397,6 @@ const Officers = () => {
                                                 </CTable>
                                             </div>
 
-                                            {/* PAGINACIÓN */}
                                             {totalPages > 1 && (
                                                 <div className="mt-4 d-flex justify-content-end">
                                                     <Pagination

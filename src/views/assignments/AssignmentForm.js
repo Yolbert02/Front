@@ -16,11 +16,12 @@ import {
     CCardBody,
     CSpinner
 } from '@coreui/react'
+import { colorbutton } from 'src/styles/darkModeStyles'
 import CIcon from '@coreui/icons-react'
 import { cilPlus, cilTrash } from '@coreui/icons'
-import { getFuncionaries, getCitizens } from 'src/services/notifications'
+import { getFuncionaries, getCitizens } from 'src/services/assignments'
 
-const NotificationForm = ({ visible, onClose, onSave, initial = null }) => {
+const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
     const [caseTitle, setCaseTitle] = useState('')
     const [caseDescription, setCaseDescription] = useState('')
     const [judgeId, setJudgeId] = useState('')
@@ -30,14 +31,13 @@ const NotificationForm = ({ visible, onClose, onSave, initial = null }) => {
     const [trialDate, setTrialDate] = useState('')
     const [trialTime, setTrialTime] = useState('10:00')
     const [location, setLocation] = useState('')
-    const [status, setStatus] = useState('scheduled')
-    const [priority, setPriority] = useState('medium')
+    const [status, setStatus] = useState('Scheduled')
+    const [priority, setPriority] = useState('Medium')
 
     const [officials, setOfficials] = useState([])
     const [witnesses, setWitnesses] = useState([])
     const [jury, setJury] = useState([])
 
-    // Available users lists
     const [availableOfficials, setAvailableOfficials] = useState([])
     const [availableCitizens, setAvailableCitizens] = useState([])
 
@@ -61,8 +61,8 @@ const NotificationForm = ({ visible, onClose, onSave, initial = null }) => {
                 setTrialDate(initial.trial_date || '')
                 setTrialTime(initial.trial_time || '10:00')
                 setLocation(initial.location || '')
-                setStatus(initial.status || 'scheduled')
-                setPriority(initial.priority || 'medium')
+                setStatus(initial.status || 'Scheduled')
+                setPriority(initial.priority || 'Medium')
                 setOfficials(initial.officials || [])
                 setWitnesses(initial.witnesses || [])
                 setJury(initial.jury || [])
@@ -80,7 +80,6 @@ const NotificationForm = ({ visible, onClose, onSave, initial = null }) => {
             return true
         }
         if (currentStep === 2) {
-            // Optional: validate dates logic if needed
             return true
         }
         if (currentStep === 3) {
@@ -94,7 +93,6 @@ const NotificationForm = ({ visible, onClose, onSave, initial = null }) => {
         if (validateStep(step)) {
             setStep(step + 1)
         } else {
-            // Optional feedback
         }
     }
 
@@ -113,8 +111,8 @@ const NotificationForm = ({ visible, onClose, onSave, initial = null }) => {
         setTrialDate('')
         setTrialTime('10:00')
         setLocation('')
-        setStatus('scheduled')
-        setPriority('medium')
+        setStatus('Scheduled')
+        setPriority('Medium')
         setOfficials([])
         setWitnesses([])
         setJury([])
@@ -243,7 +241,7 @@ const NotificationForm = ({ visible, onClose, onSave, initial = null }) => {
             await onSave(payload)
             onClose()
         } catch (error) {
-            console.error('Error saving notification:', error)
+            console.error('Error saving assignment:', error)
         } finally {
             setSaving(false)
         }
@@ -371,7 +369,7 @@ const NotificationForm = ({ visible, onClose, onSave, initial = null }) => {
         <CModal size="lg" visible={visible} onClose={onClose}>
             <CModalHeader>
                 <CModalTitle>
-                    {initial ? 'Edit Judicial Notification' : 'New Judicial Notification'} - Step {step} of 3
+                    {initial ? 'Edit Assignment' : 'New Assignment'} - Step {step} of 3
                 </CModalTitle>
             </CModalHeader>
             <CForm onSubmit={handleSubmit}>
@@ -494,11 +492,11 @@ const NotificationForm = ({ visible, onClose, onSave, initial = null }) => {
                                         value={status}
                                         onChange={(e) => setStatus(e.target.value)}
                                     >
-                                        <option value="scheduled">Scheduled</option>
-                                        <option value="in_progress">In Progress</option>
-                                        <option value="completed">Completed</option>
-                                        <option value="cancelled">Cancelled</option>
-                                        <option value="postponed">Postponed</option>
+                                        <option value="Scheduled">Scheduled</option>
+                                        <option value="In Progress">In Progress</option>
+                                        <option value="Completed">Completed</option>
+                                        <option value="Cancelled">Cancelled</option>
+                                        <option value="Postponed">Postponed</option>
                                     </CFormSelect>
                                 </CCol>
                                 <CCol md={6}>
@@ -507,9 +505,9 @@ const NotificationForm = ({ visible, onClose, onSave, initial = null }) => {
                                         value={priority}
                                         onChange={(e) => setPriority(e.target.value)}
                                     >
-                                        <option value="high">High</option>
-                                        <option value="medium">Medium</option>
-                                        <option value="low">Low</option>
+                                        <option value="High">High</option>
+                                        <option value="Medium">Medium</option>
+                                        <option value="Low">Low</option>
                                     </CFormSelect>
                                 </CCol>
                             </CRow>
@@ -565,7 +563,7 @@ const NotificationForm = ({ visible, onClose, onSave, initial = null }) => {
                         </CButton>
                     )}
                     {step < 3 ? (
-                        <CButton type="button" color="primary" onClick={handleNext} disabled={saving}>
+                        <CButton type="button" color="primary colorbutton" style={colorbutton} onClick={handleNext} disabled={saving}>
                             Next
                         </CButton>
                     ) : (
@@ -576,7 +574,7 @@ const NotificationForm = ({ visible, onClose, onSave, initial = null }) => {
                                     Saving...
                                 </>
                             ) : (
-                                <>{initial ? 'Update' : 'Create'} Notification</>
+                                <>{initial ? 'Update' : 'Create'} Assignment</>
                             )}
                         </CButton>
                     )}
@@ -589,4 +587,4 @@ const NotificationForm = ({ visible, onClose, onSave, initial = null }) => {
     )
 }
 
-export default NotificationForm
+export default AssignmentForm

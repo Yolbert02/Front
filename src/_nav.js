@@ -48,8 +48,8 @@ const _nav = [
   },
   {
     component: CNavItem,
-    name: 'Assignment Judgment',
-    to: '/notification',
+    name: 'Assignments',
+    to: '/assignments',
     icon: <CIcon icon={cilInstitution} customClassName="nav-icon" />,
   },
   {

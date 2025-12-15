@@ -15,6 +15,13 @@
     color: var(--cui-body-color) !important;
 }
 
+.zone-body {
+    margin-left: 2px;
+    border-left: 4px solid var(--zone-color, #ccc) !important;
+    padding-left: 12px !important;
+    border-radius: 8px 0 0 8px;
+}
+
 .custom-accordion .accordion-button:not(.collapsed) {
     background-color: var(--cui-primary-bg-subtle) !important;
     color: var(--cui-primary) !important;
