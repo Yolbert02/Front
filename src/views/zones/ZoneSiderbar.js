@@ -7,18 +7,20 @@ import {
     CCard,
     CCardBody,
     CCardHeader,
+    CCardFooter,
     CListGroup,
     CListGroupItem,
     CBadge,
     CSpinner,
     CButton
 } from '@coreui/react'
-import { CIcon } from '@coreui/icons-react'
-import { cilMap, cilWarning, cilInfo, cilLocationPin, cilListRich } from '@coreui/icons'
+import CIcon from '@coreui/icons-react'
+import { cilMap, cilWarning, cilInfo, cilLocationPin, cilListRich, cilChart } from '@coreui/icons'
 import { listComplaints } from 'src/services/complaints'
 import './ZoneSiderbar.css'
 import InfoComplaint from '../complaints/InfoComplaint'
 import SearchInput from 'src/components/SearchInput'
+import InfoGlobalZone from './InfoGlobalZone'
 
 const ZoneSiderbar = ({ onLocate }) => {
     const [complaints, setComplaints] = useState([])
@@ -26,6 +28,7 @@ const ZoneSiderbar = ({ onLocate }) => {
     const [selectedComplaint, setSelectedComplaint] = useState(null)
     const [showComplaintInfo, setShowComplaintInfo] = useState(false)
     const [searchTerm, setSearchTerm] = useState('')
+    const [showGlobalStats, setShowGlobalStats] = useState(false)
 
     const zones = [
         { id: 1, name: 'Pueblo Nuevo', color: '#4caf50', colorBody: '#388e3c' },
@@ -202,6 +205,18 @@ const ZoneSiderbar = ({ onLocate }) => {
                         </CAccordion>
                     )}
                 </CCardBody>
+                <CCardFooter>
+                    <div className='d-flex justify-content-end'>
+                        <CButton
+                            size="lg"
+                            onClick={() => setShowGlobalStats(true)}
+                            title="View Details"
+                            className="text-info shadow-lg"
+                        >
+                            <CIcon icon={cilInfo} />
+                        </CButton>
+                    </div>
+                </CCardFooter>
             </CCard>
 
             <InfoComplaint
@@ -211,6 +226,13 @@ const ZoneSiderbar = ({ onLocate }) => {
                     setSelectedComplaint(null)
                 }}
                 complaint={selectedComplaint}
+            />
+
+            <InfoGlobalZone
+                visible={showGlobalStats}
+                onClose={() => setShowGlobalStats(false)}
+                zones={zones}
+                complaints={complaints}
             />
         </>
     )

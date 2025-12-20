@@ -45,29 +45,39 @@ const InfoComplaint = ({ visible, onClose, complaint }) => {
     const dispatch = useDispatch()
     if (!complaint) return null
 
+    const formatLabel = (label) => {
+        if (!label) return ''
+        return label
+            .split('_')
+            .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .join(' ')
+    }
+
     const getStatusBadge = (status) => {
+        const s = status?.toLowerCase()
         const statusConfig = {
-            'Received': { color: 'primary', text: 'Received' },
-            'Under Investigation': { color: 'warning', text: 'Under Investigation' },
-            'Resolved': { color: 'success', text: 'Resolved' },
-            'Closed': { color: 'secondary', text: 'Closed' },
-            'Rejected': { color: 'danger', text: 'Rejected' }
+            'received': { color: 'primary' },
+            'under_investigation': { color: 'warning' },
+            'resolved': { color: 'success' },
+            'closed': { color: 'secondary' },
+            'rejected': { color: 'danger' }
         }
 
-        const config = statusConfig[status] || { color: 'secondary', text: status }
-        return <CBadge color={config.color}>{config.text}</CBadge>
+        const config = statusConfig[s] || { color: 'secondary' }
+        return <CBadge color={config.color}>{formatLabel(status)}</CBadge>
     }
 
     const getPriorityBadge = (priority) => {
+        const p = priority?.toLowerCase()
         const priorityConfig = {
-            'Low': { color: 'success', text: 'Low' },
-            'Medium': { color: 'warning', text: 'Medium' },
-            'High': { color: 'danger', text: 'High' },
-            'Urgent': { color: 'danger', text: 'Urgent' }
+            'low': { color: 'success' },
+            'medium': { color: 'warning' },
+            'high': { color: 'danger' },
+            'urgent': { color: 'danger' }
         }
 
-        const config = priorityConfig[priority] || { color: 'secondary', text: priority }
-        return <CBadge color={config.color}>{config.text}</CBadge>
+        const config = priorityConfig[p] || { color: 'secondary' }
+        return <CBadge color={config.color}>{formatLabel(priority)}</CBadge>
     }
 
     const formatDate = (dateString) => {
@@ -289,14 +299,14 @@ const InfoComplaint = ({ visible, onClose, complaint }) => {
                                             {formatDate(complaint.createdAt)}
                                         </small>
                                     </CListGroupItem>
-                                    {complaint.lat && complaint.lng && (
+                                    {complaint.latitude && complaint.longitude && (
                                         <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
                                             <span className="d-flex align-items-center">
                                                 <CIcon icon={cilLocationPin} className="me-2 text-primary" />
                                                 Coordinates:
                                             </span>
                                             <small className="text-muted">
-                                                {complaint.lat.toFixed(6)}, {complaint.lng.toFixed(6)}
+                                                {complaint.latitude.toFixed(6)}, {complaint.longitude.toFixed(6)}
                                             </small>
                                         </CListGroupItem>
                                     )}
@@ -346,21 +356,21 @@ const InfoComplaint = ({ visible, onClose, complaint }) => {
                                 <CListGroup flush>
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
                                         <span>Name:</span>
-                                        <strong>{complaint.complainantName}</strong>
+                                        <strong>{complaint.complainant_name}</strong>
                                     </CListGroupItem>
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
                                         <span className="d-flex align-items-center">
                                             <CIcon icon={cilPhone} className="me-2 text-primary" />
                                             Phone:
                                         </span>
-                                        <strong>{complaint.complainantPhone || 'Not provided'}</strong>
+                                        <strong>{complaint.complainant_phone || 'Not provided'}</strong>
                                     </CListGroupItem>
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
                                         <span className="d-flex align-items-center">
                                             <CIcon icon={cilEnvelopeOpen} className="me-2 text-primary" />
                                             Email:
                                         </span>
-                                        <strong>{complaint.complainantEmail || 'Not provided'}</strong>
+                                        <strong>{complaint.complainant_email || 'Not provided'}</strong>
                                     </CListGroupItem>
                                 </CListGroup>
                             </CCardBody>

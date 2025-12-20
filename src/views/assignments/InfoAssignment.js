@@ -35,28 +35,38 @@ const InfoAssignment = ({ visible, onClose, assignment }) => {
     const dispatch = useDispatch()
     if (!assignment) return null
 
+    const formatLabel = (label) => {
+        if (!label) return ''
+        return label
+            .split('_')
+            .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .join(' ')
+    }
+
     const getStatusBadge = (status) => {
+        const s = status?.toLowerCase()
         const statusConfig = {
-            'Scheduled': { color: 'primary', text: 'Scheduled' },
-            'In Progress': { color: 'warning', text: 'In Progress' },
-            'Completed': { color: 'success', text: 'Completed' },
-            'Cancelled': { color: 'danger', text: 'Cancelled' },
-            'Postponed': { color: 'info', text: 'Postponed' }
+            'scheduled': { color: 'primary' },
+            'in_progress': { color: 'warning' },
+            'completed': { color: 'success' },
+            'cancelled': { color: 'danger' },
+            'postponed': { color: 'info' }
         }
 
-        const config = statusConfig[status] || { color: 'secondary', text: status }
-        return <CBadge color={config.color}>{config.text}</CBadge>
+        const config = statusConfig[s] || { color: 'secondary' }
+        return <CBadge color={config.color}>{formatLabel(status)}</CBadge>
     }
 
     const getPriorityBadge = (priority) => {
+        const p = priority?.toLowerCase()
         const priorityConfig = {
-            'High': { color: 'danger', text: 'High' },
-            'Medium': { color: 'warning', text: 'Medium' },
-            'Low': { color: 'success', text: 'Low' }
+            'high': { color: 'danger' },
+            'medium': { color: 'warning' },
+            'low': { color: 'success' }
         }
 
-        const config = priorityConfig[priority] || { color: 'secondary', text: priority }
-        return <CBadge color={config.color}>{config.text}</CBadge>
+        const config = priorityConfig[p] || { color: 'secondary' }
+        return <CBadge color={config.color}>{formatLabel(priority)}</CBadge>
     }
 
     const formatDate = (dateString) => {

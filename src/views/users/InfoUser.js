@@ -32,14 +32,15 @@ const InfoUser = ({ visible, onClose, user }) => {
     if (!user) return null
 
     const getRoleBadge = (role) => {
+        const r = role?.toLowerCase()
         const roleConfig = {
-            'administrador': { color: 'danger', text: 'Administrator', icon: cilShieldAlt },
-            'funcionario': { color: 'info', text: 'Funcionary', icon: cilPeople },
+            'administrator': { color: 'danger', text: 'Administrator', icon: cilShieldAlt },
+            'functionary': { color: 'info', text: 'Functionary', icon: cilPeople },
             'officer': { color: 'primary', text: 'Officer', icon: cilShieldAlt },
             'civil': { color: 'success', text: 'Civil', icon: cilUser }
         }
 
-        const config = roleConfig[role] || { color: 'secondary', text: role, icon: cilUser }
+        const config = roleConfig[r] || { color: 'secondary', text: role, icon: cilUser }
         return (
             <CBadge color={config.color}>
                 <CIcon icon={config.icon} className="me-1" />
@@ -49,13 +50,15 @@ const InfoUser = ({ visible, onClose, user }) => {
     }
 
     const getStatusBadge = (status) => {
+        const s = status?.toLowerCase()
         const statusConfig = {
-            'Active': { color: 'success', text: 'Active' },
-            'Suspended': { color: 'warning', text: 'Suspended' },
-            'Inactive': { color: 'secondary', text: 'Inactive' }
+            'active': { color: 'success', text: 'Active' },
+            'suspended': { color: 'warning', text: 'Suspended' },
+            'inactive': { color: 'secondary', text: 'Inactive' },
+            'deleted': { color: 'danger', text: 'Deleted' }
         }
 
-        const config = statusConfig[status] || { color: 'secondary', text: status }
+        const config = statusConfig[s] || { color: 'secondary', text: status }
         return <CBadge color={config.color}>{config.text}</CBadge>
     }
 
@@ -145,23 +148,23 @@ const InfoUser = ({ visible, onClose, user }) => {
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
                                         <span className="d-flex align-items-center">
                                             <CIcon icon={cilAddressBook} className="me-2 text-primary" />
-                                            Document:
+                                            DNI:
                                         </span>
-                                        <strong>{user.document}</strong>
+                                        <strong>{user.dni}</strong>
                                     </CListGroupItem>
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
                                         <span className="d-flex align-items-center">
                                             <CIcon icon={cilEnvelopeOpen} className="me-2 text-primary" />
                                             Email:
                                         </span>
-                                        <strong>{user.gmail}</strong>
+                                        <strong>{user.email}</strong>
                                     </CListGroupItem>
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
                                         <span className="d-flex align-items-center">
                                             <CIcon icon={cilPhone} className="me-2 text-primary" />
                                             Phone:
                                         </span>
-                                        <strong>{user.number_phone}</strong>
+                                        <strong>{user.phone}</strong>
                                     </CListGroupItem>
                                 </CListGroup>
                             </CCardBody>

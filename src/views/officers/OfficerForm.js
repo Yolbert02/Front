@@ -225,10 +225,10 @@ const OfficerForm = ({ visible, onClose, onSave, initial = null }) => {
                                         value={status}
                                         onChange={(e) => setStatus(e.target.value)}
                                     >
-                                        <option value="Active">Active</option>
-                                        <option value="Inactive">Inactive</option>
-                                        <option value="Training">Training</option>
-                                        <option value="Suspended">Suspended</option>
+                                        <option value="active">Active</option>
+                                        <option value="inactive">Inactive</option>
+                                        <option value="training">Training</option>
+                                        <option value="suspended">Suspended</option>
                                     </CFormSelect>
                                 </CCol>
                             </CRow>

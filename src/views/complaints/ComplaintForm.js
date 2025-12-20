@@ -26,13 +26,13 @@ import { containerStyles, textStyles, colorbutton, upgradebutton } from 'src/sty
 const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
     const [title, setTitle] = useState('')
     const [description, setDescription] = useState('')
-    const [complainantName, setComplainantName] = useState('')
-    const [complainantPhone, setComplainantPhone] = useState('')
-    const [complainantEmail, setComplainantEmail] = useState('')
+    const [complainant_name, setComplainantName] = useState('')
+    const [complainant_phone, setComplainantPhone] = useState('')
+    const [complainant_email, setComplainantEmail] = useState('')
     const [location, setLocation] = useState('')
     const [assignedOfficerId, setAssignedOfficerId] = useState('')
-    const [status, setStatus] = useState('Received')
-    const [priority, setPriority] = useState('Medium')
+    const [status, setStatus] = useState('received')
+    const [priority, setPriority] = useState('medium')
     const [incidentDate, setIncidentDate] = useState('')
     const [evidence, setEvidence] = useState([])
     const [officers, setOfficers] = useState([])
@@ -57,13 +57,13 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
             if (initial) {
                 setTitle(initial.title || '')
                 setDescription(initial.description || '')
-                setComplainantName(initial.complainantName || '')
-                setComplainantPhone(initial.complainantPhone || '')
-                setComplainantEmail(initial.complainantEmail || '')
+                setComplainantName(initial.complainant_name || '')
+                setComplainantPhone(initial.complainant_phone || '')
+                setComplainantEmail(initial.complainant_email || '')
                 setLocation(initial.location || '')
                 setAssignedOfficerId(initial.assignedOfficerId || '')
-                setStatus(initial.status || 'Received')
-                setPriority(initial.priority || 'Medium')
+                setStatus(initial.status || 'received')
+                setPriority(initial.priority || 'medium')
                 setIncidentDate(initial.incidentDate || '')
                 setEvidence(initial.evidence || [])
 
@@ -82,8 +82,8 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
                 setComplainantEmail('')
                 setLocation('')
                 setAssignedOfficerId('')
-                setStatus('Received')
-                setPriority('Medium')
+                setStatus('received')
+                setPriority('medium')
                 setIncidentDate(new Date().toISOString().split('T')[0])
                 setEvidence([])
 
@@ -107,7 +107,7 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
             return true
         }
         if (currentStep === 2) {
-            if (!complainantName.trim()) {
+            if (!complainant_name.trim()) {
                 return false
             }
             return true
@@ -140,7 +140,7 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
     const loadOfficers = async () => {
         try {
             const allOfficers = await listOfficers()
-            const activeOfficers = allOfficers.filter(officer => officer.status === 'Active')
+            const activeOfficers = allOfficers.filter(officer => officer.status?.toLowerCase() === 'active')
             setOfficers(activeOfficers)
         } catch (error) {
             console.error('Error loading officers:', error)
@@ -257,9 +257,9 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
             const payload = {
                 title: title.trim(),
                 description: description.trim(),
-                complainantName: complainantName.trim(),
-                complainantPhone: complainantPhone.trim(),
-                complainantEmail: complainantEmail.trim(),
+                complainant_name: complainant_name.trim(),
+                complainant_phone: complainant_phone.trim(),
+                complainant_email: complainant_email.trim(),
                 location: fullAddress,
                 country: country.trim(),
                 state: state.trim(),
@@ -270,11 +270,11 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
                 address: address.trim(),
                 assignedOfficerId: assignedOfficerId ? parseInt(assignedOfficerId) : null,
                 assignedOfficerName,
-                status,
-                priority,
+                status: status.toLowerCase(),
+                priority: priority.toLowerCase(),
                 incidentDate,
-                lat: latitude,
-                lng: longitude,
+                latitude,
+                longitude,
                 evidence: evidence.filter(item => item.status === 'completed')
             }
 
@@ -345,7 +345,7 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
                                     <CFormInput
                                         label="Complainant Name *"
                                         placeholder="Full name"
-                                        value={complainantName}
+                                        value={complainant_name}
                                         onChange={(e) => setComplainantName(e.target.value)}
                                         required
                                     />
@@ -354,7 +354,7 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
                                     <CFormInput
                                         label="Phone Number"
                                         placeholder="Contact number"
-                                        value={complainantPhone}
+                                        value={complainant_phone}
                                         onChange={(e) => setComplainantPhone(e.target.value)}
                                     />
                                 </CCol>
@@ -365,7 +365,7 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
                                     label="Email Address"
                                     type="email"
                                     placeholder="email@example.com"
-                                    value={complainantEmail}
+                                    value={complainant_email}
                                     onChange={(e) => setComplainantEmail(e.target.value)}
                                 />
                             </div>
@@ -493,10 +493,10 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
                                         value={priority}
                                         onChange={(e) => setPriority(e.target.value)}
                                     >
-                                        <option value="Low">Low</option>
-                                        <option value="Medium">Medium</option>
-                                        <option value="High">High</option>
-                                        <option value="Urgent">Urgent</option>
+                                        <option value="low">Low</option>
+                                        <option value="medium">Medium</option>
+                                        <option value="high">High</option>
+                                        <option value="urgent">Urgent</option>
                                     </CFormSelect>
                                 </CCol>
                                 <CCol md={3}>
@@ -505,11 +505,11 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
                                         value={status}
                                         onChange={(e) => setStatus(e.target.value)}
                                     >
-                                        <option value="Received">Received</option>
-                                        <option value="Under Investigation">Under Investigation</option>
-                                        <option value="Resolved">Resolved</option>
-                                        <option value="Closed">Closed</option>
-                                        <option value="Rejected">Rejected</option>
+                                        <option value="received">Received</option>
+                                        <option value="under_investigation">Under Investigation</option>
+                                        <option value="resolved">Resolved</option>
+                                        <option value="closed">Closed</option>
+                                        <option value="rejected">Rejected</option>
                                     </CFormSelect>
                                 </CCol>
                             </CRow>

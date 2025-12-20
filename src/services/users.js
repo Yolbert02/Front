@@ -4,53 +4,53 @@ import { createOfficer, updateOfficer, getOfficerByDocument, deleteOfficerByDocu
 const initialUsers = [
     {
         id: 1,
-        document: "V-12345678",
+        dni: "V-12345678",
         first_name: "Admin",
         last_name: "System",
         password: "admin123",
-        number_phone: "0414-1112233",
-        gmail: "admin@sistema.com",
-        role: "administrador",
-        status: "Active",
+        phone: "0414-1112233",
+        email: "admin@sistema.com",
+        role: "administrator",
+        status: "active",
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
     },
     {
         id: 2,
-        document: "V-87654321",
+        dni: "V-87654321",
         first_name: "Carlos",
         last_name: "Rodríguez",
         password: "oficial123",
-        number_phone: "0414-4445566",
-        gmail: "carlos.rodriguez@policia.gov",
-        role: "funcionario",
-        status: "Active",
+        phone: "0414-4445566",
+        email: "carlos.rodriguez@policia.gov",
+        role: "officer",
+        status: "active",
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
     },
     {
         id: 3,
-        document: "V-11223344",
+        dni: "V-11223344",
         first_name: "María",
         last_name: "González",
         password: "civil123",
-        number_phone: "0424-7778899",
-        gmail: "maria.gonzalez@email.com",
+        phone: "0424-7778899",
+        email: "maria.gonzalez@email.com",
         role: "civil",
-        status: "Active",
+        status: "active",
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
     },
     {
         id: 4,
-        document: "V-55667788",
+        dni: "V-55667788",
         first_name: "Luis",
         last_name: "Pérez",
         password: "funcionario123",
-        number_phone: "0412-3334455",
-        gmail: "luis.perez@gobierno.gov",
-        role: "funcionario",
-        status: "Suspended",
+        phone: "0412-3334455",
+        email: "luis.perez@gobierno.gov",
+        role: "functionary",
+        status: "suspended",
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
     }
@@ -101,14 +101,14 @@ export async function createUser(payload) {
 
     const user = {
         id,
-        document: payload.document || '',
+        dni: payload.dni || '',
         first_name: payload.first_name || '',
         last_name: payload.last_name || '',
         password: payload.password || '',
-        number_phone: payload.number_phone || '',
-        gmail: payload.gmail || '',
+        phone: payload.phone || '',
+        email: payload.email || '',
         role: payload.role || 'civil',
-        status: payload.status || 'Active',
+        status: payload.status || 'active',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
     }
@@ -121,12 +121,12 @@ export async function createUser(payload) {
             await createOfficer({
                 name: user.first_name,
                 lastName: user.last_name,
-                idNumber: user.document,
-                email: user.gmail,
-                phone: user.number_phone,
+                idNumber: user.dni,
+                email: user.email,
+                phone: user.phone,
                 unit: 'Pending Assignment',
                 rank: 'Pending Assignment',
-                status: user.status === 'Active' ? 'Active' : 'Inactive'
+                status: user.status.toLowerCase()
             })
         } catch (e) {
             console.error('Error syncing officer creation:', e)
@@ -151,35 +151,33 @@ export async function updateUser(id, payload) {
     const updatedUser = items[idx]
 
     try {
-        const existingOfficer = await getOfficerByDocument(updatedUser.document)
-        const isOfficerRole = updatedUser.role === 'officer' || updatedUser.role === 'oficial'
+        const existingOfficer = await getOfficerByDocument(updatedUser.dni)
+        const isOfficerRole = updatedUser.role.toLowerCase() === 'officer' || updatedUser.role.toLowerCase() === 'oficial'
 
         if (isOfficerRole) {
+            const officerData = {
+                name: updatedUser.first_name,
+                lastName: updatedUser.last_name,
+                email: updatedUser.email,
+                phone: updatedUser.phone,
+                status: updatedUser.status.toLowerCase()
+            }
+
             if (existingOfficer) {
-                await updateOfficer(existingOfficer.id, {
-                    name: updatedUser.first_name,
-                    lastName: updatedUser.last_name,
-                    email: updatedUser.gmail,
-                    phone: updatedUser.number_phone,
-                    status: updatedUser.status === 'Active' ? 'Active' : 'Inactive'
-                })
+                await updateOfficer(existingOfficer.id, officerData)
             } else {
                 await createOfficer({
-                    name: updatedUser.first_name,
-                    lastName: updatedUser.last_name,
-                    idNumber: updatedUser.document,
-                    email: updatedUser.gmail,
-                    phone: updatedUser.number_phone,
+                    ...officerData,
+                    idNumber: updatedUser.dni,
                     unit: 'Pending Assignment',
-                    rank: 'Pending Assignment',
-                    status: updatedUser.status === 'Active' ? 'Active' : 'Inactive'
+                    rank: 'Pending Assignment'
                 })
             }
         } else {
-            // If role changed FROM officer to something else, deactivate officer, don't delete
+            // Requirement: If role changes from officer, set officer status to inactive
             if (existingOfficer) {
                 await updateOfficer(existingOfficer.id, {
-                    status: 'Inactive'
+                    status: 'inactive'
                 })
             }
         }
@@ -196,9 +194,9 @@ export async function deleteUser(id) {
     const filtered = items.filter(u => u.id !== id)
     save(filtered)
 
-    if (userToDelete && (userToDelete.role === 'officer' || userToDelete.role === 'oficial' || userToDelete.document)) {
+    if (userToDelete && (userToDelete.role === 'officer' || userToDelete.role === 'oficial' || userToDelete.dni)) {
         try {
-            await deleteOfficerByDocument(userToDelete.document)
+            await deleteOfficerByDocument(userToDelete.dni)
         } catch (e) {
             console.error('Error deleting synced officer:', e)
         }
@@ -214,7 +212,7 @@ export async function changeUserStatus(id, newStatus) {
 
     items[idx] = {
         ...items[idx],
-        status: newStatus,
+        status: newStatus.toLowerCase(),
         updatedAt: new Date().toISOString()
     }
     save(items)
@@ -224,15 +222,14 @@ export async function changeUserStatus(id, newStatus) {
         const rawOfficers = localStorage.getItem(officerKey)
         if (rawOfficers) {
             const officers = JSON.parse(rawOfficers)
-            const userDoc = items[idx].document
+            const userDoc = items[idx].dni
             const oIdx = officers.findIndex(o => o.idNumber === userDoc)
 
             if (oIdx !== -1) {
-                // Statuses are now unified
-                const mappedStatus = newStatus
+                const mappedStatus = newStatus.toLowerCase()
                 if (officers[oIdx].status !== mappedStatus) {
                     officers[oIdx].status = mappedStatus
-                    officers[oIdx].active = mappedStatus === 'Active'
+                    officers[oIdx].active = mappedStatus === 'active'
                     localStorage.setItem(officerKey, JSON.stringify(officers))
                 }
             }
@@ -251,7 +248,7 @@ export async function changeUserRole(id, newRole) {
 
     items[idx] = {
         ...items[idx],
-        role: newRole,
+        role: newRole.toLowerCase(),
         updatedAt: new Date().toISOString()
     }
     save(items)
@@ -259,28 +256,32 @@ export async function changeUserRole(id, newRole) {
     const updatedUser = items[idx]
 
     try {
-        const existingOfficer = await getOfficerByDocument(updatedUser.document)
-        const isOfficerRole = newRole === 'officer' || newRole === 'oficial'
+        const existingOfficer = await getOfficerByDocument(updatedUser.dni)
+        const isOfficerRole = newRole.toLowerCase() === 'officer' || newRole.toLowerCase() === 'oficial'
 
         if (isOfficerRole) {
             if (!existingOfficer) {
                 await createOfficer({
                     name: updatedUser.first_name,
                     lastName: updatedUser.last_name,
-                    idNumber: updatedUser.document,
-                    email: updatedUser.gmail,
-                    phone: updatedUser.number_phone,
+                    idNumber: updatedUser.dni,
+                    email: updatedUser.email,
+                    phone: updatedUser.phone,
                     unit: 'Pending Assignment',
                     rank: 'Pending Assignment',
-                    status: updatedUser.status === 'Active' ? 'Active' : 'Inactive'
+                    status: updatedUser.status.toLowerCase()
                 })
             } else {
+                // If they are already an officer, just ensure they are active (or match status)
+                await updateOfficer(existingOfficer.id, {
+                    status: updatedUser.status.toLowerCase()
+                })
             }
         } else {
-            // Role is NOT officer, mark as Inactive if exists (DO NOT DELETE)
+            // Requirement: If role changes from officer, set officer status to inactive
             if (existingOfficer) {
                 await updateOfficer(existingOfficer.id, {
-                    status: 'Inactive'
+                    status: 'inactive'
                 })
             }
         }

@@ -181,19 +181,19 @@ const Officers = () => {
     }
 
     const getStatusOptions = (currentStatus) => {
+        const s = currentStatus?.toLowerCase()
         const statuses = [
-            { value: 'Active', label: 'Active' },
-            { value: 'Inactive', label: 'Inactive' },
-            { value: 'Training', label: 'Training' },
-            { value: 'Suspended', label: 'Suspended' }
+            { value: 'active', label: 'Active' },
+            { value: 'inactive', label: 'Inactive' },
+            { value: 'training', label: 'Training' },
+            { value: 'suspended', label: 'Suspended' }
         ]
-        return statuses.filter(status => status.value !== currentStatus)
+        return statuses.filter(status => status.value !== s)
     }
 
-    // Placeholder function for handleStatusChange - needs implementation in services/officers
     async function handleStatusChange(officerId, newStatus) {
         try {
-            await changeOfficerStatus(officerId, newStatus)
+            await changeOfficerStatus(officerId, newStatus.toLowerCase())
             await fetchData()
         } catch (error) {
             console.error('Error changing officer status:', error)
@@ -202,14 +202,15 @@ const Officers = () => {
     }
 
     const getStatusBadge = (status) => {
+        const s = status?.toLowerCase()
         const statusConfig = {
-            'Active': { color: 'success', text: 'Active', icon: cilCheckCircle },
-            'Inactive': { color: 'secondary', text: 'Inactive', icon: cilBan },
-            'Training': { color: 'info', text: 'Training', icon: cilInfo },
-            'Suspended': { color: 'danger', text: 'Suspended', icon: cilWarning }
+            'active': { color: 'success', text: 'Active', icon: cilCheckCircle },
+            'inactive': { color: 'secondary', text: 'Inactive', icon: cilBan },
+            'training': { color: 'info', text: 'Training', icon: cilInfo },
+            'suspended': { color: 'danger', text: 'Suspended', icon: cilWarning }
         }
 
-        const config = statusConfig[status] || { color: 'secondary', text: status }
+        const config = statusConfig[s] || { color: 'secondary', text: status }
         return (
             <CBadge
                 color={config.color}

@@ -5,7 +5,7 @@ const initialZones = [
         id: 1,
         name: 'Pueblo Nuevo',
         color: '#4caf50',
-        positions: [
+        coordinates: [
             [7.795, -72.240],
             [7.820, -72.230],
             [7.820, -72.200],
@@ -18,7 +18,7 @@ const initialZones = [
         id: 2,
         name: 'Barrio Obrero',
         color: '#2196f3',
-        positions: [
+        coordinates: [
             [7.775, -72.225],
             [7.775, -72.200],
             [7.760, -72.200],
@@ -29,7 +29,7 @@ const initialZones = [
         id: 3,
         name: 'Centro',
         color: '#f44336',
-        positions: [
+        coordinates: [
             [7.775, -72.235],
             [7.775, -72.225],
             [7.760, -72.225],
@@ -40,7 +40,7 @@ const initialZones = [
         id: 4,
         name: 'Santa Teresa',
         color: '#9c27b0',
-        positions: [
+        coordinates: [
             [7.785, -72.240],
             [7.775, -72.225],
             [7.775, -72.235],
@@ -53,7 +53,7 @@ const initialZones = [
         id: 5,
         name: 'La Concordia',
         color: '#ff9800',
-        positions: [
+        coordinates: [
             [7.760, -72.235],
             [7.760, -72.200],
             [7.720, -72.210],
@@ -108,7 +108,7 @@ export async function createZone(payload) {
         id,
         name: payload.name || 'New Zone',
         color: payload.color || '#333333',
-        positions: payload.positions || [],
+        coordinates: payload.coordinates || [],
         description: payload.description || '',
         createdAt: new Date().toISOString()
     }

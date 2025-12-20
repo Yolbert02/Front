@@ -10,8 +10,8 @@ const initialOfficers = [
         unit: 'CICPC - Homicidios',
         email: 'carlos.rodriguez@policia.gov',
         phone: '0414-1112233',
-        rank: 'Detective', // Nuevo campo
-        status: 'Active',
+        rank: 'Detective',
+        status: 'active',
         active: true
     },
     {
@@ -23,7 +23,7 @@ const initialOfficers = [
         email: 'ana.martinez@mp.gov',
         phone: '0424-4445566',
         rank: 'Sergeant',
-        status: 'Active',
+        status: 'active',
         active: true
     },
     {
@@ -35,7 +35,7 @@ const initialOfficers = [
         email: 'luis.gonzalez@polincia.gov',
         phone: '0412-7788990',
         rank: 'Officer',
-        status: 'Training',
+        status: 'training',
         active: false
     }
 ]
@@ -94,6 +94,7 @@ export async function deleteOfficerByDocument(doc) {
 export async function createOfficer(payload) {
     const items = load()
     const id = nextId(items)
+    const officerStatus = (payload.status || 'active').toLowerCase()
     const officer = {
         id,
         name: payload.name || '',
@@ -103,8 +104,8 @@ export async function createOfficer(payload) {
         email: payload.email || '',
         phone: payload.phone || '',
         rank: payload.rank || '',
-        status: payload.status || 'Active',
-        active: payload.status === 'Active'
+        status: officerStatus,
+        active: officerStatus === 'active'
     }
     items.push(officer)
     save(items)
@@ -116,34 +117,31 @@ export async function updateOfficer(id, payload) {
     const idx = items.findIndex(o => o.id === id)
     if (idx === -1) return Promise.reject(new Error('Officer not found'))
 
+    const updatedStatus = payload.status ? payload.status.toLowerCase() : items[idx].status
+
     items[idx] = {
         ...items[idx],
         ...payload,
-        active: payload.status === 'Active'
+        status: updatedStatus,
+        active: updatedStatus === 'active'
     }
     save(items)
 
     // Sync status back to user if linked
     if (payload.status) {
         try {
-            // We need to find the user. We can use listUsers and find by document
-            // Avoiding circular dependency issues at runtime might be tricky, but let's try direct import
             const allUsers = await listUsers()
-            const linkedUser = allUsers.find(u => u.document === items[idx].idNumber)
+            // Important: Use 'dni' instead of 'document'
+            const linkedUser = allUsers.find(u => u.dni === items[idx].idNumber)
             if (linkedUser) {
-                const newStatus = payload.status === 'Active' ? 'activo' : 'suspendido' // Map status
+                const newStatus = updatedStatus
                 // Only update if different
                 if (linkedUser.status !== newStatus) {
-                    // We can't call updateUser from here easily if it imports THIS file.
-                    // Circular dependency risk.
-                    // Best way currently: Manually update user in localStorage to avoid loop or use a lower-level helper.
-                    // For now, I'll implement a 'updateUserStatusByDocument' helper in users.js roughly or just update users localstorage here?
-                    // Accessing localStorage directly for users key is safest to break cycles.
                     const userKey = 'mock_users_v1'
                     const rawUsers = localStorage.getItem(userKey)
                     if (rawUsers) {
                         const users = JSON.parse(rawUsers)
-                        const uIdx = users.findIndex(u => u.document === items[idx].idNumber)
+                        const uIdx = users.findIndex(u => u.dni === items[idx].idNumber)
                         if (uIdx !== -1) {
                             users[uIdx].status = newStatus
                             users[uIdx].updatedAt = new Date().toISOString()
@@ -175,8 +173,3 @@ export async function resetToInitial() {
     save(initialOfficers)
     return Promise.resolve(initialOfficers)
 }
-
-
-/*reset del localStorage
-localStorage.removeItem('mock_officers_v1')
-location.reload()  */

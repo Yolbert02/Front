@@ -5,9 +5,9 @@ const initialComplaints = [
         id: 1,
         title: "Street robbery",
         description: "Cell phone theft near the main square of Pueblo Nuevo",
-        complainantName: "Maria Gonzalez",
-        complainantPhone: "0414-1112233",
-        complainantEmail: "maria.gonzalez@email.com",
+        complainant_name: "Maria Gonzalez",
+        complainant_phone: "0414-1112233",
+        complainant_email: "maria.gonzalez@email.com",
         country: "Venezuela",
         state: "Táchira",
         parish: "San Juan Bautista",
@@ -18,10 +18,10 @@ const initialComplaints = [
         location: "Plaza Bolivar, cerca del mercado municipal, Pueblo Nuevo, San Cristóbal, San Cristóbal, San Juan Bautista, Táchira, Venezuela",
         assignedOfficerId: 1,
         assignedOfficerName: "Carlos Rodríguez",
-        status: "Under Investigation",
-        priority: "High",
-        lat: 7.785,
-        lng: -72.220,
+        status: "under_investigation",
+        priority: "high",
+        latitude: 7.785,
+        longitude: -72.220,
         evidence: [
             {
                 id: 1,
@@ -39,9 +39,9 @@ const initialComplaints = [
         id: 2,
         title: "Public property vandalism",
         description: "Damage to benches in Barrio Obrero",
-        complainantName: "Jose Lopez",
-        complainantPhone: "0424-5556677",
-        complainantEmail: "jose.lopez@email.com",
+        complainant_name: "Jose Lopez",
+        complainant_phone: "0424-5556677",
+        complainant_email: "jose.lopez@email.com",
         country: "Venezuela",
         state: "Táchira",
         parish: "Pedro María Morantes",
@@ -52,10 +52,10 @@ const initialComplaints = [
         location: "Carrera 20, entre calles 7 y 8, Barrio Obrero, San Cristóbal, San Cristóbal, Pedro María Morantes, Táchira, Venezuela",
         assignedOfficerId: 2,
         assignedOfficerName: "Ana Martínez",
-        status: "Received",
-        priority: "Medium",
-        lat: 7.768,
-        lng: -72.215,
+        status: "received",
+        priority: "medium",
+        latitude: 7.768,
+        longitude: -72.215,
         evidence: [],
         incidentDate: "2024-01-14",
         createdAt: new Date().toISOString()
@@ -64,9 +64,9 @@ const initialComplaints = [
         id: 3,
         title: "Traffic accident",
         description: "Collision at intersection in La Concordia",
-        complainantName: "Pedro Perez",
-        complainantPhone: "0412-9998877",
-        complainantEmail: "pedro.perez@email.com",
+        complainant_name: "Pedro Perez",
+        complainant_phone: "0412-9998877",
+        complainant_email: "pedro.perez@email.com",
         country: "Venezuela",
         state: "Táchira",
         parish: "La Concordia",
@@ -77,10 +77,10 @@ const initialComplaints = [
         location: "Avenida 19 de Abril con Calle 8, La Concordia, San Cristóbal, San Cristóbal, La Concordia, Táchira, Venezuela",
         assignedOfficerId: null,
         assignedOfficerName: "",
-        status: "Resolved",
-        priority: "Low",
-        lat: 7.740,
-        lng: -72.225,
+        status: "resolved",
+        priority: "low",
+        latitude: 7.740,
+        longitude: -72.225,
         evidence: [],
         incidentDate: "2024-01-20",
         createdAt: new Date().toISOString()
@@ -133,9 +133,9 @@ export async function createComplaint(payload) {
         id,
         title: payload.title || '',
         description: payload.description || '',
-        complainantName: payload.complainantName || '',
-        complainantPhone: payload.complainantPhone || '',
-        complainantEmail: payload.complainantEmail || '',
+        complainant_name: payload.complainant_name || '',
+        complainant_phone: payload.complainant_phone || '',
+        complainant_email: payload.complainant_email || '',
         country: payload.country || 'Venezuela',
         state: payload.state || 'Táchira',
         municipality: payload.municipality || 'San Cristóbal',
@@ -146,12 +146,12 @@ export async function createComplaint(payload) {
         location: payload.location || '', // Dirección completa
         assignedOfficerId: payload.assignedOfficerId || null,
         assignedOfficerName: payload.assignedOfficerName || '',
-        status: payload.status || 'Received',
-        priority: payload.priority || 'Medium',
+        status: (payload.status || 'received').toLowerCase(),
+        priority: (payload.priority || 'medium').toLowerCase(),
         evidence: payload.evidence || [],
         incidentDate: payload.incidentDate || new Date().toISOString().split('T')[0],
-        lat: payload.lat || null,
-        lng: payload.lng || null,
+        latitude: payload.latitude || null,
+        longitude: payload.longitude || null,
         createdAt: new Date().toISOString()
     }
 
@@ -165,16 +165,20 @@ export async function updateComplaint(id, payload) {
     const idx = items.findIndex(c => c.id === id)
     if (idx === -1) return Promise.reject(new Error('Complaint not found'))
 
+    const updatedPayload = { ...payload }
+    if (payload.status) updatedPayload.status = payload.status.toLowerCase()
+    if (payload.priority) updatedPayload.priority = payload.priority.toLowerCase()
+
     items[idx] = {
         ...items[idx],
-        ...payload
+        ...updatedPayload
     }
     save(items)
     return Promise.resolve(items[idx])
 }
 
 export async function changeComplaintStatus(id, newStatus) {
-    return updateComplaint(id, { status: newStatus })
+    return updateComplaint(id, { status: newStatus.toLowerCase() })
 }
 
 export async function deleteComplaint(id) {

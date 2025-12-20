@@ -31,8 +31,8 @@ const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
     const [trialDate, setTrialDate] = useState('')
     const [trialTime, setTrialTime] = useState('10:00')
     const [location, setLocation] = useState('')
-    const [status, setStatus] = useState('Scheduled')
-    const [priority, setPriority] = useState('Medium')
+    const [status, setStatus] = useState('scheduled')
+    const [priority, setPriority] = useState('medium')
 
     const [officials, setOfficials] = useState([])
     const [witnesses, setWitnesses] = useState([])
@@ -61,8 +61,8 @@ const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
                 setTrialDate(initial.trial_date || '')
                 setTrialTime(initial.trial_time || '10:00')
                 setLocation(initial.location || '')
-                setStatus(initial.status || 'Scheduled')
-                setPriority(initial.priority || 'Medium')
+                setStatus(initial.status || 'scheduled')
+                setPriority(initial.priority || 'medium')
                 setOfficials(initial.officials || [])
                 setWitnesses(initial.witnesses || [])
                 setJury(initial.jury || [])
@@ -111,8 +111,8 @@ const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
         setTrialDate('')
         setTrialTime('10:00')
         setLocation('')
-        setStatus('Scheduled')
-        setPriority('Medium')
+        setStatus('scheduled')
+        setPriority('medium')
         setOfficials([])
         setWitnesses([])
         setJury([])
@@ -259,7 +259,7 @@ const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
                         <option value="">Select official</option>
                         {availableOfficials.map(user => (
                             <option key={user.id} value={user.id}>
-                                {user.first_name} {user.last_name} - {user.document}
+                                {user.first_name} {user.last_name} - {user.dni}
                             </option>
                         ))}
                     </CFormSelect>
@@ -301,7 +301,7 @@ const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
                         <option value="">Select witness</option>
                         {availableCitizens.map(user => (
                             <option key={user.id} value={user.id}>
-                                {user.first_name} {user.last_name} - {user.document}
+                                {user.first_name} {user.last_name} - {user.dni}
                             </option>
                         ))}
                     </CFormSelect>
@@ -339,7 +339,7 @@ const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
                         <option value="">Select member</option>
                         {availableCitizens.map(user => (
                             <option key={user.id} value={user.id}>
-                                {user.first_name} {user.last_name} - {user.document}
+                                {user.first_name} {user.last_name} - {user.dni}
                             </option>
                         ))}
                     </CFormSelect>
@@ -433,7 +433,7 @@ const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
                                         <option value="">Select a judge</option>
                                         {availableOfficials.map(official => (
                                             <option key={official.id} value={official.id}>
-                                                {official.first_name} {official.last_name} - {official.document}
+                                                {official.first_name} {official.last_name} - {official.dni}
                                             </option>
                                         ))}
                                     </CFormSelect>
@@ -492,11 +492,11 @@ const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
                                         value={status}
                                         onChange={(e) => setStatus(e.target.value)}
                                     >
-                                        <option value="Scheduled">Scheduled</option>
-                                        <option value="In Progress">In Progress</option>
-                                        <option value="Completed">Completed</option>
-                                        <option value="Cancelled">Cancelled</option>
-                                        <option value="Postponed">Postponed</option>
+                                        <option value="scheduled">Scheduled</option>
+                                        <option value="in_progress">In Progress</option>
+                                        <option value="completed">Completed</option>
+                                        <option value="cancelled">Cancelled</option>
+                                        <option value="postponed">Postponed</option>
                                     </CFormSelect>
                                 </CCol>
                                 <CCol md={6}>
@@ -505,9 +505,9 @@ const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
                                         value={priority}
                                         onChange={(e) => setPriority(e.target.value)}
                                     >
-                                        <option value="High">High</option>
-                                        <option value="Medium">Medium</option>
-                                        <option value="Low">Low</option>
+                                        <option value="high">High</option>
+                                        <option value="medium">Medium</option>
+                                        <option value="low">Low</option>
                                     </CFormSelect>
                                 </CCol>
                             </CRow>

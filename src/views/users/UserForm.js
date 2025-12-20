@@ -18,15 +18,15 @@ import { colorbutton } from 'src/styles/darkModeStyles';
 
 const UserForm = ({ visible, onClose, onSave, initial = null }) => {
     const [step, setStep] = useState(1);
-    const [document, setDocument] = useState('');
+    const [dni, setDni] = useState('');
     const [document_image, setDocumentImage] = useState(null);
     const [first_name, setFirstName] = useState('');
     const [last_name, setLastName] = useState('');
     const [password, setPassword] = useState('');
-    const [number_phone, setNumberPhone] = useState('');
-    const [gmail, setGmail] = useState('');
+    const [phone, setPhone] = useState('');
+    const [email, setEmail] = useState('');
     const [role, setRole] = useState('civil');
-    const [status, setStatus] = useState('Active');
+    const [status, setStatus] = useState('active');
     const [errors, setErrors] = useState({});
     const [saving, setSaving] = useState(false);
 
@@ -34,31 +34,31 @@ const UserForm = ({ visible, onClose, onSave, initial = null }) => {
         if (visible) {
             setStep(1);
             if (initial) {
-                setDocument(initial.document || '');
+                setDni(initial.dni || '');
                 setDocumentImage(null);
                 setFirstName(initial.first_name || '');
                 setLastName(initial.last_name || '');
                 setPassword('');
-                setNumberPhone(initial.number_phone || '');
-                setGmail(initial.gmail || '');
+                setPhone(initial.phone || '');
+                setEmail(initial.email || '');
                 setRole(initial.role || 'civil');
-                setStatus(initial.status || 'Active');
+                setStatus(initial.status || 'active');
             } else {
-                setDocument('V-');
+                setDni('V-');
                 setDocumentImage(null);
                 setFirstName('');
                 setLastName('');
                 setPassword('');
-                setNumberPhone('');
-                setGmail('');
+                setPhone('');
+                setEmail('');
                 setRole('civil');
-                setStatus('Active');
+                setStatus('active');
             }
             setErrors({});
         }
     }, [visible, initial]);
 
-    const handleDocumentChange = (e) => {
+    const handleDniChange = (e) => {
         let value = e.target.value.toUpperCase();
 
         if (!value.startsWith('V-')) {
@@ -72,7 +72,7 @@ const UserForm = ({ visible, onClose, onSave, initial = null }) => {
         const docValue = value.substring(2);
         const cleanedDocValue = docValue.replace(/[^A-Z0-9]/g, '');
 
-        setDocument('V-' + cleanedDocValue);
+        setDni('V-' + cleanedDocValue);
     };
 
     const handleDocumentImageChange = (e) => {
@@ -85,14 +85,14 @@ const UserForm = ({ visible, onClose, onSave, initial = null }) => {
         if (currentStep === 1) {
             if (!first_name.trim()) newErrors.first_name = 'First name is required';
             if (!last_name.trim()) newErrors.last_name = 'Last name is required';
-            if (!document.trim() || document.trim() === 'V-') newErrors.document = 'Document is required';
+            if (!dni.trim() || dni.trim() === 'V-') newErrors.dni = 'DNI is required';
             if (!initial && !document_image) newErrors.document_image = 'Document image is required';
         }
 
         if (currentStep === 2) {
-            if (!gmail.trim()) newErrors.gmail = 'Email is required';
-            if (gmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(gmail)) newErrors.gmail = 'Invalid email format';
-            if (!number_phone.trim()) newErrors.number_phone = 'Phone number is required';
+            if (!email.trim()) newErrors.email = 'Email is required';
+            if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) newErrors.email = 'Invalid email format';
+            if (!phone.trim()) newErrors.phone = 'Phone number is required';
         }
 
         if (currentStep === 3) {
@@ -132,13 +132,13 @@ const UserForm = ({ visible, onClose, onSave, initial = null }) => {
         try {
             const formData = new FormData();
 
-            formData.append('document', document.trim());
+            formData.append('dni', dni.trim());
             formData.append('first_name', first_name.trim());
             formData.append('last_name', last_name.trim());
-            formData.append('number_phone', number_phone.trim());
-            formData.append('gmail', gmail.trim());
-            formData.append('role', role);
-            formData.append('status', status);
+            formData.append('phone', phone.trim());
+            formData.append('email', email.trim());
+            formData.append('role', role.toLowerCase());
+            formData.append('status', status.toLowerCase());
 
             if (password.trim()) {
                 formData.append('password', password.trim());
@@ -203,12 +203,12 @@ const UserForm = ({ visible, onClose, onSave, initial = null }) => {
                                 </CCol>
                                 <CCol md={6}>
                                     <CFormInput
-                                        label="Document *"
+                                        label="DNI *"
                                         placeholder="V-12345678"
-                                        value={document}
-                                        onChange={handleDocumentChange}
-                                        invalid={!!errors.document}
-                                        feedback={errors.document}
+                                        value={dni}
+                                        onChange={handleDniChange}
+                                        invalid={!!errors.dni}
+                                        feedback={errors.dni}
                                         required
                                     />
                                 </CCol>
@@ -236,10 +236,10 @@ const UserForm = ({ visible, onClose, onSave, initial = null }) => {
                                         label="Email *"
                                         type="email"
                                         placeholder="user@example.com"
-                                        value={gmail}
-                                        onChange={(e) => setGmail(e.target.value)}
-                                        invalid={!!errors.gmail}
-                                        feedback={errors.gmail}
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        invalid={!!errors.email}
+                                        feedback={errors.email}
                                         required
                                     />
                                 </CCol>
@@ -247,10 +247,10 @@ const UserForm = ({ visible, onClose, onSave, initial = null }) => {
                                     <CFormInput
                                         label="Phone Number *"
                                         placeholder="0414-1234567"
-                                        value={number_phone}
-                                        onChange={(e) => setNumberPhone(e.target.value)}
-                                        invalid={!!errors.number_phone}
-                                        feedback={errors.number_phone}
+                                        value={phone}
+                                        onChange={(e) => setPhone(e.target.value)}
+                                        invalid={!!errors.phone}
+                                        feedback={errors.phone}
                                         required
                                     />
                                 </CCol>
@@ -269,9 +269,9 @@ const UserForm = ({ visible, onClose, onSave, initial = null }) => {
                                         onChange={(e) => setRole(e.target.value)}
                                     >
                                         <option value="civil">Civil</option>
-                                        <option value="funcionario">Funcionary</option>
+                                        <option value="functionary">Functionary</option>
                                         <option value="officer">Officer</option>
-                                        <option value="administrador">Administrator</option>
+                                        <option value="administrator">Administrator</option>
                                     </CFormSelect>
                                 </CCol>
                                 <CCol md={6}>
@@ -280,9 +280,9 @@ const UserForm = ({ visible, onClose, onSave, initial = null }) => {
                                         value={status}
                                         onChange={(e) => setStatus(e.target.value)}
                                     >
-                                        <option value="Active">Active</option>
-                                        <option value="Suspended">Suspended</option>
-                                        <option value="Inactive">Inactive</option>
+                                        <option value="active">Active</option>
+                                        <option value="suspended">Suspended</option>
+                                        <option value="inactive">Inactive</option>
                                     </CFormSelect>
                                 </CCol>
                                 <CCol md={12}>

@@ -63,7 +63,7 @@ const Users = () => {
         return (
             user.first_name?.toLowerCase().includes(searchLower) ||
             user.last_name?.toLowerCase().includes(searchLower) ||
-            user.document?.toLowerCase().includes(searchLower) ||
+            user.dni?.toLowerCase().includes(searchLower) ||
             user.email?.toLowerCase().includes(searchLower)
         )
     })
@@ -167,7 +167,7 @@ const Users = () => {
 
     async function handleStatusChange(userId, newStatus) {
         try {
-            await changeUserStatus(userId, newStatus)
+            await changeUserStatus(userId, newStatus.toLowerCase())
             await fetchData()
         } catch (error) {
             console.error('Error changing user status:', error)
@@ -177,7 +177,7 @@ const Users = () => {
 
     async function handleRoleChange(userId, newRole) {
         try {
-            await changeUserRole(userId, newRole)
+            await changeUserRole(userId, newRole.toLowerCase())
             await fetchData()
         } catch (error) {
             console.error('Error changing user role:', error)
@@ -191,14 +191,15 @@ const Users = () => {
     }
 
     const getRoleBadge = (role) => {
+        const r = role?.toLowerCase()
         const roleConfig = {
-            'administrador': { color: 'warning', text: 'ADMINISTRATOR', icon: cilShieldAlt, textColor: 'text-dark' },
-            'funcionario': { color: 'primary', text: 'FUNCIONARY', icon: cilShieldAlt, textColor: 'text-white' },
+            'administrator': { color: 'warning', text: 'ADMINISTRATOR', icon: cilShieldAlt, textColor: 'text-dark' },
+            'functionary': { color: 'primary', text: 'FUNCTIONARY', icon: cilShieldAlt, textColor: 'text-white' },
             'officer': { color: 'info', text: 'OFFICER', icon: cilShieldAlt, textColor: 'text-white' },
             'civil': { color: 'light', text: 'CIVIL', icon: cilUser, textColor: 'text-dark' }
         }
 
-        const config = roleConfig[role] || { color: 'secondary', text: role, icon: cilUser, textColor: 'text-white' }
+        const config = roleConfig[r] || { color: 'secondary', text: role?.toUpperCase(), icon: cilUser, textColor: 'text-white' }
         return (
             <CBadge
                 color={config.color}
@@ -212,13 +213,15 @@ const Users = () => {
     }
 
     const getStatusBadge = (status) => {
+        const s = status?.toLowerCase()
         const statusConfig = {
-            'Active': { color: 'success', text: 'Active' },
-            'Suspended': { color: 'warning', text: 'Suspended' },
-            'Inactive': { color: 'secondary', text: 'Inactive' }
+            'active': { color: 'success', text: 'Active' },
+            'suspended': { color: 'warning', text: 'Suspended' },
+            'inactive': { color: 'secondary', text: 'Inactive' },
+            'deleted': { color: 'danger', text: 'Deleted' }
         }
 
-        const config = statusConfig[status] || { color: 'secondary', text: status }
+        const config = statusConfig[s] || { color: 'secondary', text: status }
         return (
             <CBadge color={config.color} shape="rounded-pill" className="px-2">
                 {config.text}
@@ -227,22 +230,24 @@ const Users = () => {
     }
 
     const getRoleOptions = (currentRole) => {
+        const r = currentRole?.toLowerCase()
         const roles = [
-            { value: 'administrador', label: 'Administrator', icon: cilShieldAlt },
-            { value: 'funcionario', label: 'Funcionary', icon: cilPeople },
+            { value: 'administrator', label: 'Administrator', icon: cilShieldAlt },
+            { value: 'functionary', label: 'Functionary', icon: cilPeople },
             { value: 'officer', label: 'Officer', icon: cilPeople },
             { value: 'civil', label: 'Civil', icon: cilUser }
         ]
-        return roles.filter(role => role.value !== currentRole)
+        return roles.filter(role => role.value !== r)
     }
 
     const getStatusOptions = (currentStatus) => {
+        const s = currentStatus?.toLowerCase()
         const statuses = [
-            { value: 'Active', label: 'Active' },
-            { value: 'Suspended', label: 'Suspended' },
-            { value: 'Inactive', label: 'Inactive' }
+            { value: 'active', label: 'Active' },
+            { value: 'suspended', label: 'Suspended' },
+            { value: 'inactive', label: 'Inactive' }
         ]
-        return statuses.filter(status => status.value !== currentStatus)
+        return statuses.filter(status => status.value !== s)
     }
 
     return (
@@ -331,14 +336,14 @@ const Users = () => {
                                                                         />
                                                                         <div className="ms-3">
                                                                             <div className="fw-bold">{user.first_name} {user.last_name}</div>
-                                                                            <div className="small text-muted font-monospace">{user.document}</div>
+                                                                            <div className="small text-muted font-monospace">{user.dni}</div>
                                                                         </div>
                                                                     </div>
                                                                 </CTableDataCell>
                                                                 <CTableDataCell>
                                                                     <div className="small">
-                                                                        <div className="mb-1">{user.gmail || 'N/A'}</div>
-                                                                        <div className="text-muted">{user.number_phone || 'N/A'}</div>
+                                                                        <div className="mb-1">{user.email || 'N/A'}</div>
+                                                                        <div className="text-muted">{user.phone || 'N/A'}</div>
                                                                     </div>
                                                                 </CTableDataCell>
                                                                 <CTableDataCell>
@@ -392,7 +397,6 @@ const Users = () => {
                                                                                     <CDropdownItem
                                                                                         key={status.value}
                                                                                         onClick={() => handleStatusChange(user.id, status.value)}
-                                                                                        className={status.value === 'eliminado' ? 'text-danger' : ''}
                                                                                         style={{ cursor: 'pointer' }}
                                                                                     >
                                                                                         Mark as {status.label}
@@ -405,7 +409,7 @@ const Users = () => {
                                                                             size="sm"
                                                                             shape="rounded-pill"
                                                                             onClick={() => showDeleteConfirmation(user.id, `${user.first_name} ${user.last_name}`)}
-                                                                            disabled={user.role === 'administrador'}
+                                                                            disabled={user.role?.toLowerCase() === 'administrator'}
                                                                             title="Delete User"
                                                                             className="text-danger shadow-sm"
                                                                         >

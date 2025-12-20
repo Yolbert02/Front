@@ -48,17 +48,17 @@ const Assignments = () => {
     })
 
     const statusConfig = {
-        'Scheduled': { color: 'primary', text: 'Scheduled', icon: cilCalendar },
-        'In Progress': { color: 'warning', text: 'In Progress', icon: cilClock },
-        'Completed': { color: 'success', text: 'Completed', icon: cilCheckCircle },
-        'Cancelled': { color: 'danger', text: 'Cancelled', icon: cilBan },
-        'Postponed': { color: 'info', text: 'Postponed', icon: cilClock }
+        'scheduled': { color: 'primary', text: 'Scheduled', icon: cilCalendar },
+        'in_progress': { color: 'warning', text: 'In Progress', icon: cilClock },
+        'completed': { color: 'success', text: 'Completed', icon: cilCheckCircle },
+        'cancelled': { color: 'danger', text: 'Cancelled', icon: cilBan },
+        'postponed': { color: 'info', text: 'Postponed', icon: cilClock }
     }
 
     const priorityConfig = {
-        'High': { color: 'danger', text: 'High' },
-        'Medium': { color: 'warning', text: 'Medium' },
-        'Low': { color: 'success', text: 'Low' }
+        'high': { color: 'danger', text: 'High' },
+        'medium': { color: 'warning', text: 'Medium' },
+        'low': { color: 'success', text: 'Low' }
     }
 
     useEffect(() => {
@@ -211,19 +211,21 @@ const Assignments = () => {
     }
 
     const getStatusOptions = (currentStatus) => {
+        const s = currentStatus?.toLowerCase()
         const statuses = [
-            { value: 'Scheduled', label: 'Scheduled' },
-            { value: 'In Progress', label: 'In Progress' },
-            { value: 'Completed', label: 'Completed' },
-            { value: 'Postponed', label: 'Postponed' },
-            { value: 'Cancelled', label: 'Cancelled' }
+            { value: 'scheduled', label: 'Scheduled' },
+            { value: 'in_progress', label: 'In Progress' },
+            { value: 'completed', label: 'Completed' },
+            { value: 'postponed', label: 'Postponed' },
+            { value: 'cancelled', label: 'Cancelled' }
         ]
-        return statuses.filter(status => status.value !== currentStatus)
+        return statuses.filter(status => status.value !== s)
     }
 
     async function handleStatusChange(assignmentId, newStatus) {
         try {
-            await changeAssignmentStatus(assignmentId, newStatus)
+            const lowerStatus = newStatus.toLowerCase()
+            await changeAssignmentStatus(assignmentId, lowerStatus)
             await fetchData()
             dispatch({
                 type: 'set',
@@ -247,7 +249,8 @@ const Assignments = () => {
     }
 
     const getStatusBadge = (status) => {
-        const config = statusConfig[status] || { color: 'secondary', text: status }
+        const s = status?.toLowerCase()
+        const config = statusConfig[s] || { color: 'secondary', text: status }
         return (
             <CBadge
                 color={config.color}
@@ -262,7 +265,8 @@ const Assignments = () => {
     }
 
     const getPriorityBadge = (priority) => {
-        const config = priorityConfig[priority] || { color: 'secondary', text: priority }
+        const p = priority?.toLowerCase()
+        const config = priorityConfig[p] || { color: 'secondary', text: priority }
         return (
             <CBadge
                 color={config.color}
@@ -336,9 +340,9 @@ const Assignments = () => {
             <CCard className="h-100 shadow-sm border-0" style={{ borderRadius: '12px' }}>
                 <div style={{
                     height: '4px',
-                    background: assignment.priority === 'High' ?
+                    background: assignment.priority?.toLowerCase() === 'high' ?
                         'linear-gradient(90deg, #dc3545 0%, #ff6b6b 100%)' :
-                        assignment.priority === 'Medium' ?
+                        assignment.priority?.toLowerCase() === 'medium' ?
                             'linear-gradient(90deg, #ffc107 0%, #ffd54f 100%)' :
                             'linear-gradient(90deg, #28a745 0%, #4caf50 100%)'
                 }}></div>

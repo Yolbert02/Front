@@ -14,8 +14,8 @@ const initialAssignments = [
         trial_date: "2024-03-20",
         trial_time: "10:00",
         location: "Justice Palace, Room 4A",
-        status: "Scheduled",
-        priority: "High",
+        status: "scheduled",
+        priority: "high",
         created_by: 1,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
@@ -77,8 +77,8 @@ export async function createAssignment(payload) {
         trial_date: payload.trial_date || '',
         trial_time: payload.trial_time || '10:00',
         location: payload.location || '',
-        status: payload.status || 'Scheduled',
-        priority: payload.priority || 'Medium',
+        status: payload.status?.toLowerCase() || 'scheduled',
+        priority: payload.priority?.toLowerCase() || 'medium',
         funcionaries: payload.funcionaries || [],
         witnesses: payload.witnesses || [],
         jury: payload.jury || [],
@@ -121,7 +121,10 @@ export async function getFuncionaries() {
     try {
         const usersModule = await import('./users.js')
         const users = await usersModule.listUsers()
-        return users.filter(user => user.role === 'officer' && user.status === 'Active')
+        return users.filter(user =>
+            (user.role?.toLowerCase() === 'officer' || user.role?.toLowerCase() === 'functionary' || user.role?.toLowerCase() === 'funcionario') &&
+            user.status?.toLowerCase() === 'active'
+        )
     } catch (error) {
         console.error('Error loading funcionaries:', error)
         return []
@@ -132,7 +135,7 @@ export async function getCitizens() {
     try {
         const usersModule = await import('./users.js')
         const users = await usersModule.listUsers()
-        return users.filter(user => user.role === 'civil' && user.status === 'Active')
+        return users.filter(user => user.role?.toLowerCase() === 'civil' && user.status?.toLowerCase() === 'active')
     } catch (error) {
         console.error('Error loading citizens:', error)
         return []
@@ -143,7 +146,7 @@ export async function getActiveUsers() {
     try {
         const usersModule = await import('./users.js')
         const users = await usersModule.listUsers()
-        return users.filter(user => user.status === 'Active')
+        return users.filter(user => user.status?.toLowerCase() === 'active')
     } catch (error) {
         console.error('Error loading active users:', error)
         return []

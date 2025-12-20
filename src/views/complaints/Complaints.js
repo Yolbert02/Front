@@ -185,19 +185,21 @@ const Complaints = () => {
     }
 
     const getStatusOptions = (currentStatus) => {
+        const s = currentStatus?.toLowerCase()
         const statuses = [
-            { value: 'Received', label: 'Received' },
-            { value: 'Under Investigation', label: 'Investigation' },
-            { value: 'Resolved', label: 'Resolved' },
-            { value: 'Closed', label: 'Closed' },
-            { value: 'Rejected', label: 'Rejected' }
+            { value: 'received', label: 'Received' },
+            { value: 'under_investigation', label: 'Investigation' },
+            { value: 'resolved', label: 'Resolved' },
+            { value: 'closed', label: 'Closed' },
+            { value: 'rejected', label: 'Rejected' }
         ]
-        return statuses.filter(status => status.value !== currentStatus)
+        return statuses.filter(status => status.value !== s)
     }
 
     async function handleStatusChange(complaintId, newStatus) {
         try {
-            await changeComplaintStatus(complaintId, newStatus)
+            const lowerStatus = newStatus.toLowerCase()
+            await changeComplaintStatus(complaintId, lowerStatus)
             await fetchData()
             dispatch({
                 type: 'set',
@@ -221,15 +223,16 @@ const Complaints = () => {
     }
 
     const getStatusBadge = (status) => {
+        const s = status?.toLowerCase()
         const statusConfig = {
-            'Received': { color: 'info', text: 'Received', icon: cilFile },
-            'Under Investigation': { color: 'warning', text: 'Investigation', icon: cilSearch },
-            'Resolved': { color: 'success', text: 'Resolved', icon: cilCheckCircle },
-            'Closed': { color: 'secondary', text: 'Closed', icon: cilBan },
-            'Rejected': { color: 'danger', text: 'Rejected', icon: cilBan }
+            'received': { color: 'info', text: 'Received', icon: cilFile },
+            'under_investigation': { color: 'warning', text: 'Investigation', icon: cilSearch },
+            'resolved': { color: 'success', text: 'Resolved', icon: cilCheckCircle },
+            'closed': { color: 'secondary', text: 'Closed', icon: cilBan },
+            'rejected': { color: 'danger', text: 'Rejected', icon: cilBan }
         }
 
-        const config = statusConfig[status] || { color: 'secondary', text: status }
+        const config = statusConfig[s] || { color: 'secondary', text: status }
         return (
             <CBadge
                 color={config.color}
@@ -243,14 +246,15 @@ const Complaints = () => {
     }
 
     const getPriorityBadge = (priority) => {
+        const p = priority?.toLowerCase()
         const priorityConfig = {
-            'Low': { color: 'success', text: 'Low' },
-            'Medium': { color: 'warning', text: 'Medium' },
-            'High': { color: 'danger', text: 'High' },
-            'Urgent': { color: 'danger', text: 'URGENT', icon: cilWarning }
+            'low': { color: 'success', text: 'Low' },
+            'medium': { color: 'warning', text: 'Medium' },
+            'high': { color: 'danger', text: 'High' },
+            'urgent': { color: 'danger', text: 'URGENT', icon: cilWarning }
         }
 
-        const config = priorityConfig[priority] || { color: 'secondary', text: priority }
+        const config = priorityConfig[p] || { color: 'secondary', text: priority }
         return (
             <CBadge
                 color={config.color}
@@ -358,8 +362,8 @@ const Complaints = () => {
                                                                 </CTableDataCell>
                                                                 <CTableDataCell>
                                                                     <div className="small">
-                                                                        <div className="fw-semibold">{complaint.complainantName}</div>
-                                                                        <div className="text-muted">{complaint.complainantPhone}</div>
+                                                                        <div className="fw-semibold">{complaint.complainant_name}</div>
+                                                                        <div className="text-muted">{complaint.complainant_phone}</div>
                                                                     </div>
                                                                 </CTableDataCell>
                                                                 <CTableDataCell>
