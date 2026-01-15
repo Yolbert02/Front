@@ -66,7 +66,7 @@ const InfoGlobalZone = ({ visible, onClose, zones = [], complaints = [] }) => {
             'received': 0,
             'under_investigation': 0,
             'resolved': 0,
-            'closed': 0,
+            'dismissed': 0,
             'rejected': 0
         }
 
@@ -74,14 +74,15 @@ const InfoGlobalZone = ({ visible, onClose, zones = [], complaints = [] }) => {
             'low': 0,
             'medium': 0,
             'high': 0,
-            'urgent': 0
+            'critical': 0
         }
 
         const byZone = zones.map(zone => {
-            const zoneComplaints = complaints.filter(c =>
-                c.zone?.toLowerCase().includes(zone.name.toLowerCase()) ||
-                c.location?.toLowerCase().includes(zone.name.toLowerCase())
-            )
+            const zoneComplaints = complaints.filter(c => {
+                const zoneMatch = c.zone?.toLowerCase() === zone.name.toLowerCase()
+                const locationMatch = c.location?.toLowerCase().includes(zone.name.toLowerCase())
+                return zoneMatch || locationMatch
+            })
 
             const zoneStatusStats = { ...byStatus }
             Object.keys(zoneStatusStats).forEach(key => zoneStatusStats[key] = 0)
@@ -159,7 +160,7 @@ const InfoGlobalZone = ({ visible, onClose, zones = [], complaints = [] }) => {
             case 'under_investigation': return 'warning'
             case 'received': return 'info'
             case 'rejected': return 'danger'
-            case 'closed': return 'secondary'
+            case 'dismissed': return 'secondary'
             default: return 'primary'
         }
     }
@@ -169,7 +170,7 @@ const InfoGlobalZone = ({ visible, onClose, zones = [], complaints = [] }) => {
             case 'low': return 'success'
             case 'medium': return 'warning'
             case 'high': return 'danger'
-            case 'urgent': return 'dark'
+            case 'critical': return 'dark'
             default: return 'primary'
         }
     }

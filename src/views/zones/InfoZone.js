@@ -36,54 +36,72 @@ const InfoZone = ({ visible, onClose, zone, complaints = [] }) => {
 
     if (!zone) return null
 
-    const zoneComplaints = complaints.filter((c) =>
-        c.zone?.toLowerCase().includes(zone.name.toLowerCase()) ||
-        c.location?.toLowerCase().includes(zone.name.toLowerCase()),
-    )
+    const zoneComplaints = complaints.filter((c) => {
+        const zoneMatch = c.zone?.toLowerCase() === zone.name.toLowerCase()
+        const locationMatch = c.location?.toLowerCase().includes(zone.name.toLowerCase())
+        return zoneMatch || locationMatch
+    })
 
     const statusStats = {
-        'Received': 0,
-        'Under Investigation': 0,
-        'Resolved': 0,
-        'Closed': 0,
-        'Rejected': 0
+        'received': 0,
+        'under_investigation': 0,
+        'resolved': 0,
+        'dismissed': 0,
+        'rejected': 0
     }
 
     const priorityStats = {
-        'Low': 0,
-        'Medium': 0,
-        'High': 0,
-        'Urgent': 0
+        'low': 0,
+        'medium': 0,
+        'high': 0,
+        'critical': 0
+    }
+
+    const statusLabels = {
+        'received': 'Received',
+        'under_investigation': 'Under Investigation',
+        'resolved': 'Resolved',
+        'dismissed': 'Dismissed',
+        'rejected': 'Rejected'
+    }
+
+    const priorityLabels = {
+        'low': 'Low',
+        'medium': 'Medium',
+        'high': 'High',
+        'critical': 'Critical'
     }
 
     zoneComplaints.forEach(complaint => {
-        if (statusStats[complaint.status] !== undefined) {
-            statusStats[complaint.status]++
+        const status = complaint.status?.toLowerCase()
+        const priority = complaint.priority?.toLowerCase()
+        if (statusStats[status] !== undefined) {
+            statusStats[status]++
         }
-        if (priorityStats[complaint.priority] !== undefined) {
-            priorityStats[complaint.priority]++
+        if (priorityStats[priority] !== undefined) {
+            priorityStats[priority]++
         }
     })
 
     const totalComplaints = zoneComplaints.length
 
     const getStatusColor = (status) => {
-        switch (status) {
-            case 'Resolved': return 'success'
-            case 'Under Investigation': return 'warning'
-            case 'Received': return 'info'
-            case 'Rejected': return 'danger'
-            case 'Closed': return 'secondary'
+        switch (status.toLowerCase()) {
+            case 'resolved': return 'success'
+            case 'under_investigation': return 'warning'
+            case 'received': return 'info'
+            case 'rejected': return 'danger'
+            case 'dismissed': return 'secondary'
             default: return 'primary'
         }
     }
 
     const getPriorityColor = (priority) => {
-        switch (priority) {
-            case 'Low': return 'success'
-            case 'Medium': return 'warning'
-            case 'High': return 'danger'
-            case 'Urgent': return 'dark'
+        switch (priority.toLowerCase()) {
+            case 'low': return 'success'
+            case 'medium': return 'warning'
+            case 'high': return 'danger'
+            case 'critical': return 'dark'
             default: return 'primary'
         }
     }
@@ -140,7 +158,7 @@ const InfoZone = ({ visible, onClose, zone, complaints = [] }) => {
                                             <CCol xs={12} sm={6} key={status}>
                                                 <div className="p-3 border rounded h-100">
                                                     <div className="d-flex justify-content-between mb-2">
-                                                        <strong>{status}</strong>
+                                                        <strong>{statusLabels[status]}</strong>
                                                         <span className="badge bg-primary">{count}</span>
                                                     </div>
                                                     <CProgress
@@ -178,7 +196,7 @@ const InfoZone = ({ visible, onClose, zone, complaints = [] }) => {
                                             <CCol xs={12} sm={6} key={priority}>
                                                 <div className="p-3 border rounded h-100">
                                                     <div className="d-flex justify-content-between mb-2">
-                                                        <strong>{priority}</strong>
+                                                        <strong>{priorityLabels[priority]}</strong>
                                                         <span className="badge bg-primary">{count}</span>
                                                     </div>
                                                     <CProgress
@@ -228,10 +246,10 @@ const InfoZone = ({ visible, onClose, zone, complaints = [] }) => {
                                                                 color={getPriorityColor(complaint.priority)}
                                                                 className="me-2"
                                                             >
-                                                                {complaint.priority}
+                                                                {priorityLabels[complaint.priority?.toLowerCase()] || complaint.priority}
                                                             </CBadge>
                                                             <CBadge color={getStatusColor(complaint.status)}>
-                                                                {complaint.status}
+                                                                {statusLabels[complaint.status?.toLowerCase()] || complaint.status}
                                                             </CBadge>
                                                         </div>
                                                     </div>

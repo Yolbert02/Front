@@ -110,7 +110,7 @@ const Zones = () => {
                 {zones.map((zone, index) => (
                   <Polygon
                     key={zone.id || index}
-                    positions={zone.positions}
+                    positions={zone.coordinates}
                     eventHandlers={{
                       click: () => handleZoneClick(zone),
                       mouseover: (e) => {

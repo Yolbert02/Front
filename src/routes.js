@@ -1,7 +1,7 @@
 import { element, exact } from 'prop-types'
 import React from 'react'
 
-const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'))
+const Dashboard = React.lazy(() => import('./views/dashboard/Welcome'))
 
 const Widgets = React.lazy(() => import('./views/widgets/Widgets'))
 
