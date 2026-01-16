@@ -1,0 +1,200 @@
+{
+    "info": {
+        "_postman_id": "evaluacion-backend",
+        "name": "Evaluación Backend",
+        "description": "Colección automatizada para probar el backend",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Auth",
+            "item": [
+                {
+                    "name": "Login",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "var jsonData = pm.response.json();",
+                                    "if (jsonData.token) {",
+                                    "    pm.collectionVariables.set(\"token\", jsonData.token);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"admin@sistema.com\",\n    \"password\": \"admin123\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": "http://localhost:4000/api/auth/login"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Profile",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": "http://localhost:4000/api/auth/profile"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Users",
+            "item": [
+                {
+                    "name": "List Users",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": "http://localhost:4000/api/users"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create User",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"dni\": \"V-22222222\",\n    \"first_name\": \"Prueba\",\n    \"last_name\": \"Postman\",\n    \"email\": \"postman@test.com\",\n    \"password\": \"123456\",\n    \"role\": \"civil\",\n    \"phone\": \"0414-9998877\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": "http://localhost:4000/api/users"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Officers",
+            "item": [
+                {
+                    "name": "List Officers",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": "http://localhost:4000/api/officers"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Upgrade Officer",
+                    "request": {
+                        "method": "PATCH",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"unit\": \"CICPC - Delitos Infomaticos\",\n    \"rank\": \"Inspector\",\n    \"status\": \"active\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": "http://localhost:4000/api/officers/1/upgrade"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Complaints",
+            "item": [
+                {
+                    "name": "List Complaints",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": "http://localhost:4000/api/complaints"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Complaint",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"title\": \"Robo de celular\",\n    \"description\": \"Ocurrió cerca de la plaza central\",\n    \"complainant_name\": \"Juan Perez\",\n    \"complainant_phone\": \"0414-0001122\",\n    \"zone\": \"Centro\",\n    \"address\": \"Calle 5 con Carrera 10\",\n    \"latitude\": 7.7667,\n    \"longitude\": -72.2250\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": "http://localhost:4000/api/complaints"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Zones",
+            "item": [
+                {
+                    "name": "List Zones",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": "http://localhost:4000/api/zones"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Zone",
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"name\": \"Sector 5\",\n    \"city\": \"San Cristóbal\",\n    \"state\": \"Táchira\",\n    \"parish\": \"San Juan Bautista\",\n    \"municipality\": \"San Cristóbal\",\n    \"latitude\": 7.7667,\n    \"longitude\": -72.2250\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": "http://localhost:4000/api/zones"
+                    },
+                    "response": []
+                }
+            ]
+        }
+    ],
+    "variable": [
+        {
+            "key": "token",
+            "value": ""
+        }
+    ]
+}

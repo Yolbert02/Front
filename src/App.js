@@ -1,9 +1,10 @@
 import React, { Suspense, useEffect } from 'react'
-import { HashRouter, Route, Routes } from 'react-router-dom'
+import { HashRouter, Route, Routes, Navigate } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 
 import { CSpinner, useColorModes } from '@coreui/react'
 import './scss/style.scss'
+import { checkAuth } from './services/auth'
 
 // We use those styles to show code examples, you should remove them in your application.
 import './scss/examples.scss'
@@ -14,6 +15,11 @@ const DefaultLayout = React.lazy(() => import('./layout/DefaultLayout'))
 // Pages
 const Login = React.lazy(() => import('./views/login/Login'))
 const Register = React.lazy(() => import('./views/register/Register'))
+
+const PrivateRoute = ({ children }) => {
+  const isAuthenticated = checkAuth()
+  return isAuthenticated ? children : <Navigate to="/login" replace />
+}
 
 const App = () => {
   const { isColorModeSet, setColorMode } = useColorModes('coreui-free-react-admin-template-theme')
@@ -45,7 +51,15 @@ const App = () => {
         <Routes>
           <Route exact path="/login" name="Login Page" element={<Login />} />
           <Route exact path="/register" name="Register Page" element={<Register />} />
-          <Route path="*" name="Home" element={<DefaultLayout />} />
+          <Route
+            path="*"
+            name="Home"
+            element={
+              <PrivateRoute>
+                <DefaultLayout />
+              </PrivateRoute>
+            }
+          />
         </Routes>
       </Suspense>
     </HashRouter>

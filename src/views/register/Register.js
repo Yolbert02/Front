@@ -37,7 +37,7 @@ const Register = () => {
     setError('')
     setLoading(true)
 
-    if (!formData.username || !formData.password || !formData.confirmPassword ||
+    if (!formData.password || !formData.confirmPassword ||
       !formData.first_name || !formData.last_name || !formData.email || !formData.document) {
       setError('All fields are required')
       setLoading(false)

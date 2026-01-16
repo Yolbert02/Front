@@ -1,0 +1,89 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "dni": "V-12345678",
+      "first_name": "Admin",
+      "last_name": "System",
+      "password": "admin123",
+      "phone": "0414-1112233",
+      "email": "admin@sistema.com",
+      "role": "administrator",
+      "status": "active",
+      "createdAt": "2024-01-16T15:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "dni": "V-87654321",
+      "first_name": "Carlos",
+      "last_name": "Rodríguez",
+      "password": "oficial123",
+      "phone": "0414-4445566",
+      "email": "carlos.rodriguez@policia.gov",
+      "role": "officer",
+      "status": "active",
+      "createdAt": "2024-01-16T15:00:00.000Z"
+    }
+  ],
+  "officers": [
+    {
+      "id": 1,
+      "name": "Carlos",
+      "lastName": "Rodríguez",
+      "idNumber": "V-12345678",
+      "unit": "CICPC - Homicidios",
+      "email": "carlos.rodriguez@policia.gov",
+      "phone": "0414-1112233",
+      "rank": "Detective",
+      "status": "active"
+    },
+    {
+      "id": 2,
+      "name": "pedrito",
+      "lastName": "marquez",
+      "idNumber": "V-16427839",
+      "unit": "",
+      "email": "pedrototototo@test.com",
+      "phone": "0414-7653451",
+      "rank": "",
+      "status": "active"
+    },
+    {
+      "id": 3,
+      "name": "pedrito",
+      "lastName": "marquez",
+      "idNumber": "V-16427839",
+      "unit": "",
+      "email": "pedrototototo@test.com",
+      "phone": "0414-7653451",
+      "rank": "",
+      "status": "active"
+    },
+    {
+      "id": 4,
+      "name": "pedrito",
+      "lastName": "marquez",
+      "idNumber": "V-16427839",
+      "unit": "",
+      "email": "pedrototototo@test.com",
+      "phone": "0414-7653451",
+      "rank": "",
+      "status": "active"
+    }
+  ],
+  "complaints": [],
+  "assignments": [],
+  "zones": [
+    {
+      "id": 1,
+      "name": "Pueblo Nuevo",
+      "city": "San Cristóbal",
+      "state": "Táchira",
+      "parish": "San Juan Bautista",
+      "municipality": "San Cristóbal",
+      "latitude": 7.785,
+      "longitude": -72.22,
+      "status": "active"
+    }
+  ]
+}

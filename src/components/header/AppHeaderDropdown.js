@@ -34,7 +34,7 @@ const AppHeaderDropdown = () => {
 
   useEffect(() => {
     loadProfile()
-    
+
     const handleProfilePictureUpdate = (event) => {
       setProfile(prev => ({
         ...prev,
@@ -51,7 +51,7 @@ const AppHeaderDropdown = () => {
 
     window.addEventListener('profilePictureUpdated', handleProfilePictureUpdate)
     window.addEventListener('profileUpdated', handleProfileUpdate)
-    
+
     return () => {
       window.removeEventListener('profilePictureUpdated', handleProfilePictureUpdate)
       window.removeEventListener('profileUpdated', handleProfileUpdate)
@@ -72,10 +72,10 @@ const AppHeaderDropdown = () => {
   const handleLogout = async () => {
     try {
       await logout()
-      navigate('/login')
+      navigate('/login', { replace: true })
     } catch (error) {
       console.error('Error during logout:', error)
-      navigate('/login')
+      navigate('/login', { replace: true })
     }
   }
 
@@ -87,14 +87,14 @@ const AppHeaderDropdown = () => {
     <CDropdown variant="nav-item">
       <CDropdownToggle placement="bottom-end" className="py-0 pe-0" caret={false}>
         {profile?.profile_picture ? (
-          <CAvatar 
-            src={profile.profile_picture} 
+          <CAvatar
+            src={profile.profile_picture}
             size="md"
             status="success"
             style={{ cursor: 'pointer' }}
           />
         ) : (
-          <div 
+          <div
             className="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white"
             style={{ width: 40, height: 40 }}
           >
@@ -109,13 +109,13 @@ const AppHeaderDropdown = () => {
         <CDropdownItem className="d-flex align-items-center" disabled>
           <div className="d-flex align-items-center w-100">
             {profile?.profile_picture ? (
-              <CAvatar 
-                src={profile.profile_picture} 
+              <CAvatar
+                src={profile.profile_picture}
                 size="sm"
                 className="me-2"
               />
             ) : (
-              <div 
+              <div
                 className="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white me-2"
                 style={{ width: 24, height: 24 }}
               >
@@ -130,19 +130,19 @@ const AppHeaderDropdown = () => {
             </div>
           </div>
         </CDropdownItem>
-        
+
         <CDropdownDivider />
-        
+
         <CDropdownItem href="#">
           <CIcon icon={cilBell} className="me-2" />
           Updates
         </CDropdownItem>
-        
+
         <CDropdownHeader className="bg-body-secondary fw-semibold my-2">
           Settings
         </CDropdownHeader>
-        
-        <CDropdownItem 
+
+        <CDropdownItem
           className="d-flex align-items-center"
           onClick={handleProfileClick}
           style={{ cursor: 'pointer' }}
@@ -150,15 +150,15 @@ const AppHeaderDropdown = () => {
           <CIcon icon={cilUser} className="me-2" />
           My Profile
         </CDropdownItem>
-        
+
         <CDropdownItem href="#">
           <CIcon icon={cilSettings} className="me-2" />
           Settings
         </CDropdownItem>
 
         <CDropdownDivider />
-        
-        <CDropdownItem 
+
+        <CDropdownItem
           className="d-flex align-items-center text-danger"
           onClick={handleLogout}
           style={{ cursor: 'pointer' }}

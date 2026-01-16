@@ -16,12 +16,12 @@ import {
   CSpinner
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { cilLockLocked, cilUser, cilShieldAlt, cilUserPlus } from '@coreui/icons'
-import { login } from 'src/services/auth'
+import { cilLockLocked, cilUser, cilShieldAlt, cilUserPlus, cilEnvelopeClosed } from '@coreui/icons'
+import { login, checkAuth } from 'src/services/auth'
 import { authStyles, containerStyles } from 'src/styles/darkModeStyles'
 
 const Login = () => {
-  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -29,22 +29,39 @@ const Login = () => {
 
   const navigate = useNavigate()
 
+  React.useEffect(() => {
+    if (checkAuth()) {
+      navigate('/dashboard', { replace: true })
+    }
+
+    const blockBack = () => {
+      window.history.pushState(null, null, window.location.href)
+    }
+
+    window.history.pushState(null, null, window.location.href)
+    window.addEventListener('popstate', blockBack)
+
+    return () => {
+      window.removeEventListener('popstate', blockBack)
+    }
+  }, [navigate])
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
     setLoading(true)
 
-    if (!username.trim() || !password.trim()) {
+    if (!email.trim() || !password.trim()) {
       setError('Please complete all fields.')
       setLoading(false)
       return
     }
 
     try {
-      const result = await login(username, password)
+      const result = await login(email, password)
 
       if (result.success) {
-        navigate('/dashboard')
+        navigate('/dashboard', { replace: true })
       }
     } catch (err) {
       setError(err.message || 'Error logging')
@@ -84,13 +101,13 @@ const Login = () => {
 
                     <CInputGroup className="mb-3">
                       <CInputGroupText>
-                        <CIcon icon={cilUser} />
+                        <CIcon icon={cilEnvelopeClosed} />
                       </CInputGroupText>
                       <CFormInput
-                        placeholder="Usuario"
-                        autoComplete="username"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
+                        placeholder="example@gmail.com"
+                        autoComplete="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
                         disabled={loading}
                         required
                       />
