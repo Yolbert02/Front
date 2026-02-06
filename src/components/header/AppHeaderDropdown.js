@@ -85,18 +85,54 @@ const AppHeaderDropdown = () => {
 
   return (
     <CDropdown variant="nav-item">
-      <CDropdownToggle placement="bottom-end" className="py-0 pe-0" caret={false}>
+      <CDropdownToggle placement="bottom-end" className="py-0 pe-0 border-0" caret={false} style={{ display: 'flex', alignItems: 'center' }}>
         {profile?.profile_picture ? (
-          <CAvatar
-            src={profile.profile_picture}
-            size="md"
-            status="success"
-            style={{ cursor: 'pointer' }}
-          />
+          <div
+            style={{
+              width: '42px',
+              height: '42px',
+              borderRadius: '50%',
+              border: '2px solid #1a237e',
+              padding: '2px', // Space for the border
+              background: 'white',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+              position: 'relative'
+            }}
+          >
+            <div
+              style={{
+                width: '100%',
+                height: '100%',
+                borderRadius: '50%',
+                backgroundImage: `url(${profile.profile_picture})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat'
+              }}
+            />
+            {/* Custom Status Indicator */}
+            <span
+              style={{
+                position: 'absolute',
+                bottom: '2px',
+                right: '2px',
+                width: '10px',
+                height: '10px',
+                backgroundColor: '#2eb85c',
+                borderRadius: '50%',
+                border: '1.5px solid white'
+              }}
+            />
+          </div>
         ) : (
           <div
             className="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white"
-            style={{ width: 40, height: 40 }}
+            style={{
+              width: 40,
+              height: 40,
+              border: '2px solid #ced4da',
+              cursor: 'pointer'
+            }}
           >
             <CIcon icon={cilUser} />
           </div>

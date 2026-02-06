@@ -25,6 +25,8 @@ const Users = () => {
     const [editing, setEditing] = useState(null)
     const [selectedUser, setSelectedUser] = useState(null)
     const dispatch = useDispatch()
+    const userStr = sessionStorage.getItem('user')
+    const userRole = userStr ? JSON.parse(userStr).role : 'civil'
 
     const [currentPage, setCurrentPage] = useState(1)
     const [itemsPerPage] = useState(8)
@@ -94,7 +96,7 @@ const Users = () => {
                     appAlert: {
                         visible: true,
                         color: 'success',
-                        message: 'Usuario actualizado correctamente',
+                        message: 'User updated successfully',
                     },
                 })
             } else {
@@ -104,7 +106,7 @@ const Users = () => {
                     appAlert: {
                         visible: true,
                         color: 'success',
-                        message: 'Usuario creado exitosamente',
+                        message: 'User created successfully',
                     },
                 })
             }
@@ -118,7 +120,7 @@ const Users = () => {
                 appAlert: {
                     visible: true,
                     color: 'danger',
-                    message: 'Error al guardar usuario: ' + error.message,
+                    message: 'Error saving user: ' + error.message,
                 },
             })
         }
@@ -142,7 +144,7 @@ const Users = () => {
                 appAlert: {
                     visible: true,
                     color: 'warning',
-                    message: 'Usuario eliminado del sistema',
+                    message: 'User deleted from the system',
                 },
             })
         } catch (error) {
@@ -152,7 +154,7 @@ const Users = () => {
                 appAlert: {
                     visible: true,
                     color: 'danger',
-                    message: 'Error al eliminar usuario: ' + error.message,
+                    message: 'Error deleting user: ' + error.message,
                 },
             })
         }
@@ -269,21 +271,23 @@ const Users = () => {
                                         System access control and personnel administration
                                     </p>
                                 </div>
-                                <div>
-                                    <CButton
-                                        color="primary colorbutton"
-                                        style={colorbutton}
-                                        onClick={() => {
-                                            setEditing(null);
-                                            setShowForm(true)
-                                        }}
-                                        className="d-flex align-items-center px-4 py-2 shadow-sm"
-                                        shape="rounded-pill"
-                                    >
-                                        <CIcon icon={cilPlus} className="me-2 fw-bold" />
-                                        NEW USER
-                                    </CButton>
-                                </div>
+                                {userRole === 'administrator' && (
+                                    <div>
+                                        <CButton
+                                            color="primary colorbutton"
+                                            style={colorbutton}
+                                            onClick={() => {
+                                                setEditing(null);
+                                                setShowForm(true)
+                                            }}
+                                            className="d-flex align-items-center px-4 py-2 shadow-sm"
+                                            shape="rounded-pill"
+                                        >
+                                            <CIcon icon={cilPlus} className="me-2 fw-bold" />
+                                            NEW USER
+                                        </CButton>
+                                    </div>
+                                )}
                             </div>
                         </CCardHeader>
 
@@ -364,57 +368,60 @@ const Users = () => {
                                                                             <CIcon icon={cilInfo} />
                                                                         </CButton>
 
-                                                                        <CDropdown variant="btn-group">
-                                                                            <CDropdownToggle
-                                                                                size="sm"
-                                                                                shape="rounded-pill"
-                                                                                className="text-primary shadow-sm"
-                                                                                split={false}
-                                                                            >
-                                                                                <CIcon icon={cilPencil} />
-                                                                            </CDropdownToggle>
-                                                                            <CDropdownMenu>
-                                                                                <CDropdownItem
-                                                                                    onClick={() => { setEditing(user); setShowForm(true) }}
-                                                                                    style={{ cursor: 'pointer' }}
+                                                                        {userRole === 'administrator' && (
+                                                                            <>
+                                                                                <CDropdown variant="btn-group">
+                                                                                    <CDropdownToggle
+                                                                                        size="sm"
+                                                                                        shape="rounded-pill"
+                                                                                        className="text-primary shadow-sm"
+                                                                                        split={false}
+                                                                                    >
+                                                                                        <CIcon icon={cilPencil} />
+                                                                                    </CDropdownToggle>
+                                                                                    <CDropdownMenu>
+                                                                                        <CDropdownItem
+                                                                                            onClick={() => { setEditing(user); setShowForm(true) }}
+                                                                                            style={{ cursor: 'pointer' }}
+                                                                                        >
+                                                                                            Edit Details
+                                                                                        </CDropdownItem>
+                                                                                        <CDropdownItem divider />
+                                                                                        <CDropdownItem header style={{ cursor: 'default' }}>Role Management</CDropdownItem>
+                                                                                        {getRoleOptions(user.role).map(role => (
+                                                                                            <CDropdownItem
+                                                                                                key={role.value}
+                                                                                                onClick={() => handleRoleChange(user.id, role.value)}
+                                                                                                style={{ cursor: 'pointer' }}
+                                                                                            >
+                                                                                                Change to {role.label}
+                                                                                            </CDropdownItem>
+                                                                                        ))}
+                                                                                        <CDropdownItem divider />
+                                                                                        <CDropdownItem header style={{ cursor: 'default' }}>Status Management</CDropdownItem>
+                                                                                        {getStatusOptions(user.status).map(status => (
+                                                                                            <CDropdownItem
+                                                                                                key={status.value}
+                                                                                                onClick={() => handleStatusChange(user.id, status.value)}
+                                                                                                style={{ cursor: 'pointer' }}
+                                                                                            >
+                                                                                                Mark as {status.label}
+                                                                                            </CDropdownItem>
+                                                                                        ))}
+                                                                                    </CDropdownMenu>
+                                                                                </CDropdown>
+                                                                                <CButton
+                                                                                    size="sm"
+                                                                                    shape="rounded-pill"
+                                                                                    onClick={() => showDeleteConfirmation(user.id, `${user.first_name} ${user.last_name}`)}
+                                                                                    disabled={user.role?.toLowerCase() === 'administrator'}
+                                                                                    title="Delete User"
+                                                                                    className="text-danger shadow-sm"
                                                                                 >
-                                                                                    Edit Details
-                                                                                </CDropdownItem>
-                                                                                <CDropdownItem divider />
-                                                                                <CDropdownItem header style={{ cursor: 'default' }}>Role Management</CDropdownItem>
-                                                                                {getRoleOptions(user.role).map(role => (
-                                                                                    <CDropdownItem
-                                                                                        key={role.value}
-                                                                                        onClick={() => handleRoleChange(user.id, role.value)}
-                                                                                        style={{ cursor: 'pointer' }}
-                                                                                    >
-                                                                                        Change to {role.label}
-                                                                                    </CDropdownItem>
-                                                                                ))}
-                                                                                <CDropdownItem divider />
-                                                                                <CDropdownItem header style={{ cursor: 'default' }}>Status Management</CDropdownItem>
-                                                                                {getStatusOptions(user.status).map(status => (
-                                                                                    <CDropdownItem
-                                                                                        key={status.value}
-                                                                                        onClick={() => handleStatusChange(user.id, status.value)}
-                                                                                        style={{ cursor: 'pointer' }}
-                                                                                    >
-                                                                                        Mark as {status.label}
-                                                                                    </CDropdownItem>
-                                                                                ))}
-                                                                            </CDropdownMenu>
-                                                                        </CDropdown>
-
-                                                                        <CButton
-                                                                            size="sm"
-                                                                            shape="rounded-pill"
-                                                                            onClick={() => showDeleteConfirmation(user.id, `${user.first_name} ${user.last_name}`)}
-                                                                            disabled={user.role?.toLowerCase() === 'administrator'}
-                                                                            title="Delete User"
-                                                                            className="text-danger shadow-sm"
-                                                                        >
-                                                                            <CIcon icon={cilTrash} />
-                                                                        </CButton>
+                                                                                    <CIcon icon={cilTrash} />
+                                                                                </CButton>
+                                                                            </>
+                                                                        )}
                                                                     </div>
                                                                 </CTableDataCell>
                                                             </CTableRow>

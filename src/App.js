@@ -14,7 +14,6 @@ const DefaultLayout = React.lazy(() => import('./layout/DefaultLayout'))
 
 // Pages
 const Login = React.lazy(() => import('./views/login/Login'))
-const Register = React.lazy(() => import('./views/register/Register'))
 
 const PrivateRoute = ({ children }) => {
   const isAuthenticated = checkAuth()
@@ -50,7 +49,6 @@ const App = () => {
       >
         <Routes>
           <Route exact path="/login" name="Login Page" element={<Login />} />
-          <Route exact path="/register" name="Register Page" element={<Register />} />
           <Route
             path="*"
             name="Home"

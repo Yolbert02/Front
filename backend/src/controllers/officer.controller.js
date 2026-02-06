@@ -1,90 +1,132 @@
-const { officers, users, saveData } = require('../data/storage');
+const prisma = require('../config/prisma');
 
-const getAllOfficers = (req, res) => {
-    res.json(officers);
-};
-
-const getOfficerById = (req, res) => {
-    const id = parseInt(req.params.id);
-    const officer = officers.find(o => o.id === id);
-    if (!officer) return res.status(404).json({ message: 'Officer not found' });
-    res.json(officer);
-};
-
-const createOfficer = (req, res) => {
-    const { name, lastName, idNumber, unit, email, phone, rank } = req.body;
-
-    const newOfficer = {
-        id: officers.length > 0 ? Math.max(...officers.map(o => o.id)) + 1 : 1,
-        name,
-        lastName,
-        idNumber,
-        unit,
-        email,
-        phone,
-        rank,
-        status: 'active'
-    };
-
-    officers.push(newOfficer);
-    saveData();
-    res.status(201).json(newOfficer);
-};
-
-const updateOfficer = (req, res) => {
-    const id = parseInt(req.params.id);
-    const index = officers.findIndex(o => o.id === id);
-
-    if (index === -1) return res.status(404).json({ message: 'Officer not found' });
-
-    officers[index] = {
-        ...officers[index],
-        ...req.body
-    };
-
-    saveData();
-    res.json(officers[index]);
-};
-
-const deleteOfficer = (req, res) => {
-    const id = parseInt(req.params.id);
-    const index = officers.findIndex(o => o.id === id);
-
-    if (index === -1) return res.status(404).json({ message: 'Officer not found' });
-
-    officers.splice(index, 1);
-    saveData();
-    res.json({ message: 'Officer deleted', id });
-};
-
-
-const upgradeOfficer = (req, res) => {
-    const id = parseInt(req.params.id);
-    const { status, unit, rank } = req.body;
-
-    const officer = officers.find(o => o.id === id);
-    if (!officer) return res.status(404).json({ message: 'Officer not found' });
-
-    if (status) {
-        officer.status = status;
-        const user = users.find(u => u.dni === officer.idNumber);
-        if (user) {
-            user.status = status;
-        }
+const getAllOfficers = async (req, res) => {
+    try {
+        const officers = await prisma.police_Officer.findMany({
+            include: {
+                user: {
+                    select: {
+                        first_name: true,
+                        last_name: true,
+                        email: true,
+                        dni: true,
+                        status_user: true
+                    }
+                },
+                unit: true
+            }
+        });
+        res.json(officers);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching officers', error: error.message });
     }
-
-    if (unit) officer.unit = unit;
-    if (rank) officer.rank = rank;
-
-    saveData();
-    res.json({ message: 'Officer upgraded successfully', officer });
 };
 
-const getOfficerByDni = (req, res) => {
-    const { dni } = req.params;
-    const officer = officers.find(o => o.idNumber === dni);
-    if (!officer) return res.status(404).json({ message: 'Officer not found by DNI' });
-    res.json(officer);
+const getOfficerById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const officer = await prisma.police_Officer.findUnique({
+            where: { Id_user: id },
+            include: { user: true, unit: true }
+        });
+        if (!officer) return res.status(404).json({ message: 'Officer not found' });
+        res.json(officer);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching officer', error: error.message });
+    }
+};
+
+const createOfficer = async (req, res) => {
+    // Note: Creating an officer usually requires a valid User first or creating both.
+    // In our schema, Police_Officer is a specialization of User.
+    try {
+        const { Id_user, badge_number, rank, Id_unit } = req.body;
+
+        const newOfficer = await prisma.police_Officer.create({
+            data: {
+                Id_user,
+                badge_number,
+                rank,
+                Id_unit: parseInt(Id_unit)
+            },
+            include: { user: true }
+        });
+
+        res.status(201).json(newOfficer);
+    } catch (error) {
+        res.status(400).json({ message: 'Error creating officer', error: error.message });
+    }
+};
+
+const updateOfficer = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updated = await prisma.police_Officer.update({
+            where: { Id_user: id },
+            data: req.body,
+            include: { user: true }
+        });
+        res.json(updated);
+    } catch (error) {
+        res.status(400).json({ message: 'Error updating officer', error: error.message });
+    }
+};
+
+const deleteOfficer = async (req, res) => {
+    try {
+        const { id } = req.params;
+        // This only deletes the officer profile, not the user unless cascaded in DB (which it is)
+        await prisma.police_Officer.delete({
+            where: { Id_user: id }
+        });
+        res.json({ message: 'Officer profile deleted', id });
+    } catch (error) {
+        res.status(500).json({ message: 'Error deleting officer', error: error.message });
+    }
+};
+
+const upgradeOfficer = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status, Id_unit, rank } = req.body;
+
+        const data = {};
+        if (Id_unit) data.Id_unit = parseInt(Id_unit);
+        if (rank) data.rank = rank;
+
+        const officer = await prisma.police_Officer.update({
+            where: { Id_user: id },
+            data,
+            include: { user: true }
+        });
+
+        if (status) {
+            await prisma.user.update({
+                where: { Id_user: id },
+                data: { status_user: status }
+            });
+        }
+
+        res.json({ message: 'Officer upgraded successfully', officer });
+    } catch (error) {
+        res.status(400).json({ message: 'Error upgrading officer', error: error.message });
+    }
+};
+
+const getOfficerByDni = async (req, res) => {
+    try {
+        const { dni } = req.params;
+        const officer = await prisma.police_Officer.findFirst({
+            where: {
+                user: { dni: dni }
+            },
+            include: { user: true, unit: true }
+        });
+        if (!officer) return res.status(404).json({ message: 'Officer not found by DNI' });
+        res.json(officer);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching officer by DNI', error: error.message });
+    }
 };
 
 module.exports = {

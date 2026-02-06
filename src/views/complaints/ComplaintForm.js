@@ -21,6 +21,7 @@ import {
 import CIcon from '@coreui/icons-react'
 import { cilPaperclip, cilImage, cilFile, cilVideo, cilTrash, cilLocationPin } from '@coreui/icons'
 import { listOfficers } from 'src/services/officers'
+import { listZones } from 'src/services/zones'
 import { containerStyles, textStyles, colorbutton, upgradebutton } from 'src/styles/darkModeStyles'
 
 const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
@@ -36,6 +37,7 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
     const [incidentDate, setIncidentDate] = useState('')
     const [evidence, setEvidence] = useState([])
     const [officers, setOfficers] = useState([])
+    const [zones, setZones] = useState([])
     const [uploadProgress, setUploadProgress] = useState({})
     const [saving, setSaving] = useState(false)
 
@@ -49,10 +51,14 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
 
     const [step, setStep] = useState(1)
 
+    const userStr = sessionStorage.getItem('user')
+    const userRole = userStr ? JSON.parse(userStr).role : 'civil'
+
     useEffect(() => {
         if (visible) {
             setStep(1)
             loadOfficers()
+            loadZones()
 
             if (initial) {
                 setTitle(initial.title || '')
@@ -64,7 +70,7 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
                 setAssignedOfficerId(initial.assignedOfficerId || '')
                 setStatus(initial.status || 'received')
                 setPriority(initial.priority || 'medium')
-                setIncidentDate(initial.incidentDate || '')
+                setIncidentDate(initial.incidentDate ? new Date(initial.incidentDate).toISOString().split('T')[0] : '')
                 setEvidence(initial.evidence || [])
 
                 setCountry(initial.country || 'Venezuela')
@@ -72,7 +78,7 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
                 setParish(initial.parish || '')
                 setMunicipality(initial.municipality || 'San Cristóbal')
                 setCity(initial.city || '')
-                setZone(initial.zone || '')
+                setZone(initial.zoneId || initial.Id_zone || '')
                 setAddress(initial.address || '')
             } else {
                 setTitle('')
@@ -145,6 +151,16 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
         } catch (error) {
             console.error('Error loading officers:', error)
             setOfficers([])
+        }
+    }
+
+    const loadZones = async () => {
+        try {
+            const allZones = await listZones()
+            setZones(allZones || [])
+        } catch (error) {
+            console.error('Error loading zones:', error)
+            setZones([])
         }
     }
 
@@ -266,7 +282,8 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
                 parish: parish.trim(),
                 municipality: municipality.trim(),
                 city: city.trim(),
-                zone: zone.trim(),
+                Id_zone: parseInt(zone) || null,
+                zone: zones.find(z => z.id === parseInt(zone))?.name || '',
                 address: address.trim(),
                 assignedOfficerId: assignedOfficerId ? parseInt(assignedOfficerId) : null,
                 assignedOfficerName,
@@ -434,13 +451,18 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
 
                             <CRow className="g-3 mt-2">
                                 <CCol md={6}>
-                                    <CFormInput
+                                    <CFormSelect
                                         label="Zone/Neighborhood *"
-                                        placeholder="e.g., Pueblo Nuevo, Barrio Obrero, La Concordia"
                                         value={zone}
                                         onChange={(e) => setZone(e.target.value)}
-                                    />
-                                    <small className="text-muted">Enter the specific zone or neighborhood</small>
+                                        required
+                                    >
+                                        <option value="">Select a zone</option>
+                                        {zones && zones.map(z => (
+                                            <option key={z.id} value={z.id}>{z.name}</option>
+                                        ))}
+                                    </CFormSelect>
+                                    <small className="text-muted">Select the specific patrol zone</small>
                                 </CCol>
                                 <CCol md={6}>
                                     <CFormInput
@@ -459,7 +481,7 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
                                     <strong style={textStyles.previewLabel}>Full Address Preview:</strong><br />
                                     {address && address.trim() ? (
                                         <span style={textStyles.previewText}>
-                                            {address}{zone && zone.trim() ? `, ${zone}` : ''}, {city}, {municipality}{parish && parish.trim() ? `, ${parish}` : ''}, {state}, {country}
+                                            {address}{zone && zones.find(z => z.id === parseInt(zone)) ? `, ${zones.find(z => z.id === parseInt(zone)).name}` : ''}, {city}, {municipality}{parish && parish.trim() ? `, ${parish}` : ''}, {state}, {country}
                                         </span>
                                     ) : (
                                         <span className="fst-italic" style={textStyles.previewPlaceholder}>Enter address details to see preview</span>
@@ -472,47 +494,52 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
                     {step === 4 && (
                         <>
                             <h6 className="mb-3 mt-4 text-primary">Assignment and Status</h6>
-                            <CRow className="g-3">
-                                <CCol md={6}>
-                                    <CFormSelect
-                                        label="Assigned Officer"
-                                        value={assignedOfficerId}
-                                        onChange={(e) => setAssignedOfficerId(e.target.value)}
-                                    >
-                                        <option value="">Select an officer</option>
-                                        {officers.map(officer => (
-                                            <option key={officer.id} value={officer.id}>
-                                                {officer.name} {officer.lastName} - {officer.unit}
-                                            </option>
-                                        ))}
-                                    </CFormSelect>
-                                </CCol>
-                                <CCol md={3}>
-                                    <CFormSelect
-                                        label="Priority"
-                                        value={priority}
-                                        onChange={(e) => setPriority(e.target.value)}
-                                    >
-                                        <option value="low">Low</option>
-                                        <option value="medium">Medium</option>
-                                        <option value="high">High</option>
-                                        <option value="urgent">Urgent</option>
-                                    </CFormSelect>
-                                </CCol>
-                                <CCol md={3}>
-                                    <CFormSelect
-                                        label="Status"
-                                        value={status}
-                                        onChange={(e) => setStatus(e.target.value)}
-                                    >
-                                        <option value="received">Received</option>
-                                        <option value="under_investigation">Under Investigation</option>
-                                        <option value="resolved">Resolved</option>
-                                        <option value="closed">Closed</option>
-                                        <option value="rejected">Rejected</option>
-                                    </CFormSelect>
-                                </CCol>
-                            </CRow>
+                            {userRole !== 'civil' && (
+                                <CRow className="g-3">
+                                    <CCol md={6}>
+                                        <CFormSelect
+                                            label="Assigned Officer"
+                                            value={assignedOfficerId}
+                                            onChange={(e) => setAssignedOfficerId(e.target.value)}
+                                            disabled={userRole !== 'administrator'}
+                                        >
+                                            <option value="">Select an officer</option>
+                                            {officers.map(officer => (
+                                                <option key={officer.id} value={officer.id}>
+                                                    {officer.name} {officer.lastName} - {officer.unit}
+                                                </option>
+                                            ))}
+                                        </CFormSelect>
+                                    </CCol>
+                                    <CCol md={3}>
+                                        <CFormSelect
+                                            label="Priority"
+                                            value={priority}
+                                            onChange={(e) => setPriority(e.target.value)}
+                                            disabled={userRole !== 'administrator'}
+                                        >
+                                            <option value="low">Low</option>
+                                            <option value="medium">Medium</option>
+                                            <option value="high">High</option>
+                                            <option value="urgent">Urgent</option>
+                                        </CFormSelect>
+                                    </CCol>
+                                    <CCol md={3}>
+                                        <CFormSelect
+                                            label="Status"
+                                            value={status}
+                                            onChange={(e) => setStatus(e.target.value)}
+                                            disabled={userRole === 'civil'}
+                                        >
+                                            <option value="received">Received</option>
+                                            <option value="under_investigation">Under Investigation</option>
+                                            <option value="resolved">Resolved</option>
+                                            <option value="closed">Closed</option>
+                                            <option value="rejected">Rejected</option>
+                                        </CFormSelect>
+                                    </CCol>
+                                </CRow>
+                            )}
                             <h6 className="mb-3 mt-4 text-primary">Multimedia Evidence</h6>
                             <CCard>
                                 <CCardBody>

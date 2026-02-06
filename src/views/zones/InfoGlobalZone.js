@@ -32,6 +32,7 @@ import {
     cilFolderOpen
 } from '@coreui/icons'
 import { modalStyles, cardStyles, containerStyles } from 'src/styles/darkModeStyles'
+import { downloadComplaintsExcel } from 'src/services/reports'
 
 const InfoGlobalZone = ({ visible, onClose, zones = [], complaints = [] }) => {
     const dispatch = useDispatch()
@@ -55,7 +56,7 @@ const InfoGlobalZone = ({ visible, onClose, zones = [], complaints = [] }) => {
 
     // Calculate statistics
     useEffect(() => {
-        if (visible && zones.length > 0 && complaints.length > 0) {
+        if (visible && zones.length > 0) {
             calculateStatistics()
         }
     }, [visible, zones, complaints])
@@ -79,7 +80,7 @@ const InfoGlobalZone = ({ visible, onClose, zones = [], complaints = [] }) => {
 
         const byZone = zones.map(zone => {
             const zoneComplaints = complaints.filter(c => {
-                const zoneMatch = c.zone?.toLowerCase() === zone.name.toLowerCase()
+                const zoneMatch = c.zoneId === zone.id || c.zone?.toLowerCase() === zone.name.toLowerCase()
                 const locationMatch = c.location?.toLowerCase().includes(zone.name.toLowerCase())
                 return zoneMatch || locationMatch
             })
@@ -208,15 +209,28 @@ const InfoGlobalZone = ({ visible, onClose, zones = [], complaints = [] }) => {
         return `${Math.round((value / total) * 100)}%`
     }
 
-    const downloadXLS = (id) => {
-        dispatch({
-            type: 'set',
-            appAlert: {
-                visible: true,
-                color: 'success',
-                message: 'Your XLS downloaded successfully',
-            },
-        })
+    const downloadXLS = async () => {
+        try {
+            await downloadComplaintsExcel()
+            dispatch({
+                type: 'set',
+                appAlert: {
+                    visible: true,
+                    color: 'success',
+                    message: 'Your XLS downloaded successfully',
+                },
+            })
+        } catch (error) {
+            console.error('Error downloading XLS:', error)
+            dispatch({
+                type: 'set',
+                appAlert: {
+                    visible: true,
+                    color: 'danger',
+                    message: 'Error downloading Excel report',
+                },
+            })
+        }
     }
 
     return (
@@ -453,16 +467,6 @@ const InfoGlobalZone = ({ visible, onClose, zones = [], complaints = [] }) => {
                     </div>
 
                     <div className="d-flex align-items-center">
-                        <CButton
-                            size="lg"
-                            variant="outline"
-                            className="text-success me-2"
-                            onClick={() => downloadXLS(InfoGlobalZone.id)}
-                            title="Download XLS"
-                        >
-                            <CIcon icon={cilCloudDownload} />
-                        </CButton>
-
                         {step < 3 ? (
                             <CButton type="button" color="primary" onClick={handleNext}>
                                 Next

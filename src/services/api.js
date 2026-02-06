@@ -1,16 +1,18 @@
-const MOCK_API_URL = 'https://894ca824-5638-4e27-89ef-46151bb14341.mock.pstmn.io';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
 class ApiService {
   constructor() {
-    this.baseURL = MOCK_API_URL;
+    this.baseURL = API_URL;
   }
 
   async request(endpoint, options = {}) {
     const url = `${this.baseURL}${endpoint}`;
-    
+    const token = sessionStorage.getItem('token');
+
     const config = {
       headers: {
         'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         ...options.headers,
       },
       ...options,
@@ -19,11 +21,21 @@ class ApiService {
     try {
       console.log(`API Call: ${url}`, config);
       const response = await fetch(url, config);
-      
+      console.log(`API Status: ${response.status} ${response.statusText} for ${url}`);
+
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          if (errorData && errorData.message) {
+            errorMessage = errorData.message;
+          }
+        } catch (e) {
+          // Si no es JSON, se queda con el mensaje de status
+        }
+        throw new Error(errorMessage);
       }
-      
+
       const data = await response.json();
       console.log(`API Response:`, data);
       return data;

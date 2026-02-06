@@ -40,6 +40,7 @@ import {
     cilCloudDownload
 } from '@coreui/icons'
 import { modalStyles, cardStyles, containerStyles } from 'src/styles/darkModeStyles'
+import { downloadComplaintPDF } from 'src/services/reports'
 
 const InfoComplaint = ({ visible, onClose, complaint }) => {
     const dispatch = useDispatch()
@@ -109,7 +110,7 @@ const InfoComplaint = ({ visible, onClose, complaint }) => {
 
     const buildFullAddress = () => {
         const parts = []
-        if (complaint.address) parts.push(complaint.address)
+        if (complaint.address_detail) parts.push(complaint.address_detail)
         if (complaint.zone) parts.push(complaint.zone)
         if (complaint.city) parts.push(complaint.city)
         if (complaint.municipality) parts.push(complaint.municipality)
@@ -120,15 +121,28 @@ const InfoComplaint = ({ visible, onClose, complaint }) => {
         return parts.join(', ')
     }
 
-    const downloadPDF = (id) => {
-        dispatch({
-            type: 'set',
-            appAlert: {
-                visible: true,
-                color: 'success',
-                message: 'Your PDF downloaded successfully',
-            },
-        })
+    const downloadPDF = async (id) => {
+        try {
+            await downloadComplaintPDF(id)
+            dispatch({
+                type: 'set',
+                appAlert: {
+                    visible: true,
+                    color: 'success',
+                    message: 'Your PDF downloaded successfully',
+                },
+            })
+        } catch (error) {
+            console.error('Error downloading PDF:', error)
+            dispatch({
+                type: 'set',
+                appAlert: {
+                    visible: true,
+                    color: 'danger',
+                    message: 'Error downloading PDF report',
+                },
+            })
+        }
     }
 
     return (
@@ -136,7 +150,7 @@ const InfoComplaint = ({ visible, onClose, complaint }) => {
             <CModalHeader style={modalStyles.header}>
                 <CModalTitle>
                     <CIcon icon={cilWarning} className="me-2" />
-                    Complaint Details - #{complaint.id}
+                    Complaint Details
                 </CModalTitle>
             </CModalHeader>
             <CModalBody style={modalStyles.bodyScrollable}>
@@ -164,10 +178,6 @@ const InfoComplaint = ({ visible, onClose, complaint }) => {
                                             <div className="d-flex justify-content-between">
                                                 <span>Priority:</span>
                                                 {getPriorityBadge(complaint.priority)}
-                                            </div>
-                                            <div className="d-flex justify-content-between">
-                                                <span>Complaint ID:</span>
-                                                <strong>#{complaint.id}</strong>
                                             </div>
                                         </div>
                                     </CCol>
@@ -263,7 +273,7 @@ const InfoComplaint = ({ visible, onClose, complaint }) => {
                                                     <strong>Street Address:</strong>
                                                 </div>
                                                 <div className="ms-4">
-                                                    {complaint.address || 'Not specified'}
+                                                    {complaint.address_detail || 'Not specified'}
                                                 </div>
                                             </CCol>
                                         </CRow>
@@ -299,17 +309,18 @@ const InfoComplaint = ({ visible, onClose, complaint }) => {
                                             {formatDate(complaint.createdAt)}
                                         </small>
                                     </CListGroupItem>
-                                    {complaint.latitude && complaint.longitude && (
-                                        <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
-                                            <span className="d-flex align-items-center">
-                                                <CIcon icon={cilLocationPin} className="me-2 text-primary" />
-                                                Coordinates:
-                                            </span>
-                                            <small className="text-muted">
-                                                {complaint.latitude.toFixed(6)}, {complaint.longitude.toFixed(6)}
-                                            </small>
-                                        </CListGroupItem>
-                                    )}
+                                    {complaint.latitude !== null && complaint.latitude !== undefined &&
+                                        complaint.longitude !== null && complaint.longitude !== undefined && (
+                                            <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
+                                                <span className="d-flex align-items-center">
+                                                    <CIcon icon={cilLocationPin} className="me-2 text-primary" />
+                                                    Coordinates:
+                                                </span>
+                                                <small className="text-muted">
+                                                    {Number(complaint.latitude).toFixed(6)}, {Number(complaint.longitude).toFixed(6)}
+                                                </small>
+                                            </CListGroupItem>
+                                        )}
                                 </CListGroup>
                             </CCardBody>
                         </CCard>
@@ -328,10 +339,6 @@ const InfoComplaint = ({ visible, onClose, complaint }) => {
                                         <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
                                             <span>Officer:</span>
                                             <strong>{complaint.assignedOfficerName}</strong>
-                                        </CListGroupItem>
-                                        <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
-                                            <span>Officer ID:</span>
-                                            <strong>#{complaint.assignedOfficerId}</strong>
                                         </CListGroupItem>
                                     </CListGroup>
                                 ) : (
@@ -437,15 +444,6 @@ const InfoComplaint = ({ visible, onClose, complaint }) => {
                 </CRow>
             </CModalBody>
             <CModalFooter style={modalStyles.footer}>
-                <CButton
-                    size="lg"
-                    variant="outline"
-                    className="text-danger shadow-sm"
-                    onClick={() => downloadPDF(complaint.id)}
-                    title="Download PDF"
-                >
-                    <CIcon icon={cilCloudDownload} />
-                </CButton>
                 <CButton color="secondary" onClick={onClose}>
                     Close
                 </CButton>

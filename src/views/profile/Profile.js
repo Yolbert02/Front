@@ -167,23 +167,35 @@ const Profile = () => {
                     <CCard className="mb-4">
                         <CCardBody className="text-center">
                             <div className="position-relative d-inline-block">
-                                {profile?.profile_picture ? (
-                                    <CImage
-                                        src={profile.profile_picture}
-                                        alt="Profile"
-                                        className="rounded-circle mb-3"
-                                        width={150}
-                                        height={150}
-                                        style={{ objectFit: 'cover' }}
-                                    />
-                                ) : (
-                                    <div
-                                        className="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white mb-3 mx-auto"
-                                        style={{ width: 150, height: 150 }}
-                                    >
-                                        <CIcon icon={cilUser} size="3xl" />
+                                <div className="position-relative">
+                                    <div className="rounded-circle p-1 mb-3 mx-auto" style={{
+                                        width: 158,
+                                        height: 158,
+                                        background: 'linear-gradient(45deg, #1a237e, #0d47a1)',
+                                        boxShadow: '0 8px 16px rgba(0,0,0,0.15)'
+                                    }}>
+                                        {profile?.profile_picture ? (
+                                            <div
+                                                className="rounded-circle"
+                                                style={{
+                                                    width: '150px',
+                                                    height: '150px',
+                                                    backgroundImage: `url(${profile.profile_picture})`,
+                                                    backgroundSize: 'cover',
+                                                    backgroundPosition: 'center',
+                                                    border: '3px solid white'
+                                                }}
+                                            />
+                                        ) : (
+                                            <div
+                                                className="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white"
+                                                style={{ width: 150, height: 150, border: '3px solid white' }}
+                                            >
+                                                <CIcon icon={cilUser} size="3xl" />
+                                            </div>
+                                        )}
                                     </div>
-                                )}
+                                </div>
                                 <label
                                     htmlFor="profile-picture-upload"
                                     className="btn btn-primary btn-sm rounded-circle position-absolute"
@@ -225,9 +237,19 @@ const Profile = () => {
                                     color="link"
                                     className={`me-3 ${activeTab === 'personal' ? 'text-primary border-primary border-bottom' : 'text-muted'}`}
                                     onClick={() => setActiveTab('personal')}
+                                    style={{ textDecoration: 'none', borderRadius: 0 }}
                                 >
                                     <CIcon icon={cilUser} className="me-2" />
                                     Personal Information
+                                </CButton>
+                                <CButton
+                                    color="link"
+                                    className={`${activeTab === 'security' ? 'text-primary border-primary border-bottom' : 'text-muted'}`}
+                                    onClick={() => setActiveTab('security')}
+                                    style={{ textDecoration: 'none', borderRadius: 0 }}
+                                >
+                                    <CIcon icon={cilLockLocked} className="me-2" />
+                                    Security
                                 </CButton>
                             </div>
                         </CCardHeader>
@@ -309,6 +331,50 @@ const Profile = () => {
                                             {saving ? ' Saving...' : ' Save Changes'}
                                         </CButton>
                                     </div>
+                                </CForm>
+                            )}
+                            {activeTab === 'security' && (
+                                <CForm onSubmit={handleChangePassword}>
+                                    <h5 className="mb-4">Security Settings</h5>
+                                    <div className="mb-3">
+                                        <CFormInput
+                                            type="password"
+                                            label="Current Password"
+                                            placeholder="Enter your current password"
+                                            value={passwordData.currentPassword}
+                                            onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="mb-3">
+                                        <CFormInput
+                                            type="password"
+                                            label="New Password"
+                                            placeholder="Minimum 6 characters"
+                                            value={passwordData.newPassword}
+                                            onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="mb-4">
+                                        <CFormInput
+                                            type="password"
+                                            label="Confirm New Password"
+                                            placeholder="Repeat your new password"
+                                            value={passwordData.confirmPassword}
+                                            onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                                            required
+                                        />
+                                    </div>
+                                    <CButton type="submit" color="primary" disabled={saving} style={{
+                                        background: 'linear-gradient(45deg, #1a237e, #0d47a1)',
+                                        border: 'none',
+                                        borderRadius: '50px',
+                                        padding: '10px 25px'
+                                    }}>
+                                        {saving ? <CSpinner size="sm" /> : <CIcon icon={cilSave} className="me-2" />}
+                                        {saving ? ' Updating...' : ' Change Password'}
+                                    </CButton>
                                 </CForm>
                             )}
                         </CCardBody>

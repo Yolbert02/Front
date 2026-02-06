@@ -20,6 +20,16 @@ const AppSidebar = () => {
   const unfoldable = useSelector((state) => state.sidebarUnfoldable)
   const sidebarShow = useSelector((state) => state.sidebarShow)
 
+  // Filter navigation by role
+  const userStr = sessionStorage.getItem('user')
+  const user = userStr ? JSON.parse(userStr) : null
+  const userRole = user ? user.role : 'civil'
+
+  const filteredNavigation = navigation.filter(item => {
+    if (!item.roles) return true // Show if no roles defined
+    return item.roles.includes(userRole)
+  })
+
   return (
     <CSidebar
       className="border-end border-dark"
@@ -97,7 +107,7 @@ const AppSidebar = () => {
         />
       </CSidebarHeader>
 
-      <AppSidebarNav items={navigation} />
+      <AppSidebarNav items={filteredNavigation} />
 
       <CSidebarFooter className="border-top border-secondary border-opacity-25 d-none d-lg-flex justify-content-center py-2">
         <CSidebarToggler

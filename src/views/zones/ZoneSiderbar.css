@@ -23,8 +23,9 @@
 }
 
 .custom-accordion .accordion-button:not(.collapsed) {
-    background-color: var(--cui-primary-bg-subtle) !important;
-    color: var(--cui-primary) !important;
+    background-color: var(--cui-card-cap-bg) !important;
+    color: var(--cui-body-color) !important;
+    box-shadow: none !important;
 }
 
 .complaint-title {
@@ -38,4 +39,10 @@
 
 .custom-accordion .list-group-item:last-child {
     border-bottom: none !important;
+}
+
+.custom-accordion .accordion-button:focus {
+    z-index: 3;
+    outline: 0;
+    box-shadow: none !important;
 }

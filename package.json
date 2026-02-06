@@ -16,7 +16,8 @@
     "build": "vite build",
     "lint": "eslint",
     "serve": "vite preview",
-    "start": "vite"
+    "start": "vite",
+    "dev": "concurrently \"npm run start\" \"npm run dev --prefix backend\""
   },
   "dependencies": {
     "@coreui/chartjs": "^4.1.0",
@@ -47,6 +48,7 @@
     "@vitejs/plugin-react": "^5.1.0",
     "autoprefixer": "^10.4.21",
     "baseline-browser-mapping": "^2.9.14",
+    "concurrently": "^9.2.1",
     "eslint": "^9.38.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",

@@ -29,34 +29,35 @@ const _nav = [
     name: 'Dashboard',
     to: '/dashboard',
     icon: <CIcon icon={cilSpeedometer} customClassName="nav-icon" />,
-    badge: {
-      color: 'info',
-      text: 'NEW',
-    },
+    roles: ['administrator', 'oficial', 'functionary', 'civil']
   },
   {
     component: CNavItem,
-    name: 'Oficiales',
+    name: 'Officers',
     to: '/officers',
     icon: <CIcon icon={cilFindInPage} customClassName="nav-icon" />,
+    roles: ['administrator', 'oficial', 'functionary']
   },
   {
     component: CNavItem,
-    name: 'Complains',
+    name: 'Complaints',
     to: '/complaints',
     icon: <CIcon icon={cilLibrary} customClassName="nav-icon" />,
+    roles: ['administrator', 'oficial', 'functionary', 'civil']
   },
   {
     component: CNavItem,
     name: 'Assignments',
     to: '/assignments',
     icon: <CIcon icon={cilInstitution} customClassName="nav-icon" />,
+    roles: ['administrator', 'oficial', 'functionary', 'civil']
   },
   {
     component: CNavItem,
     name: 'Zones',
     to: '/zones',
     icon: <CIcon icon={cilMap} customClassName="nav-icon" />,
+    roles: ['administrator', 'oficial', 'functionary', 'civil']
   }
 ]
 

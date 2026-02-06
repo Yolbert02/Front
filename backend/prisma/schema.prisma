@@ -1,0 +1,275 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Gender {
+  male
+  female
+}
+
+enum StatusUser {
+  active
+  suspended
+  deleted
+}
+
+enum RoleType {
+  administrator
+  oficial
+  functionary
+  civil
+}
+
+enum JudgmentState {
+  process
+  closed
+  suspended
+}
+
+model Country {
+  Id_country   Int     @id @default(autoincrement())
+  name_country String  @unique
+  states       State[]
+}
+
+model State {
+  Id_state       Int            @id @default(autoincrement())
+  Id_country     Int
+  name_state     String
+  country        Country        @relation(fields: [Id_country], references: [Id_country], onDelete: Cascade)
+  municipalities Municipality[]
+}
+
+model Municipality {
+  Id_municipality   Int      @id @default(autoincrement())
+  Id_state          Int
+  name_municipality String
+  state             State    @relation(fields: [Id_state], references: [Id_state], onDelete: Cascade)
+  parishes          Parish[]
+}
+
+model Parish {
+  Id_parish       Int          @id @default(autoincrement())
+  Id_municipality Int
+  name_parish     String
+  municipality    Municipality @relation(fields: [Id_municipality], references: [Id_municipality], onDelete: Cascade)
+  cities          City[]
+}
+
+model City {
+  Id_city     Int      @id @default(autoincrement())
+  Id_parish   Int
+  name_city   String
+  parish      Parish   @relation(fields: [Id_parish], references: [Id_parish], onDelete: Cascade)
+  zones       Zone[]
+}
+
+model Zone {
+  Id_zone   Int       @id @default(autoincrement())
+  Id_city   Int
+  name_zone String
+  latitude  Decimal?  @db.Decimal(10, 8)
+  longitude Decimal?  @db.Decimal(11, 8)
+  city      City      @relation(fields: [Id_city], references: [Id_city], onDelete: Cascade)
+  addresses Address[]
+  complaints Complaint[]
+}
+
+model Address {
+  Id_address   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  Id_zone      Int
+  name_address String
+  zone         Zone      @relation(fields: [Id_zone], references: [Id_zone])
+  users        User[]
+  offices      Office[]
+  courts       Court[]
+  evidence     Evidence[]
+}
+
+model Office {
+  Id_office   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  Id_address  String    @db.Uuid
+  name_office String
+  address     Address   @relation(fields: [Id_address], references: [Id_address])
+  expedients  Expedient[] @relation("office_expedient")
+}
+
+model Court {
+  Id_court          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name_court        String
+  jurisdiction_type String
+  Id_address        String    @db.Uuid
+  address           Address   @relation(fields: [Id_address], references: [Id_address])
+  judgments         Judgment[]
+}
+
+model Roles {
+  Id_rol   Int      @id @default(autoincrement())
+  type_rol RoleType @unique
+  users    User[]
+}
+
+model User {
+  Id_user      String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  dni         String     @unique
+  dni_photo   String?
+  profile_picture String?
+  first_name   String
+  last_name    String
+  password    String
+  number_phone String?
+  email       String     @unique
+  date_birth   DateTime
+  gender      Gender
+  status_user  StatusUser @default(active)
+  created_at   DateTime   @default(now()) @db.Timestamptz
+  updated_at   DateTime   @default(now()) @db.Timestamptz
+  reset_token    String?
+  reset_token_expires DateTime?
+  Id_address   String?    @db.Uuid
+  Id_rol       Int
+  address      Address?   @relation(fields: [Id_address], references: [Id_address])
+  role         Roles      @relation(fields: [Id_rol], references: [Id_rol])
+  officer      Police_Officer?
+  complaints   Complaint[]
+  judgments    Judgment_User[]
+  judge_assignments   Assignment[] @relation("judge_assignments")
+  created_assignments Assignment[] @relation("created_assignments")
+  as_official         Assignment[] @relation("AssignmentOfficials")
+  as_funcionary       Assignment[] @relation("AssignmentFuncionaries")
+  as_witness          Assignment[] @relation("AssignmentWitnesses")
+  as_jury             Assignment[] @relation("AssignmentJury")
+}
+
+model Police_Unit {
+  Id_unit   Int      @id @default(autoincrement())
+  name_unit String   @unique
+  officers  Police_Officer[]
+}
+
+model Police_Officer {
+  Id_user      String @id @db.Uuid
+  badge_number String @unique
+  rank         String
+  Id_unit      Int
+  user         User   @relation(fields: [Id_user], references: [Id_user], onDelete: Cascade)
+  unit         Police_Unit @relation(fields: [Id_unit], references: [Id_unit])
+  complaints   Complaint[]
+}
+
+model Judgment {
+  Id_judgment   String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  date_judgment DateTime       @default(now()) @db.Date
+  state         JudgmentState  @default(process)
+  created_at    DateTime       @default(now()) @db.Timestamptz
+  updated_at    DateTime       @default(now()) @db.Timestamptz
+  Id_court      String         @db.Uuid
+  court         Court          @relation(fields: [Id_court], references: [Id_court])
+  resolutions   Resolution[]
+  users         Judgment_User[]
+}
+
+model Resolution {
+  Id_resolution String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  resolution    String   @db.Text
+  created_at    DateTime @default(now()) @db.Timestamptz
+  Id_judgment   String   @db.Uuid
+  judgment      Judgment @relation(fields: [Id_judgment], references: [Id_judgment], onDelete: Cascade)
+  expedients    Expedient[]
+}
+
+model Complaint {
+  Id_complaint     String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title            String
+  description      String    @db.Text
+  status           String    @default("received") // received, under_investigation, closed
+  priority         String    @default("medium")   // low, medium, high
+  latitude         Decimal?  @db.Decimal(10, 8)
+  longitude        Decimal?  @db.Decimal(11, 8)
+  address_detail   String?
+  complainant_phone String?
+  complainant_email String?
+  complainant_name String?
+  Id_user          String    @db.Uuid // Complainant
+  assigned_officer_id String? @db.Uuid // Admin can assign an officer
+  Id_zone          Int
+  incident_date    DateTime? @db.Date
+  created_at       DateTime  @default(now()) @db.Timestamptz
+  updated_at       DateTime  @default(now()) @db.Timestamptz
+  
+  user             User      @relation(fields: [Id_user], references: [Id_user])
+  assigned_officer Police_Officer? @relation(fields: [assigned_officer_id], references: [Id_user])
+  zone             Zone      @relation(fields: [Id_zone], references: [Id_zone])
+  expedients       Expedient[]
+}
+
+model Expedient {
+  Id_expedient   String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  created_at     DateTime    @default(now()) @db.Timestamptz
+  updated_at     DateTime    @default(now()) @db.Timestamptz
+  Id_resolution  String?     @db.Uuid
+  Id_complaint   String?     @db.Uuid
+  resolution     Resolution? @relation(fields: [Id_resolution], references: [Id_resolution])
+  complaint      Complaint?  @relation(fields: [Id_complaint], references: [Id_complaint])
+  offices        Office[]    @relation("office_expedient")
+  evidences      Evidence[]  @relation("evidence_expedient")
+}
+
+model Evidence {
+  Id_evidence    String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  police_report  String      @db.Text
+  multimedia_url String?
+  date_evidence  DateTime    @db.Date
+  created_at     DateTime    @default(now()) @db.Timestamptz
+  updated_at     DateTime    @default(now()) @db.Timestamptz
+  Id_address     String      @db.Uuid
+  address        Address     @relation(fields: [Id_address], references: [Id_address])
+  expedients     Expedient[] @relation("evidence_expedient")
+}
+
+model Judgment_User {
+  Id_judgment String @db.Uuid
+  Id_user     String @db.Uuid
+  judgment    Judgment @relation(fields: [Id_judgment], references: [Id_judgment], onDelete: Cascade)
+  user        User     @relation(fields: [Id_user], references: [Id_user], onDelete: Cascade)
+  @@id([Id_judgment, Id_user])
+}
+model Assignment {
+  Id_assignment    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  case_number     String    @unique
+  case_title      String
+  case_description String?   @db.Text
+  judge_id        String?   @db.Uuid
+  judge_name      String?
+  court           String?
+  hearing_date    DateTime? @db.Date
+  hearing_time    String?
+  trial_date      DateTime? @db.Date
+  trial_time      String?
+  location        String?
+  status          String    @default("scheduled")
+  priority        String    @default("medium")
+  id_created_by   String    @db.Uuid
+  created_at      DateTime  @default(now()) @db.Timestamptz
+  updated_at      DateTime  @default(now()) @db.Timestamptz
+
+  // Relations
+  judge           User?     @relation("judge_assignments", fields: [judge_id], references: [Id_user])
+  creator         User      @relation("created_assignments", fields: [id_created_by], references: [Id_user])
+  
+  officials       User[]    @relation("AssignmentOfficials")
+  funcionaries    User[]    @relation("AssignmentFuncionaries")
+  witnesses       User[]    @relation("AssignmentWitnesses")
+  jury            User[]    @relation("AssignmentJury")
+}
+
+// Add these to User model in a separate replacement chunk if needed, but I'll try to do it here if I replace the User model too.
+// Actually, I should update User model to include the opposite relation fields.

@@ -27,6 +27,7 @@ import { cilPlus, cilPencil, cilTrash, cilInfo, cilFolderOpen, cilMap, cilUser, 
 import ComplaintForm from './ComplaintForm'
 import InfoComplaint from './InfoComplaint'
 import { listComplaints, createComplaint, updateComplaint, deleteComplaint, changeComplaintStatus } from 'src/services/complaints'
+import { downloadComplaintPDF } from 'src/services/reports'
 import ConfirmationModal from 'src/components/ConfirmationModal'
 import Pagination from 'src/components/Pagination'
 import { colorbutton } from 'src/styles/darkModeStyles'
@@ -39,6 +40,9 @@ const Complaints = () => {
     const [editing, setEditing] = useState(null)
     const [selectedComplaint, setSelectedComplaint] = useState(null)
     const dispatch = useDispatch()
+
+    const userStr = sessionStorage.getItem('user')
+    const userRole = userStr ? JSON.parse(userStr).role : 'civil'
 
     const [currentPage, setCurrentPage] = useState(1)
     const [itemsPerPage, setItemsPerPage] = useState(6)
@@ -336,7 +340,7 @@ const Complaints = () => {
                                                 <CTable hover align="middle" className="mb-0">
                                                     <CTableHead>
                                                         <CTableRow>
-                                                            <CTableHeaderCell className="text-uppercase text-secondary small ps-4 py-3" style={{ fontWeight: 600 }}>Case ID</CTableHeaderCell>
+                                                            <CTableHeaderCell className="text-uppercase text-secondary small ps-4 py-3" style={{ fontWeight: 600 }}>Type</CTableHeaderCell>
                                                             <CTableHeaderCell className="text-uppercase text-secondary small py-3" style={{ fontWeight: 600 }}>Incident</CTableHeaderCell>
                                                             <CTableHeaderCell className="text-uppercase text-secondary small py-3" style={{ fontWeight: 600 }}>Complainant</CTableHeaderCell>
                                                             <CTableHeaderCell className="text-uppercase text-secondary small py-3" style={{ fontWeight: 600 }}>Assigned To</CTableHeaderCell>
@@ -349,7 +353,7 @@ const Complaints = () => {
                                                         {currentPageData.map(complaint => (
                                                             <CTableRow key={complaint.id}>
                                                                 <CTableDataCell className="ps-4">
-                                                                    <span className="font-monospace fw-bold text-primary">#{complaint.id}</span>
+                                                                    <CIcon icon={cilFile} className="text-primary" />
                                                                 </CTableDataCell>
                                                                 <CTableDataCell>
                                                                     <div style={{ maxWidth: '200px' }} className="text-truncate" title={complaint.title}>
@@ -393,45 +397,51 @@ const Complaints = () => {
                                                                         >
                                                                             <CIcon icon={cilInfo} />
                                                                         </CButton>
-                                                                        <CDropdown variant="btn-group">
-                                                                            <CDropdownToggle
-                                                                                size="sm"
-                                                                                shape="rounded-pill"
-                                                                                className="text-primary shadow-sm"
-                                                                                split={false}
-                                                                            >
-                                                                                <CIcon icon={cilPencil} />
-                                                                            </CDropdownToggle>
-                                                                            <CDropdownMenu>
-                                                                                <CDropdownItem
-                                                                                    onClick={() => { setEditing(complaint); setShowForm(true) }}
-                                                                                    style={{ cursor: 'pointer' }}
-                                                                                >
-                                                                                    Edit Details
-                                                                                </CDropdownItem>
-                                                                                <CDropdownItem divider />
-                                                                                <CDropdownItem header style={{ cursor: 'default' }}>Status Management</CDropdownItem>
-                                                                                {getStatusOptions(complaint.status).map(status => (
-                                                                                    <CDropdownItem
-                                                                                        key={status.value}
-                                                                                        onClick={() => handleStatusChange(complaint.id, status.value)}
-                                                                                        className={status.value === 'Rejected' ? 'text-danger' : ''}
-                                                                                        style={{ cursor: 'pointer' }}
+                                                                        {(userRole === 'administrator' || userRole === 'oficial') && (
+                                                                            <>
+                                                                                <CDropdown variant="btn-group">
+                                                                                    <CDropdownToggle
+                                                                                        size="sm"
+                                                                                        shape="rounded-pill"
+                                                                                        className="text-primary shadow-sm"
+                                                                                        split={false}
                                                                                     >
-                                                                                        Mark as {status.label}
-                                                                                    </CDropdownItem>
-                                                                                ))}
-                                                                            </CDropdownMenu>
-                                                                        </CDropdown>
-                                                                        <CButton
-                                                                            size="sm"
-                                                                            className="text-danger shadow-sm"
-                                                                            onClick={() => showDeleteConfirmation(complaint.id, complaint.title)}
-                                                                            title="Delete Case"
-                                                                            shape="rounded-pill"
-                                                                        >
-                                                                            <CIcon icon={cilTrash} />
-                                                                        </CButton>
+                                                                                        <CIcon icon={cilPencil} />
+                                                                                    </CDropdownToggle>
+                                                                                    <CDropdownMenu>
+                                                                                        <CDropdownItem
+                                                                                            onClick={() => { setEditing(complaint); setShowForm(true) }}
+                                                                                            style={{ cursor: 'pointer' }}
+                                                                                        >
+                                                                                            Edit Details
+                                                                                        </CDropdownItem>
+                                                                                        <CDropdownItem divider />
+                                                                                        <CDropdownItem header style={{ cursor: 'default' }}>Status Management</CDropdownItem>
+                                                                                        {getStatusOptions(complaint.status).map(status => (
+                                                                                            <CDropdownItem
+                                                                                                key={status.value}
+                                                                                                onClick={() => handleStatusChange(complaint.id, status.value)}
+                                                                                                className={status.value === 'Rejected' ? 'text-danger' : ''}
+                                                                                                style={{ cursor: 'pointer' }}
+                                                                                            >
+                                                                                                Mark as {status.label}
+                                                                                            </CDropdownItem>
+                                                                                        ))}
+                                                                                    </CDropdownMenu>
+                                                                                </CDropdown>
+                                                                                {userRole === 'administrator' && (
+                                                                                    <CButton
+                                                                                        size="sm"
+                                                                                        className="text-danger shadow-sm"
+                                                                                        onClick={() => showDeleteConfirmation(complaint.id, complaint.title)}
+                                                                                        title="Delete Case"
+                                                                                        shape="rounded-pill"
+                                                                                    >
+                                                                                        <CIcon icon={cilTrash} />
+                                                                                    </CButton>
+                                                                                )}
+                                                                            </>
+                                                                        )}
                                                                     </div>
                                                                 </CTableDataCell>
                                                             </CTableRow>
@@ -440,7 +450,7 @@ const Complaints = () => {
                                                 </CTable>
                                             </div>
 
-                                            {/* PAGINACIÓN */}
+                                            {/* PAGINATION */}
                                             {totalPages > 1 && (
                                                 <div className="mt-4 d-flex justify-content-end">
                                                     <Pagination

@@ -17,7 +17,7 @@ import {
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilLockLocked, cilUser, cilShieldAlt, cilUserPlus, cilEnvelopeClosed } from '@coreui/icons'
-import { login, checkAuth } from 'src/services/auth'
+import { login, checkAuth, forgotPassword } from 'src/services/auth'
 import { authStyles, containerStyles } from 'src/styles/darkModeStyles'
 
 const Login = () => {
@@ -26,8 +26,27 @@ const Login = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [showDemoInfo, setShowDemoInfo] = useState(false)
+  const [recoveryEmail, setRecoveryEmail] = useState('')
+  const [sendingEmail, setSendingEmail] = useState(false)
+  const [recoveryMessage, setRecoveryMessage] = useState(null)
 
   const navigate = useNavigate()
+
+  const handleForgotPassword = async (e) => {
+    e.preventDefault()
+    if (!recoveryEmail) return
+
+    setSendingEmail(true)
+    setRecoveryMessage(null)
+    try {
+      const result = await forgotPassword(recoveryEmail)
+      setRecoveryMessage({ type: 'success', text: 'Reset email sent successfully!' })
+    } catch (err) {
+      setRecoveryMessage({ type: 'danger', text: err.message || 'Error sending email' })
+    } finally {
+      setSendingEmail(false)
+    }
+  }
 
   React.useEffect(() => {
     if (checkAuth()) {
@@ -157,17 +176,6 @@ const Login = () => {
                         </CButton>
                       </CCol>
                     </CRow>
-                    <div className="text-center mt-3">
-                      <CButton
-                        color="outline-primary"
-                        onClick={() => navigate('/register')}
-                        className="w-100"
-                        disabled={loading}
-                      >
-                        <CIcon icon={cilUserPlus} className="me-2" />
-                        Create Account
-                      </CButton>
-                    </div>
 
                     {showDemoInfo && (
                       <div className="mt-3 p-3 rounded" style={containerStyles.lightBg}>
@@ -180,14 +188,22 @@ const Login = () => {
                             placeholder="Email"
                             type="email"
                             autoComplete="email"
+                            value={recoveryEmail}
+                            onChange={(e) => setRecoveryEmail(e.target.value)}
                             required
                           />
                           <CButton
                             color="primary"
-                            disabled={loading}
+                            disabled={sendingEmail || !recoveryEmail}
+                            onClick={handleForgotPassword}
                           >
-                            Send recovery code
+                            {sendingEmail ? <CSpinner size="sm" /> : 'Send recovery code'}
                           </CButton>
+                          {recoveryMessage && (
+                            <div className={`mt-2 small text-${recoveryMessage.type === 'success' ? 'success' : 'danger'}`}>
+                              {recoveryMessage.text}
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}

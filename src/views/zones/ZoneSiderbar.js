@@ -21,6 +21,7 @@ import './ZoneSiderbar.css'
 import InfoComplaint from '../complaints/InfoComplaint'
 import SearchInput from 'src/components/SearchInput'
 import InfoGlobalZone from './InfoGlobalZone'
+import { listZones } from 'src/services/zones'
 
 const ZoneSiderbar = ({ onLocate }) => {
     const [complaints, setComplaints] = useState([])
@@ -29,18 +30,23 @@ const ZoneSiderbar = ({ onLocate }) => {
     const [showComplaintInfo, setShowComplaintInfo] = useState(false)
     const [searchTerm, setSearchTerm] = useState('')
     const [showGlobalStats, setShowGlobalStats] = useState(false)
+    const [zones, setZones] = useState([])
 
-    const zones = [
-        { id: 1, name: 'Pueblo Nuevo', color: '#4caf50', colorBody: '#388e3c' },
-        { id: 2, name: 'Barrio Obrero', color: '#2196f3', colorBody: '#1976d2' },
-        { id: 3, name: 'Centro', color: '#f44336', colorBody: '#d32f2f' },
-        { id: 4, name: 'Santa Teresa', color: '#9c27b0', colorBody: '#7b1fa2' },
-        { id: 5, name: 'La Concordia', color: '#ff9800', colorBody: '#f57c00' }
-    ]
 
     useEffect(() => {
         fetchComplaints()
+        fetchZones()
     }, [])
+
+    const fetchZones = async () => {
+        try {
+            const data = await listZones()
+            setZones(data || [])
+        } catch (error) {
+            console.error('Error fetching zones:', error)
+            setZones([])
+        }
+    }
 
     const fetchComplaints = async () => {
         try {
@@ -54,12 +60,14 @@ const ZoneSiderbar = ({ onLocate }) => {
         }
     }
 
-    const getZoneComplaints = (zoneName) => {
+    const getZoneComplaints = (zone) => {
         if (!complaints.length) return []
 
         return complaints.filter(complaint => {
-            if (!complaint.location) return false
-            return complaint.location.toLowerCase().includes(zoneName.toLowerCase())
+            const zoneMatchById = complaint.zoneId === zone.id
+            const zoneMatchByName = complaint.location && complaint.location.toLowerCase().includes(zone.name.toLowerCase())
+            const zoneFieldMatch = complaint.zone && complaint.zone.toLowerCase() === zone.name.toLowerCase()
+            return zoneMatchById || zoneMatchByName || zoneFieldMatch
         })
     }
 
@@ -74,8 +82,9 @@ const ZoneSiderbar = ({ onLocate }) => {
     }
 
     const renderComplaintItem = (complaint) => {
-        const zone = zones.find(z => complaint.location && complaint.location.toLowerCase().includes(z.name.toLowerCase()))
-        const zoneColor = zone ? zone.colorBody : '#ccc'
+        const zone = zones.find(z => z.id === complaint.zoneId) ||
+            zones.find(z => complaint.location && complaint.location.toLowerCase().includes(z.name.toLowerCase()))
+        const zoneColor = zone ? (zone.colorBody || zone.color) : '#ccc'
 
         return (
             <CListGroupItem
@@ -89,7 +98,7 @@ const ZoneSiderbar = ({ onLocate }) => {
                             {complaint.title || 'Untitled'}
                         </strong>
                         <small className="text-muted d-block mt-1">
-                            ID: #{complaint.id} {complaint.zone && `• ${complaint.zone}`}
+                            {complaint.zone || 'Unknown Zone'}
                         </small>
                     </div>
                 </div>
@@ -176,7 +185,7 @@ const ZoneSiderbar = ({ onLocate }) => {
                     ) : (
                         <CAccordion className="custom-accordion">
                             {zones.map((zone) => {
-                                const zoneComplaints = getZoneComplaints(zone.name)
+                                const zoneComplaints = getZoneComplaints(zone)
 
                                 return (
                                     <CAccordionItem key={zone.id} itemKey={zone.id}>

@@ -1,114 +1,148 @@
-const { users, officers, saveData } = require('../data/storage');
+const prisma = require('../config/prisma');
+const bcrypt = require('bcryptjs');
 
-const getAllUsers = (req, res) => {
-    const usersWithoutPasswords = users.map(({ password, ...u }) => u);
-    res.json(usersWithoutPasswords);
+const getAllUsers = async (req, res) => {
+    console.log("GET /api/users called by user:", req.user);
+    try {
+        const users = await prisma.user.findMany({
+            select: {
+                Id_user: true,
+                dni: true,
+                first_name: true,
+                last_name: true,
+                email: true,
+                status_user: true,
+                role: true,
+                created_at: true
+            }
+        });
+        res.json(users);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching users', error: error.message });
+    }
 };
 
-const getUserById = (req, res) => {
-    const id = parseInt(req.params.id);
-    const user = users.find(u => u.id === id);
-    if (!user) return res.status(404).json({ message: 'User not found' });
+const getUserById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const user = await prisma.user.findUnique({
+            where: { Id_user: id },
+            include: { role: true, officer: true }
+        });
 
-    const { password, ...userWithoutPassword } = user;
-    res.json(userWithoutPassword);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        const { password: _, ...userWithoutPassword } = user;
+        res.json(userWithoutPassword);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching user', error: error.message });
+    }
 };
 
-const createUser = (req, res) => {
-    const { dni, first_name, last_name, email, password, role, phone } = req.body;
+const createUser = async (req, res) => {
+    try {
+        const { dni, first_name, last_name, email, password, role_type, date_birth, gender } = req.body;
 
-    const emailExists = users.find(u => u.email === email);
-    if (emailExists) {
-        return res.status(400).json({ message: 'Email already in use' });
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Find role id
+        const role = await prisma.roles.findUnique({
+            where: { type_rol: role_type || 'civil' }
+        });
+
+        const newUser = await prisma.user.create({
+            data: {
+                dni,
+                first_name,
+                last_name,
+                email,
+                password: hashedPassword,
+                date_birth: new Date(date_birth),
+                gender: gender || 'male',
+                Id_rol: role.Id_rol
+            },
+            include: { role: true }
+        });
+
+        const { password: _, ...userWithoutPassword } = newUser;
+        res.status(201).json(userWithoutPassword);
+    } catch (error) {
+        res.status(400).json({ message: 'Error creating user', error: error.message });
     }
-
-    const dniExists = users.find(u => u.dni === dni);
-    if (dniExists) {
-        return res.status(400).json({ message: 'DNI already in use' });
-    }
-
-    const newUser = {
-        id: users.length > 0 ? Math.max(...users.map(u => u.id)) + 1 : 1,
-        dni,
-        first_name,
-        last_name,
-        email,
-        password,
-        role: role || 'civil',
-        phone,
-        status: 'active',
-        createdAt: new Date().toISOString()
-    };
-
-    users.push(newUser);
-
-    if (newUser.role === 'officer') {
-        const newOfficer = {
-            id: officers.length > 0 ? Math.max(...officers.map(o => o.id)) + 1 : 1,
-            name: first_name,
-            lastName: last_name,
-            idNumber: dni,
-            unit: '',
-            email: email,
-            phone: phone,
-            rank: '',
-            status: 'active'
-        };
-        officers.push(newOfficer);
-    }
-
-    saveData();
-    const { password: _, ...userWithoutPassword } = newUser;
-    res.status(201).json(userWithoutPassword);
 };
 
-const updateUser = (req, res) => {
-    const id = parseInt(req.params.id);
-    const index = users.findIndex(u => u.id === id);
+const updateUser = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { id: requesterId, role: requesterRole } = req.user;
 
-    if (index === -1) return res.status(404).json({ message: 'User not found' });
+        // RBAC: Only self or admin
+        if (requesterRole !== 'administrator' && requesterId !== id) {
+            return res.status(403).json({ message: 'You do not have permission to update this user' });
+        }
 
-    const oldDni = users[index].dni;
+        let data = { ...req.body };
 
-    users[index] = {
-        ...users[index],
-        ...req.body,
-        updatedAt: new Date().toISOString()
-    };
+        // Handle password hashing
+        if (data.password) {
+            data.password = await bcrypt.hash(data.password, 10);
+        }
 
-    const officerIndex = officers.findIndex(o => o.idNumber === oldDni);
-    if (officerIndex !== -1) {
-        officers[officerIndex] = {
-            ...officers[officerIndex],
-            name: req.body.first_name || officers[officerIndex].name,
-            lastName: req.body.last_name || officers[officerIndex].lastName,
-            idNumber: req.body.dni || officers[officerIndex].idNumber,
-            email: req.body.email || officers[officerIndex].email,
-            phone: req.body.phone || officers[officerIndex].phone
-        };
+        // Map role string to Id_rol
+        if (data.role || data.role_type) {
+            if (requesterRole === 'administrator') {
+                const roleName = data.role_type || data.role;
+                const role = await prisma.roles.findUnique({
+                    where: { type_rol: roleName }
+                });
+                if (role) {
+                    data.Id_rol = role.Id_rol;
+                }
+            }
+            delete data.role;
+            delete data.role_type;
+        }
+
+        // Map frontend fields to backend schema
+        if (data.status) {
+            data.status_user = data.status;
+            delete data.status;
+        }
+        if (data.phone) {
+            data.number_phone = data.phone;
+            delete data.phone;
+        }
+
+        // Remove sensitive fields if not admin
+        if (requesterRole !== 'administrator') {
+            delete data.Id_rol;
+            delete data.status_user;
+        }
+
+        const updatedUser = await prisma.user.update({
+            where: { Id_user: id },
+            data,
+            include: { role: true }
+        });
+
+        const { password: _, ...userWithoutPassword } = updatedUser;
+        res.json(userWithoutPassword);
+    } catch (error) {
+        console.error('Update user error:', error);
+        res.status(400).json({ message: 'Error updating user', error: error.message });
     }
-
-    saveData();
-    const { password: _, ...userWithoutPassword } = users[index];
-    res.json(userWithoutPassword);
 };
 
-const deleteUser = (req, res) => {
-    const id = parseInt(req.params.id);
-    const index = users.findIndex(u => u.id === id);
-
-    if (index === -1) return res.status(404).json({ message: 'User not found' });
-
-    const userDni = users[index].dni;
-    users.splice(index, 1);
-
-    const officerIndex = officers.findIndex(o => o.idNumber === userDni);
-    if (officerIndex !== -1) {
-        officers.splice(officerIndex, 1);
+const deleteUser = async (req, res) => {
+    try {
+        const { id } = req.params;
+        await prisma.user.delete({
+            where: { Id_user: id }
+        });
+        res.json({ message: 'User deleted successfully', id });
+    } catch (error) {
+        res.status(500).json({ message: 'Error deleting user', error: error.message });
     }
-
-    saveData();
-    res.json({ message: 'User and its officer profile deleted successfully', id });
 };
 
 module.exports = {

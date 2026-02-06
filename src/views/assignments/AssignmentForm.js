@@ -35,10 +35,12 @@ const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
     const [priority, setPriority] = useState('medium')
 
     const [officials, setOfficials] = useState([])
+    const [funcionaries, setFuncionaries] = useState([])
     const [witnesses, setWitnesses] = useState([])
     const [jury, setJury] = useState([])
 
     const [availableOfficials, setAvailableOfficials] = useState([])
+    const [availableFuncionaries, setAvailableFuncionaries] = useState([])
     const [availableCitizens, setAvailableCitizens] = useState([])
 
     const [loading, setLoading] = useState(false)
@@ -64,6 +66,7 @@ const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
                 setStatus(initial.status || 'scheduled')
                 setPriority(initial.priority || 'medium')
                 setOfficials(initial.officials || [])
+                setFuncionaries(initial.funcionaries || [])
                 setWitnesses(initial.witnesses || [])
                 setJury(initial.jury || [])
             } else {
@@ -114,6 +117,7 @@ const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
         setStatus('scheduled')
         setPriority('medium')
         setOfficials([])
+        setFuncionaries([])
         setWitnesses([])
         setJury([])
     }
@@ -126,7 +130,8 @@ const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
                 getCitizens()
             ])
 
-            setAvailableOfficials(officials)
+            setAvailableOfficials(officials.filter(u => u.role?.toLowerCase() === 'officer' || u.role?.toLowerCase() === 'oficial'))
+            setAvailableFuncionaries(officials.filter(u => u.role?.toLowerCase() === 'functionary' || u.role?.toLowerCase() === 'funcionario'))
             setAvailableCitizens(citizens)
 
         } catch (error) {
@@ -144,6 +149,10 @@ const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
         }])
     }
 
+    const addFuncionary = () => {
+        setFuncionaries([...funcionaries, { user_id: '', name: '', role: 'Clerk' }])
+    }
+
     const addWitness = () => {
         setWitnesses([...witnesses, { user_id: '', name: '', role: 'Witness' }])
     }
@@ -157,7 +166,7 @@ const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
         updated[index][field] = value
 
         if (field === 'user_id' && value) {
-            const selectedUser = availableOfficials.find(u => u.id === parseInt(value))
+            const selectedUser = availableOfficials.find(u => u.id === value)
             if (selectedUser) {
                 updated[index].name = `${selectedUser.first_name} ${selectedUser.last_name}`
             }
@@ -166,12 +175,26 @@ const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
         setOfficials(updated)
     }
 
+    const updateFuncionary = (index, field, value) => {
+        const updated = [...funcionaries]
+        updated[index][field] = value
+
+        if (field === 'user_id' && value) {
+            const selectedUser = availableFuncionaries.find(u => u.id === value)
+            if (selectedUser) {
+                updated[index].name = `${selectedUser.first_name} ${selectedUser.last_name}`
+            }
+        }
+
+        setFuncionaries(updated)
+    }
+
     const updateWitness = (index, field, value) => {
         const updated = [...witnesses]
         updated[index][field] = value
 
         if (field === 'user_id' && value) {
-            const selectedUser = availableCitizens.find(u => u.id === parseInt(value))
+            const selectedUser = availableCitizens.find(u => u.id === value)
             if (selectedUser) {
                 updated[index].name = `${selectedUser.first_name} ${selectedUser.last_name}`
             }
@@ -185,7 +208,7 @@ const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
         updated[index][field] = value
 
         if (field === 'user_id' && value) {
-            const selectedUser = availableCitizens.find(u => u.id === parseInt(value))
+            const selectedUser = availableCitizens.find(u => u.id === value)
             if (selectedUser) {
                 updated[index].name = `${selectedUser.first_name} ${selectedUser.last_name}`
             }
@@ -196,6 +219,10 @@ const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
 
     const removeOfficial = (index) => {
         setOfficials(officials.filter((_, i) => i !== index))
+    }
+
+    const removeFuncionary = (index) => {
+        setFuncionaries(funcionaries.filter((_, i) => i !== index))
     }
 
     const removeWitness = (index) => {
@@ -217,13 +244,13 @@ const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
         setSaving(true)
 
         try {
-            const selectedJudge = availableOfficials.find(j => j.id === parseInt(judgeId))
+            const selectedJudge = availableOfficials.find(j => j.id === judgeId)
             const judgeName = selectedJudge ? `${selectedJudge.first_name} ${selectedJudge.last_name}` : ''
 
             const payload = {
                 case_title: caseTitle.trim(),
                 case_description: caseDescription.trim(),
-                judge_id: judgeId ? parseInt(judgeId) : null,
+                judge_id: judgeId || null,
                 judge_name: judgeName,
                 court: court.trim(),
                 hearing_date: hearingDate,
@@ -233,9 +260,10 @@ const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
                 location: location.trim(),
                 status,
                 priority,
-                officials: officials.filter(f => f.user_id && f.name),
-                witnesses: witnesses.filter(w => w.user_id && w.name),
-                jury: jury.filter(j => j.user_id && j.name)
+                officials: officials.filter(f => f.user_id).map(f => f.user_id),
+                funcionaries: funcionaries.filter(f => f.user_id).map(f => f.user_id),
+                witnesses: witnesses.filter(w => w.user_id).map(w => w.user_id),
+                jury: jury.filter(j => j.user_id).map(j => j.user_id)
             }
 
             await onSave(payload)
@@ -252,7 +280,7 @@ const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
             <CRow key={index} className="g-3 mb-3 align-items-end">
                 <CCol md={5}>
                     <CFormSelect
-                        label="Official"
+                        label="Official (Officer)"
                         value={official.user_id}
                         onChange={(e) => updateOfficial(index, 'user_id', e.target.value)}
                     >
@@ -270,10 +298,10 @@ const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
                         value={official.role}
                         onChange={(e) => updateOfficial(index, 'role', e.target.value)}
                     >
-                        <option value="Lawyer">Lawyer</option>
-                        <option value="Prosecutor">Prosecutor</option>
-                        <option value="Defender">Defender</option>
-                        <option value="Judge">Judge</option>
+                        <option value="Detective">Detective</option>
+                        <option value="Agent">Agent</option>
+                        <option value="Investigator">Investigator</option>
+                        <option value="Supervisor">Supervisor</option>
                     </CFormSelect>
                 </CCol>
                 <CCol md={2}>
@@ -281,6 +309,51 @@ const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
                         color="danger"
                         variant="outline"
                         onClick={() => removeOfficial(index)}
+                    >
+                        <CIcon icon={cilTrash} />
+                    </CButton>
+                </CCol>
+            </CRow>
+        ))
+    }
+
+    const renderFuncionaries = () => {
+        return funcionaries.map((f, index) => (
+            <CRow key={index} className="g-3 mb-3 align-items-end">
+                <CCol md={5}>
+                    <CFormSelect
+                        label="Court Functionary"
+                        value={f.user_id}
+                        onChange={(e) => updateFuncionary(index, 'user_id', e.target.value)}
+                    >
+                        <option value="">Select functionary</option>
+                        {availableFuncionaries.map(user => (
+                            <option key={user.id} value={user.id}>
+                                {user.first_name} {user.last_name} - {user.dni}
+                            </option>
+                        ))}
+                    </CFormSelect>
+                </CCol>
+                <CCol md={5}>
+                    <CFormSelect
+                        label="Role"
+                        value={f.role}
+                        onChange={(e) => updateFuncionary(index, 'role', e.target.value)}
+                    >
+                        <option value="Clerk">Clerk</option>
+                        <option value="Court Reporter">Court Reporter</option>
+                        <option value="Bailiff">Bailiff</option>
+                        <option value="Secretary">Secretary</option>
+                        <option value="Lawyer">Lawyer</option>
+                        <option value="Prosecutor">Prosecutor</option>
+                        <option value="Defender">Defender</option>
+                    </CFormSelect>
+                </CCol>
+                <CCol md={2}>
+                    <CButton
+                        color="danger"
+                        variant="outline"
+                        onClick={() => removeFuncionary(index)}
                     >
                         <CIcon icon={cilTrash} />
                     </CButton>
@@ -517,13 +590,24 @@ const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
                     {/* SECCIÓN 3: PARTICIPANTS */}
                     {step === 3 && (
                         <>
-                            <h6 className="mb-3 text-primary">Case Officials</h6>
+                            <h6 className="mb-3 text-primary">Case Officials (Police/Investigators)</h6>
                             <CCard className="mb-3">
                                 <CCardBody>
                                     {renderOfficials()}
                                     <CButton color="primary" variant="outline" onClick={addOfficial}>
                                         <CIcon icon={cilPlus} className="me-2" />
                                         Add Official
+                                    </CButton>
+                                </CCardBody>
+                            </CCard>
+
+                            <h6 className="mb-3 mt-4 text-primary">Court Functionaries</h6>
+                            <CCard className="mb-3">
+                                <CCardBody>
+                                    {renderFuncionaries()}
+                                    <CButton color="primary" variant="outline" onClick={addFuncionary}>
+                                        <CIcon icon={cilPlus} className="me-2" />
+                                        Add Functionary
                                     </CButton>
                                 </CCardBody>
                             </CCard>

@@ -1,4 +1,5 @@
 import React from 'react'
+import { useDispatch } from 'react-redux'
 import classNames from 'classnames'
 
 import {
@@ -54,14 +55,58 @@ import WidgetsBrand from '../widgets/WidgetsBrand'
 import WidgetsDropdown from '../widgets/WidgetsDropdown'
 import MainChart from './MainChart'
 
+import { getDashboardStats, downloadComplaintsExcel } from 'src/services/reports'
+
 const Dashboard = () => {
-  const progressExample = [
-    { title: 'Visits', value: '29.703 Users', percent: 40, color: 'success' },
-    { title: 'Unique', value: '24.093 Users', percent: 20, color: 'info' },
-    { title: 'Pageviews', value: '78.706 Views', percent: 60, color: 'warning' },
-    { title: 'New Users', value: '22.123 Users', percent: 80, color: 'danger' },
-    { title: 'Bounce Rate', value: 'Average Rate', percent: 40.15, color: 'primary' },
-  ]
+  const [stats, setStats] = React.useState(null)
+  const [loading, setLoading] = React.useState(true)
+  const dispatch = useDispatch()
+
+  React.useEffect(() => {
+    loadStats()
+  }, [])
+
+  const loadStats = async () => {
+    try {
+      const data = await getDashboardStats()
+      setStats(data)
+    } catch (error) {
+      console.error('Error loading dashboard stats:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDownloadExcel = async () => {
+    try {
+      await downloadComplaintsExcel()
+      dispatch({
+        type: 'set',
+        appAlert: {
+          visible: true,
+          color: 'success',
+          message: 'Your XLS downloaded successfully',
+        },
+      })
+    } catch (error) {
+      console.error('Error downloading XLS:', error)
+      dispatch({
+        type: 'set',
+        appAlert: {
+          visible: true,
+          color: 'danger',
+          message: 'Error downloading Excel report',
+        },
+      })
+    }
+  }
+
+  const progressExample = stats ? [
+    { title: 'Total Users', value: `${stats.counts.users}`, percent: 100, color: 'success' },
+    { title: 'Total Complaints', value: `${stats.counts.complaints}`, percent: 100, color: 'info' },
+    { title: 'Officers', value: `${stats.counts.officers}`, percent: 100, color: 'warning' },
+    { title: 'Active Complaints', value: `${stats.complaintsByStatus.find(s => s.status === 'received')?.count || 0}`, percent: 0, color: 'danger' },
+  ] : []
 
   const progressGroupExample1 = [
     { title: 'Monday', value1: 34, value2: 78 },
@@ -178,7 +223,7 @@ const Dashboard = () => {
 
   return (
     <>
-      <WidgetsDropdown className="mb-4" />
+      <WidgetsDropdown className="mb-4" stats={stats} />
       <CCard className="mb-4">
         <CCardBody>
           <CRow>
@@ -189,9 +234,6 @@ const Dashboard = () => {
               <div className="small text-body-secondary">January - July 2023</div>
             </CCol>
             <CCol sm={7} className="d-none d-md-block">
-              <CButton color="primary" className="float-end">
-                <CIcon icon={cilCloudDownload} />
-              </CButton>
               <CButtonGroup className="float-end me-3">
                 {['Day', 'Month', 'Year'].map((value) => (
                   <CButton

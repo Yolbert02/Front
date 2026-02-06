@@ -16,8 +16,13 @@ import CIcon from '@coreui/icons-react'
 import { cilArrowBottom, cilArrowTop, cilOptions } from '@coreui/icons'
 
 const WidgetsDropdown = (props) => {
+  const { stats } = props
   const widgetChartRef1 = useRef(null)
   const widgetChartRef2 = useRef(null)
+
+  const usersCount = stats?.counts?.users || 0
+  const complaintsCount = stats?.counts?.complaints || 0
+  const officersCount = stats?.counts?.officers || 0
 
   useEffect(() => {
     document.documentElement.addEventListener('ColorSchemeChange', () => {
@@ -44,9 +49,9 @@ const WidgetsDropdown = (props) => {
           color="primary"
           value={
             <>
-              26K{' '}
+              {usersCount}{' '}
               <span className="fs-6 fw-normal">
-                (-12.4% <CIcon icon={cilArrowBottom} />)
+                (Total)
               </span>
             </>
           }
@@ -134,13 +139,13 @@ const WidgetsDropdown = (props) => {
           color="info"
           value={
             <>
-              $6.200{' '}
+              {complaintsCount}{' '}
               <span className="fs-6 fw-normal">
-                (40.9% <CIcon icon={cilArrowTop} />)
+                (Total)
               </span>
             </>
           }
-          title="Income"
+          title="Complaints"
           action={
             <CDropdown alignment="end">
               <CDropdownToggle color="transparent" caret={false} className="text-white p-0">
@@ -223,13 +228,13 @@ const WidgetsDropdown = (props) => {
           color="warning"
           value={
             <>
-              2.49%{' '}
+              {officersCount}{' '}
               <span className="fs-6 fw-normal">
-                (84.7% <CIcon icon={cilArrowTop} />)
+                (Active)
               </span>
             </>
           }
-          title="Conversion Rate"
+          title="Police Officers"
           action={
             <CDropdown alignment="end">
               <CDropdownToggle color="transparent" caret={false} className="text-white p-0">

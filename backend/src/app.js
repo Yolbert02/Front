@@ -18,11 +18,19 @@ const userRoutes = require('./routes/user.routes');
 const officerRoutes = require('./routes/officer.routes');
 const complaintRoutes = require('./routes/complaint.routes');
 const zoneRoutes = require('./routes/zone.routes');
+const assignmentRoutes = require('./routes/assignment.routes');
+const statsRoutes = require('./routes/stats.routes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/officers', officerRoutes);
 app.use('/api/complaints', complaintRoutes);
 app.use('/api/zones', zoneRoutes);
+app.use('/api/assignments', assignmentRoutes);
+app.use('/api/stats', statsRoutes);
+
+// Global Error Handler (must be last)
+const errorHandler = require('./middleware/error.middleware');
+app.use(errorHandler);
 
 module.exports = app;

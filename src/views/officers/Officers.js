@@ -40,6 +40,8 @@ const Officers = () => {
     const [editing, setEditing] = useState(null)
     const [selectedOfficer, setSelectedOfficer] = useState(null)
     const dispatch = useDispatch()
+    const userStr = sessionStorage.getItem('user')
+    const userRole = userStr ? JSON.parse(userStr).role : 'civil'
 
     const [currentPage, setCurrentPage] = useState(1)
     const [itemsPerPage] = useState(6)
@@ -248,22 +250,24 @@ const Officers = () => {
                                         Manage police force personnel and assignments
                                     </p>
                                 </div>
-                                <div>
-                                    <CButton
-                                        color="primary colorbutton"
-                                        style={colorbutton}
-                                        onClick={() => {
-                                            console.log('New officer button clicked')
-                                            setEditing(null);
-                                            setShowForm(true)
-                                        }}
-                                        className="d-flex align-items-center px-4 py-2 shadow-sm"
-                                        shape="rounded-pill"
-                                    >
-                                        <CIcon icon={cilPlus} className="me-2 fw-bold" />
-                                        NEW OFFICER
-                                    </CButton>
-                                </div>
+                                {userRole === 'administrator' && (
+                                    <div>
+                                        <CButton
+                                            color="primary colorbutton"
+                                            style={colorbutton}
+                                            onClick={() => {
+                                                console.log('New officer button clicked')
+                                                setEditing(null);
+                                                setShowForm(true)
+                                            }}
+                                            className="d-flex align-items-center px-4 py-2 shadow-sm"
+                                            shape="rounded-pill"
+                                        >
+                                            <CIcon icon={cilPlus} className="me-2 fw-bold" />
+                                            NEW OFFICER
+                                        </CButton>
+                                    </div>
+                                )}
                             </div>
                         </CCardHeader>
 
@@ -299,7 +303,7 @@ const Officers = () => {
                                                     <CTableHead>
                                                         <CTableRow>
                                                             <CTableHeaderCell className="text-uppercase text-secondary small ps-4 py-3" style={{ fontWeight: 600 }}>Personnel</CTableHeaderCell>
-                                                            <CTableHeaderCell className="text-uppercase text-secondary small py-3" style={{ fontWeight: 600 }}>Badge ID</CTableHeaderCell>
+                                                            <CTableHeaderCell className="text-uppercase text-secondary small py-3" style={{ fontWeight: 600 }}>Contact Info</CTableHeaderCell>
                                                             <CTableHeaderCell className="text-uppercase text-secondary small py-3" style={{ fontWeight: 600 }}>Unit / Division</CTableHeaderCell>
                                                             <CTableHeaderCell className="text-uppercase text-secondary small py-3" style={{ fontWeight: 600 }}>Status</CTableHeaderCell>
                                                             <CTableHeaderCell className="text-uppercase text-secondary small text-end pe-4 py-3" style={{ fontWeight: 600, width: '150px' }}>Actions</CTableHeaderCell>
@@ -323,9 +327,9 @@ const Officers = () => {
                                                                     </div>
                                                                 </CTableDataCell>
                                                                 <CTableDataCell>
-                                                                    <span className="font-monospace fw-semibold text-secondary">
-                                                                        #{officer.id}
-                                                                    </span>
+                                                                    <div className="small text-muted">
+                                                                        {officer.email || officer.phone || 'N/A'}
+                                                                    </div>
                                                                 </CTableDataCell>
                                                                 <CTableDataCell>
                                                                     <div className="d-flex align-items-center">
@@ -351,45 +355,49 @@ const Officers = () => {
                                                                         </CButton>
 
 
-                                                                        <CDropdown variant="btn-group">
-                                                                            <CDropdownToggle
-                                                                                size="sm"
-                                                                                shape="rounded-pill"
-                                                                                className="text-primary shadow-sm"
-                                                                                split={false}
-                                                                            >
-                                                                                <CIcon icon={cilPencil} />
-                                                                            </CDropdownToggle>
-                                                                            <CDropdownMenu>
-                                                                                <CDropdownItem
-                                                                                    onClick={() => { setEditing(officer); setShowForm(true) }}
-                                                                                    style={{ cursor: 'pointer' }}
-                                                                                >
-                                                                                    Edit Details
-                                                                                </CDropdownItem>
-                                                                                <CDropdownItem divider />
-                                                                                <CDropdownItem header style={{ cursor: 'default' }}>Status Management</CDropdownItem>
-                                                                                {getStatusOptions(officer.status).map(status => (
-                                                                                    <CDropdownItem
-                                                                                        key={status.value}
-                                                                                        onClick={() => handleStatusChange(officer.id, status.value)}
-                                                                                        className={status.value === 'Suspended' ? 'text-danger' : ''}
-                                                                                        style={{ cursor: 'pointer' }}
+                                                                        {userRole === 'administrator' && (
+                                                                            <>
+                                                                                <CDropdown variant="btn-group">
+                                                                                    <CDropdownToggle
+                                                                                        size="sm"
+                                                                                        shape="rounded-pill"
+                                                                                        className="text-primary shadow-sm"
+                                                                                        split={false}
                                                                                     >
-                                                                                        Mark as {status.label}
-                                                                                    </CDropdownItem>
-                                                                                ))}
-                                                                            </CDropdownMenu>
-                                                                        </CDropdown>
-                                                                        <CButton
-                                                                            size="sm"
-                                                                            className="text-danger shadow-sm"
-                                                                            onClick={() => showDeleteConfirmation(officer.id, `${officer.name} ${officer.lastName}`)}
-                                                                            title="Deactivate/Delete"
-                                                                            shape="rounded-pill"
-                                                                        >
-                                                                            <CIcon icon={cilTrash} />
-                                                                        </CButton>
+                                                                                        <CIcon icon={cilPencil} />
+                                                                                    </CDropdownToggle>
+                                                                                    <CDropdownMenu>
+                                                                                        <CDropdownItem
+                                                                                            onClick={() => { setEditing(officer); setShowForm(true) }}
+                                                                                            style={{ cursor: 'pointer' }}
+                                                                                        >
+                                                                                            Edit Details
+                                                                                        </CDropdownItem>
+                                                                                        <CDropdownItem divider />
+                                                                                        <CDropdownItem header style={{ cursor: 'default' }}>Status Management</CDropdownItem>
+                                                                                        {getStatusOptions(officer.status).map(status => (
+                                                                                            <CDropdownItem
+                                                                                                key={status.value}
+                                                                                                onClick={() => handleStatusChange(officer.id, status.value)}
+                                                                                                className={status.value === 'Suspended' ? 'text-danger' : ''}
+                                                                                                style={{ cursor: 'pointer' }}
+                                                                                            >
+                                                                                                Mark as {status.label}
+                                                                                            </CDropdownItem>
+                                                                                        ))}
+                                                                                    </CDropdownMenu>
+                                                                                </CDropdown>
+                                                                                <CButton
+                                                                                    size="sm"
+                                                                                    className="text-danger shadow-sm"
+                                                                                    onClick={() => showDeleteConfirmation(officer.id, `${officer.name} ${officer.lastName}`)}
+                                                                                    title="Deactivate/Delete"
+                                                                                    shape="rounded-pill"
+                                                                                >
+                                                                                    <CIcon icon={cilTrash} />
+                                                                                </CButton>
+                                                                            </>
+                                                                        )}
                                                                     </div>
                                                                 </CTableDataCell>
                                                             </CTableRow>

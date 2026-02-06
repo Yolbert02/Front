@@ -114,10 +114,6 @@ const InfoUser = ({ visible, onClose, user }) => {
                                                 </div>
                                             </CCol>
                                             <CCol md={6}>
-                                                <strong>User ID:</strong>
-                                                <div className="text-muted">#{user.id}</div>
-                                            </CCol>
-                                            <CCol md={6}>
                                                 <strong>Status:</strong>
                                                 <div>{getStatusBadge(user.status)}</div>
                                             </CCol>

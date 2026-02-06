@@ -21,6 +21,7 @@ import CIcon from '@coreui/icons-react'
 import { cilLocationPin, cilWarning, cilArrowRight, cilArrowLeft, cilCloudDownload } from '@coreui/icons'
 import InfoComplaint from '../complaints/InfoComplaint'
 import { modalStyles, cardStyles } from 'src/styles/darkModeStyles'
+import { downloadComplaintsExcel } from 'src/services/reports'
 
 const InfoZone = ({ visible, onClose, zone, complaints = [] }) => {
     const dispatch = useDispatch()
@@ -37,7 +38,7 @@ const InfoZone = ({ visible, onClose, zone, complaints = [] }) => {
     if (!zone) return null
 
     const zoneComplaints = complaints.filter((c) => {
-        const zoneMatch = c.zone?.toLowerCase() === zone.name.toLowerCase()
+        const zoneMatch = c.zoneId === zone.id || c.zone?.toLowerCase() === zone.name.toLowerCase()
         const locationMatch = c.location?.toLowerCase().includes(zone.name.toLowerCase())
         return zoneMatch || locationMatch
     })
@@ -119,15 +120,28 @@ const InfoZone = ({ visible, onClose, zone, complaints = [] }) => {
         setStep(step - 1)
     }
 
-    const downloadXLS = (id) => {
-        dispatch({
-            type: 'set',
-            appAlert: {
-                visible: true,
-                color: 'success',
-                message: 'Your XLS downloaded successfully',
-            },
-        })
+    const downloadXLS = async () => {
+        try {
+            await downloadComplaintsExcel()
+            dispatch({
+                type: 'set',
+                appAlert: {
+                    visible: true,
+                    color: 'success',
+                    message: 'Your XLS downloaded successfully',
+                },
+            })
+        } catch (error) {
+            console.error('Error downloading XLS:', error)
+            dispatch({
+                type: 'set',
+                appAlert: {
+                    visible: true,
+                    color: 'danger',
+                    message: 'Error downloading Excel report',
+                },
+            })
+        }
     }
 
     return (
@@ -238,7 +252,7 @@ const InfoZone = ({ visible, onClose, zone, complaints = [] }) => {
                                                     }}
                                                 >
                                                     <div>
-                                                        <strong>#{complaint.id} - {complaint.title}</strong>
+                                                        <strong>{complaint.title}</strong>
                                                         <br />
                                                         <small className="text-muted">{complaint.location}</small>
                                                         <div className="mt-1">
@@ -279,15 +293,6 @@ const InfoZone = ({ visible, onClose, zone, complaints = [] }) => {
                         </CButton>
                     ) : null}
                     <div className="ms-auto d-flex align-items-center">
-                        <CButton
-                            size="lg"
-                            variant="outline"
-                            className="text-success me-2"
-                            onClick={() => downloadXLS(zone.id)}
-                            title="Download XLS"
-                        >
-                            <CIcon icon={cilCloudDownload} />
-                        </CButton>
                         <CButton type="button" color="secondary" onClick={onClose}>
                             Cancel
                         </CButton>

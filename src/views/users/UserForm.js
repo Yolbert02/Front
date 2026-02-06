@@ -86,7 +86,7 @@ const UserForm = ({ visible, onClose, onSave, initial = null }) => {
             if (!first_name.trim()) newErrors.first_name = 'First name is required';
             if (!last_name.trim()) newErrors.last_name = 'Last name is required';
             if (!dni.trim() || dni.trim() === 'V-') newErrors.dni = 'DNI is required';
-            if (!initial && !document_image) newErrors.document_image = 'Document image is required';
+            // if (!initial && !document_image) newErrors.document_image = 'Document image is required';
         }
 
         if (currentStep === 2) {
@@ -130,25 +130,21 @@ const UserForm = ({ visible, onClose, onSave, initial = null }) => {
         setSaving(true);
 
         try {
-            const formData = new FormData();
-
-            formData.append('dni', dni.trim());
-            formData.append('first_name', first_name.trim());
-            formData.append('last_name', last_name.trim());
-            formData.append('phone', phone.trim());
-            formData.append('email', email.trim());
-            formData.append('role', role.toLowerCase());
-            formData.append('status', status.toLowerCase());
+            const payload = {
+                dni: dni.trim(),
+                first_name: first_name.trim(),
+                last_name: last_name.trim(),
+                phone: phone.trim(),
+                email: email.trim(),
+                role: role.toLowerCase(),
+                status: status.toLowerCase()
+            };
 
             if (password.trim()) {
-                formData.append('password', password.trim());
+                payload.password = password.trim();
             }
 
-            if (document_image) {
-                formData.append('document_image', document_image);
-            }
-
-            await onSave(formData);
+            await onSave(payload);
 
             onClose();
         } catch (error) {
@@ -177,7 +173,7 @@ const UserForm = ({ visible, onClose, onSave, initial = null }) => {
 
                     {step === 1 && (
                         <>
-                            <h5 className="mb-3 text-primary">Datos Personales</h5>
+                            <h5 className="mb-3 text-primary">Personal Data</h5>
                             <CRow className="g-3">
                                 <CCol md={6}>
                                     <CFormInput
@@ -214,13 +210,13 @@ const UserForm = ({ visible, onClose, onSave, initial = null }) => {
                                 </CCol>
                                 <CCol md={6}>
                                     <CFormInput
-                                        label={`Document Image * ${initial ? '(Optional for Edit)' : ''}`}
+                                        label={`Document Image ${initial ? '(Optional for Edit)' : '(Optional)'}`}
                                         type="file"
                                         accept="image/*"
                                         onChange={handleDocumentImageChange}
                                         invalid={!!errors.document_image}
                                         feedback={errors.document_image}
-                                        required={!initial}
+                                        required={false}
                                     />
                                 </CCol>
                             </CRow>
@@ -229,7 +225,7 @@ const UserForm = ({ visible, onClose, onSave, initial = null }) => {
 
                     {step === 2 && (
                         <>
-                            <h5 className="mb-3 text-primary">Contacto</h5>
+                            <h5 className="mb-3 text-primary">Contact</h5>
                             <CRow className="g-3">
                                 <CCol md={6}>
                                     <CFormInput
@@ -260,7 +256,7 @@ const UserForm = ({ visible, onClose, onSave, initial = null }) => {
 
                     {step === 3 && (
                         <>
-                            <h5 className="mb-3 text-primary">Datos del Sistema</h5>
+                            <h5 className="mb-3 text-primary">System Data</h5>
                             <CRow className="g-3">
                                 <CCol md={6}>
                                     <CFormSelect

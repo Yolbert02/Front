@@ -30,6 +30,7 @@ import {
     cilCloudDownload
 } from '@coreui/icons'
 import { modalStyles, cardStyles } from 'src/styles/darkModeStyles'
+import { downloadAssignmentPDF } from 'src/services/reports'
 
 const InfoAssignment = ({ visible, onClose, assignment }) => {
     const dispatch = useDispatch()
@@ -89,20 +90,34 @@ const InfoAssignment = ({ visible, onClose, assignment }) => {
 
     const getParticipantsCount = (assignment) => {
         const officials = assignment.officials?.length || 0
+        const funcionaries = assignment.funcionaries?.length || 0
         const witnesses = assignment.witnesses?.length || 0
         const jury = assignment.jury?.length || 0
-        return officials + witnesses + jury + (assignment.judge_id ? 1 : 0)
+        return officials + funcionaries + witnesses + jury + (assignment.judge_id ? 1 : 0)
     }
 
-    const downloadPDF = (id) => {
-        dispatch({
-            type: 'set',
-            appAlert: {
-                visible: true,
-                color: 'success',
-                message: 'Your PDF downloaded successfully',
-            },
-        })
+    const downloadPDF = async (id) => {
+        try {
+            await downloadAssignmentPDF(id)
+            dispatch({
+                type: 'set',
+                appAlert: {
+                    visible: true,
+                    color: 'success',
+                    message: 'Your PDF downloaded successfully',
+                },
+            })
+        } catch (error) {
+            console.error('Error downloading PDF:', error)
+            dispatch({
+                type: 'set',
+                appAlert: {
+                    visible: true,
+                    color: 'danger',
+                    message: 'Error downloading Assignment report',
+                },
+            })
+        }
     }
 
     return (
@@ -194,6 +209,10 @@ const InfoAssignment = ({ visible, onClose, assignment }) => {
                                         <CBadge color="info">{assignment.officials?.length || 0}</CBadge>
                                     </CListGroupItem>
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
+                                        <span>Court Funcionaries:</span>
+                                        <CBadge color="primary">{assignment.funcionaries?.length || 0}</CBadge>
+                                    </CListGroupItem>
+                                    <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
                                         <span>Witnesses:</span>
                                         <CBadge color="warning">{assignment.witnesses?.length || 0}</CBadge>
                                     </CListGroupItem>
@@ -253,7 +272,7 @@ const InfoAssignment = ({ visible, onClose, assignment }) => {
                         <CCol md={12}>
                             <CCard style={cardStyles.card}>
                                 <CCardHeader style={cardStyles.header}>
-                                    <h6 className="mb-0">Case Officials</h6>
+                                    <h6 className="mb-0">Case Officials (Police/Investigators)</h6>
                                 </CCardHeader>
                                 <CCardBody style={cardStyles.body}>
                                     <CListGroup flush>
@@ -266,6 +285,31 @@ const InfoAssignment = ({ visible, onClose, assignment }) => {
                                                         <small className="text-muted">{official.role}</small>
                                                     </span>
                                                     <CBadge color="info">Official</CBadge>
+                                                </div>
+                                            </CListGroupItem>
+                                        ))}
+                                    </CListGroup>
+                                </CCardBody>
+                            </CCard>
+                        </CCol>
+                    )}
+                    {assignment.funcionaries && assignment.funcionaries.length > 0 && (
+                        <CCol md={12}>
+                            <CCard style={cardStyles.card}>
+                                <CCardHeader style={cardStyles.header}>
+                                    <h6 className="mb-0">Court Functionaries</h6>
+                                </CCardHeader>
+                                <CCardBody style={cardStyles.body}>
+                                    <CListGroup flush>
+                                        {assignment.funcionaries.map((f, index) => (
+                                            <CListGroupItem key={index} className="px-0">
+                                                <div className="d-flex justify-content-between align-items-center">
+                                                    <span>
+                                                        <strong>{f.name}</strong>
+                                                        <br />
+                                                        <small className="text-muted">{f.role}</small>
+                                                    </span>
+                                                    <CBadge color="primary">Court Staff</CBadge>
                                                 </div>
                                             </CListGroupItem>
                                         ))}
@@ -327,15 +371,6 @@ const InfoAssignment = ({ visible, onClose, assignment }) => {
                 </CRow>
             </CModalBody>
             <CModalFooter style={modalStyles.footer}>
-                <CButton
-                    size="lg"
-                    variant="outline"
-                    className="text-danger shadow-sm"
-                    onClick={() => downloadPDF(assignment.id)}
-                    title="Download PDF"
-                >
-                    <CIcon icon={cilCloudDownload} />
-                </CButton>
                 <CButton color="secondary" onClick={onClose}>
                     Close
                 </CButton>

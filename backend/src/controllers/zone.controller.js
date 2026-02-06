@@ -1,79 +1,117 @@
-const { zones, saveData } = require('../data/storage');
+const prisma = require('../config/prisma');
+const { zoneSchema } = require('../validators/geographySchema');
 
-const getAllZones = (req, res) => {
-    res.json(zones);
+const getAllZones = async (req, res) => {
+    try {
+        const zones = await prisma.zone.findMany({
+            include: {
+                city: {
+                    include: {
+                        parish: {
+                            include: {
+                                municipality: {
+                                    include: {
+                                        state: {
+                                            include: {
+                                                country: true
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        res.json(zones);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching zones', error: error.message });
+    }
 };
 
-const getZoneById = (req, res) => {
-    const id = parseInt(req.params.id);
-    const zone = zones.find(z => z.id === id);
-    if (!zone) return res.status(404).json({ message: 'Zone not found' });
-    res.json(zone);
+const getZoneById = async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const zone = await prisma.zone.findUnique({
+            where: { Id_zone: id },
+            include: { city: true }
+        });
+        if (!zone) return res.status(404).json({ message: 'Zone not found' });
+        res.json(zone);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching zone', error: error.message });
+    }
 };
 
-const createZone = (req, res) => {
-    const { name, city, state, parish, municipality, latitude, longitude } = req.body;
+const createZone = async (req, res) => {
+    try {
+        const validatedData = zoneSchema.parse(req.body);
 
-    const newZone = {
-        id: zones.length > 0 ? Math.max(...zones.map(z => z.id)) + 1 : 1,
-        name,
-        city,
-        state,
-        parish,
-        municipality,
-        latitude: latitude || 0,
-        longitude: longitude || 0,
-        status: 'active',
-        createdAt: new Date().toISOString()
-    };
+        const newZone = await prisma.zone.create({
+            data: {
+                name_zone: validatedData.name_zone,
+                Id_city: validatedData.Id_city,
+                latitude: validatedData.latitude,
+                longitude: validatedData.longitude,
+            }
+        });
 
-    zones.push(newZone);
-    saveData();
-    res.status(201).json(newZone);
+        res.status(201).json(newZone);
+    } catch (error) {
+        res.status(400).json({ message: 'Error creating zone', error: error.message });
+    }
 };
 
-const updateZone = (req, res) => {
-    const id = parseInt(req.params.id);
-    const index = zones.findIndex(z => z.id === id);
+const updateZone = async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const validatedData = zoneSchema.partial().parse(req.body);
 
-    if (index === -1) return res.status(404).json({ message: 'Zone not found' });
+        const updatedZone = await prisma.zone.update({
+            where: { Id_zone: id },
+            data: {
+                name_zone: validatedData.name_zone,
+                Id_city: validatedData.Id_city,
+                latitude: validatedData.latitude,
+                longitude: validatedData.longitude,
+            }
+        });
 
-    zones[index] = {
-        ...zones[index],
-        ...req.body
-    };
-
-    saveData();
-    res.json(zones[index]);
+        res.json(updatedZone);
+    } catch (error) {
+        res.status(400).json({ message: 'Error updating zone', error: error.message });
+    }
 };
 
-const deleteZone = (req, res) => {
-    const id = parseInt(req.params.id);
-    const index = zones.findIndex(z => z.id === id);
-
-    if (index === -1) return res.status(404).json({ message: 'Zone not found' });
-
-    zones.splice(index, 1);
-    saveData();
-    res.json({ message: 'Zone deleted', id });
+const deleteZone = async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        await prisma.zone.delete({
+            where: { Id_zone: id }
+        });
+        res.json({ message: 'Zone deleted', id });
+    } catch (error) {
+        res.status(500).json({ message: 'Error deleting zone', error: error.message });
+    }
 };
 
-
-const toggleZoneStatus = (req, res) => {
-    const id = parseInt(req.params.id);
-    const zone = zones.find(z => z.id === id);
-
-    if (!zone) return res.status(404).json({ message: 'Zone not found' });
-
-    zone.status = zone.status === 'active' ? 'inactive' : 'active';
-    saveData();
-    res.json({ message: `Zone status changed to ${zone.status}`, zone });
+const toggleZoneStatus = async (req, res) => {
+    // Note: status field not present in current schema for Zone, 
+    // assuming it might be added or using a placeholder logic for now
+    res.status(501).json({ message: 'Toggle status not implemented in DB schema' });
 };
 
-const getZonesByCity = (req, res) => {
-    const { city } = req.params;
-    const filteredZones = zones.filter(z => z.city.toLowerCase() === city.toLowerCase());
-    res.json(filteredZones);
+const getZonesByCity = async (req, res) => {
+    try {
+        const id_city = parseInt(req.params.city);
+        const filteredZones = await prisma.zone.findMany({
+            where: { Id_city: id_city }
+        });
+        res.json(filteredZones);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching zones by city', error: error.message });
+    }
 };
 
 module.exports = {

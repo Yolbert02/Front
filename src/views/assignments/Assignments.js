@@ -36,6 +36,11 @@ const Assignments = () => {
     const [selectedAssignment, setSelectedAssignment] = useState(null)
     const dispatch = useDispatch()
 
+    const userStr = sessionStorage.getItem('user')
+    const user = userStr ? JSON.parse(userStr) : null
+    const userId = user?.id
+    const userRole = user?.role || 'civil'
+
     const [currentPage, setCurrentPage] = useState(1)
     const [itemsPerPage, setItemsPerPage] = useState(6)
     const [searchTerm, setSearchTerm] = useState('')
@@ -84,8 +89,21 @@ const Assignments = () => {
     }
 
     const filteredAssignments = data.filter(assignment => {
-        if (!searchTerm) return true
+        // First filter by Role/ID permissions
+        if (userRole !== 'administrator') {
+            const isParticipant =
+                assignment.officials?.some(o => o.id === userId) ||
+                assignment.funcionaries?.some(f => f.id === userId) ||
+                assignment.witnesses?.some(w => w.id === userId) ||
+                assignment.jury?.some(j => j.id === userId) ||
+                assignment.judge_id === userId ||
+                assignment.created_by === userId;
 
+            if (!isParticipant) return false;
+        }
+
+        // Then filter by search term
+        if (!searchTerm) return true
         const searchLower = searchTerm.toLowerCase()
         return (
             assignment.case_number?.toLowerCase().includes(searchLower) ||
@@ -285,9 +303,10 @@ const Assignments = () => {
 
     const getParticipantsCount = (assignment) => {
         const officials = assignment.officials?.length || 0
+        const funcionaries = assignment.funcionaries?.length || 0
         const witnesses = assignment.witnesses?.length || 0
         const jury = assignment.jury?.length || 0
-        return officials + witnesses + jury + (assignment.judge_id ? 1 : 0)
+        return officials + funcionaries + witnesses + jury + (assignment.judge_id ? 1 : 0)
     }
 
     const truncateDescription = (description, maxLength = 100) => {
@@ -325,7 +344,7 @@ const Assignments = () => {
                     <div>
                         <div className="fw-semibold small">{getParticipantsCount(assignment)} Total</div>
                         <div className="small text-muted" style={{ fontSize: '0.7rem' }}>
-                            {officials} Off. / {witnesses} Wit. / {jury} Jur.
+                            {officials} Off. / {assignment.funcionaries?.length || 0} Fun. / {witnesses} Wit. / {jury} Jur.
                         </div>
                     </div>
                 </div>
@@ -351,7 +370,8 @@ const Assignments = () => {
                     <div className="d-flex justify-content-between align-items-start mb-3">
                         <div>
                             <CCardTitle className="fw-bold mb-1">
-                                <span className="font-monospace">{assignment.case_number}</span>
+                                <CIcon icon={cilBalanceScale} className="text-primary me-2" />
+                                <span>Case Details</span>
                             </CCardTitle>
                             <CCardText className="text-muted small mb-2">
                                 {truncateDescription(assignment.case_title, 60)}
@@ -405,9 +425,10 @@ const Assignments = () => {
                         <div className="ps-4">
                             <div className="small fw-semibold">{participantsCount} Total</div>
                             <div className="small text-muted" style={{ fontSize: '0.7rem' }}>
-                                Officials: {assignment.officials?.length || 0} |
-                                Witnesses: {assignment.witnesses?.length || 0} |
-                                Jury: {assignment.jury?.length || 0}
+                                Off: {assignment.officials?.length || 0} |
+                                Fun: {assignment.funcionaries?.length || 0} |
+                                Wit: {assignment.witnesses?.length || 0} |
+                                Jur: {assignment.jury?.length || 0}
                             </div>
                         </div>
                     </div>
@@ -433,50 +454,55 @@ const Assignments = () => {
                             </CButton>
                         </CTooltip>
 
-                        <CDropdown variant="btn-group">
-                            <CDropdownToggle
-                                size="sm"
-                                shape="rounded-pill"
-                                variant="outline"
-                                className="text-primary shadow-sm"
-                                split={false}
-                            >
-                                <CIcon icon={cilPencil} />
-                            </CDropdownToggle>
-                            <CDropdownMenu>
-                                <CDropdownItem
-                                    onClick={() => handleEdit(assignment)}
-                                    style={{ cursor: 'pointer' }}
-                                >
-                                    Edit Details
-                                </CDropdownItem>
-                                <CDropdownItem divider />
-                                <CDropdownItem header style={{ cursor: 'default' }}>Status Management</CDropdownItem>
-                                {getStatusOptions(assignment.status).map(status => (
-                                    <CDropdownItem
-                                        key={status.value}
-                                        onClick={() => handleStatusChange(assignment.id, status.value)}
-                                        className={status.value === 'Cancelled' ? 'text-danger' : ''}
-                                        style={{ cursor: 'pointer' }}
+                        {/* Action buttons (Edit/Delete) - Only for admin */}
+                        {userRole === 'administrator' && (
+                            <>
+                                <CDropdown variant="btn-group">
+                                    <CDropdownToggle
+                                        size="sm"
+                                        shape="rounded-pill"
+                                        variant="outline"
+                                        className="text-primary shadow-sm"
+                                        split={false}
                                     >
-                                        Mark as {status.label}
-                                    </CDropdownItem>
-                                ))}
-                            </CDropdownMenu>
-                        </CDropdown>
+                                        <CIcon icon={cilPencil} />
+                                    </CDropdownToggle>
+                                    <CDropdownMenu>
+                                        <CDropdownItem
+                                            onClick={() => handleEdit(assignment)}
+                                            style={{ cursor: 'pointer' }}
+                                        >
+                                            Edit Details
+                                        </CDropdownItem>
+                                        <CDropdownItem divider />
+                                        <CDropdownItem header style={{ cursor: 'default' }}>Status Management</CDropdownItem>
+                                        {getStatusOptions(assignment.status).map(status => (
+                                            <CDropdownItem
+                                                key={status.value}
+                                                onClick={() => handleStatusChange(assignment.id, status.value)}
+                                                className={status.value === 'Cancelled' ? 'text-danger' : ''}
+                                                style={{ cursor: 'pointer' }}
+                                            >
+                                                Mark as {status.label}
+                                            </CDropdownItem>
+                                        ))}
+                                    </CDropdownMenu>
+                                </CDropdown>
 
-                        <CTooltip content="Delete Assignment">
-                            <CButton
-                                size="sm"
-                                variant="outline"
-                                className="text-danger shadow-sm"
-                                onClick={() => showDeleteConfirmation(assignment.id, assignment.case_title)}
-                                title="Delete Assignment"
-                                shape="rounded-pill"
-                            >
-                                <CIcon icon={cilTrash} />
-                            </CButton>
-                        </CTooltip>
+                                <CTooltip content="Delete Assignment">
+                                    <CButton
+                                        size="sm"
+                                        variant="outline"
+                                        className="text-danger shadow-sm"
+                                        onClick={() => showDeleteConfirmation(assignment.id, assignment.case_title)}
+                                        title="Delete Assignment"
+                                        shape="rounded-pill"
+                                    >
+                                        <CIcon icon={cilTrash} />
+                                    </CButton>
+                                </CTooltip>
+                            </>
+                        )}
                     </div>
                 </CCardFooter>
             </CCard>
@@ -522,16 +548,18 @@ const Assignments = () => {
                                             <CIcon icon={cilListRich} />
                                         </CButton>
                                     </div>
-                                    <CButton
-                                        color="primary colorbutton"
-                                        style={colorbutton}
-                                        onClick={handleNewAssignment}
-                                        className="d-flex align-items-center px-4 py-2 shadow-sm"
-                                        shape="rounded-pill"
-                                    >
-                                        <CIcon icon={cilPlus} className="me-2 fw-bold" />
-                                        NEW ASSIGNMENT
-                                    </CButton>
+                                    {userRole === 'administrator' && (
+                                        <CButton
+                                            color="primary colorbutton"
+                                            style={colorbutton}
+                                            onClick={handleNewAssignment}
+                                            className="d-flex align-items-center px-4 py-2 shadow-sm"
+                                            shape="rounded-pill"
+                                        >
+                                            <CIcon icon={cilPlus} className="me-2 fw-bold" />
+                                            NEW ASSIGNMENT
+                                        </CButton>
+                                    )}
                                 </div>
                             </div>
                         </CCardHeader>
@@ -588,7 +616,10 @@ const Assignments = () => {
                                                                     <CTableRow key={assignment.id}>
                                                                         <CTableDataCell className="ps-4">
                                                                             <div className="d-flex flex-column">
-                                                                                <span className="font-monospace fw-bold">{assignment.case_number}</span>
+                                                                                <div className="d-flex align-items-center mb-1">
+                                                                                    <CIcon icon={cilBalanceScale} size="sm" className="text-primary me-2" />
+                                                                                    <span className="fw-bold">Trial Case</span>
+                                                                                </div>
                                                                                 <span className="small text-muted text-truncate" style={{ maxWidth: '150px' }}>{assignment.case_title}</span>
                                                                             </div>
                                                                         </CTableDataCell>
@@ -618,45 +649,49 @@ const Assignments = () => {
                                                                                 >
                                                                                     <CIcon icon={cilInfo} />
                                                                                 </CButton>
-                                                                                <CDropdown variant="btn-group">
-                                                                                    <CDropdownToggle
-                                                                                        size="sm"
-                                                                                        shape="rounded-pill"
-                                                                                        className="text-primary shadow-sm"
-                                                                                        split={false}
-                                                                                    >
-                                                                                        <CIcon icon={cilPencil} />
-                                                                                    </CDropdownToggle>
-                                                                                    <CDropdownMenu>
-                                                                                        <CDropdownItem
-                                                                                            onClick={() => handleEdit(assignment)}
-                                                                                            style={{ cursor: 'pointer' }}
-                                                                                        >
-                                                                                            Edit Details
-                                                                                        </CDropdownItem>
-                                                                                        <CDropdownItem divider />
-                                                                                        <CDropdownItem header style={{ cursor: 'default' }}>Status Management</CDropdownItem>
-                                                                                        {getStatusOptions(assignment.status).map(status => (
-                                                                                            <CDropdownItem
-                                                                                                key={status.value}
-                                                                                                onClick={() => handleStatusChange(assignment.id, status.value)}
-                                                                                                className={status.value === 'Cancelled' ? 'text-danger' : ''}
-                                                                                                style={{ cursor: 'pointer' }}
+                                                                                {(userRole === 'administrator' || userRole === 'oficial') && (
+                                                                                    <>
+                                                                                        <CDropdown variant="btn-group">
+                                                                                            <CDropdownToggle
+                                                                                                size="sm"
+                                                                                                shape="rounded-pill"
+                                                                                                className="text-primary shadow-sm"
+                                                                                                split={false}
                                                                                             >
-                                                                                                Mark as {status.label}
-                                                                                            </CDropdownItem>
-                                                                                        ))}
-                                                                                    </CDropdownMenu>
-                                                                                </CDropdown>
-                                                                                <CButton
-                                                                                    size="sm"
-                                                                                    className="text-danger shadow-sm"
-                                                                                    onClick={() => showDeleteConfirmation(assignment.id, assignment.case_title)}
-                                                                                    title="Delete Assignment"
-                                                                                    shape="rounded-pill"
-                                                                                >
-                                                                                    <CIcon icon={cilTrash} />
-                                                                                </CButton>
+                                                                                                <CIcon icon={cilPencil} />
+                                                                                            </CDropdownToggle>
+                                                                                            <CDropdownMenu>
+                                                                                                <CDropdownItem
+                                                                                                    onClick={() => handleEdit(assignment)}
+                                                                                                    style={{ cursor: 'pointer' }}
+                                                                                                >
+                                                                                                    Edit Details
+                                                                                                </CDropdownItem>
+                                                                                                <CDropdownItem divider />
+                                                                                                <CDropdownItem header style={{ cursor: 'default' }}>Status Management</CDropdownItem>
+                                                                                                {getStatusOptions(assignment.status).map(status => (
+                                                                                                    <CDropdownItem
+                                                                                                        key={status.value}
+                                                                                                        onClick={() => handleStatusChange(assignment.id, status.value)}
+                                                                                                        className={status.value === 'Cancelled' ? 'text-danger' : ''}
+                                                                                                        style={{ cursor: 'pointer' }}
+                                                                                                    >
+                                                                                                        Mark as {status.label}
+                                                                                                    </CDropdownItem>
+                                                                                                ))}
+                                                                                            </CDropdownMenu>
+                                                                                        </CDropdown>
+                                                                                        <CButton
+                                                                                            size="sm"
+                                                                                            className="text-danger shadow-sm"
+                                                                                            onClick={() => showDeleteConfirmation(assignment.id, assignment.case_title)}
+                                                                                            title="Delete Assignment"
+                                                                                            shape="rounded-pill"
+                                                                                        >
+                                                                                            <CIcon icon={cilTrash} />
+                                                                                        </CButton>
+                                                                                    </>
+                                                                                )}
                                                                             </div>
                                                                         </CTableDataCell>
                                                                     </CTableRow>
@@ -667,7 +702,7 @@ const Assignments = () => {
                                                 </>
                                             )}
 
-                                            {/* PAGINACIÓN */}
+                                            {/* PAGINATION */}
                                             {totalPages > 1 && (
                                                 <div className="mt-4 d-flex justify-content-end">
                                                     <Pagination

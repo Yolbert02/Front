@@ -1,189 +1,145 @@
-const KEY = 'mock_complaints_v1'
-
-const initialComplaints = [
-    {
-        id: 1,
-        title: "Street robbery",
-        description: "Cell phone theft near the main square of Pueblo Nuevo",
-        complainant_name: "Maria Gonzalez",
-        complainant_phone: "0414-1112233",
-        complainant_email: "maria.gonzalez@email.com",
-        country: "Venezuela",
-        state: "Táchira",
-        parish: "San Juan Bautista",
-        municipality: "San Cristóbal",
-        city: "San Cristóbal",
-        zone: "Pueblo Nuevo",
-        address: "Plaza Bolivar, cerca del mercado municipal",
-        location: "Plaza Bolivar, cerca del mercado municipal, Pueblo Nuevo, San Cristóbal, San Cristóbal, San Juan Bautista, Táchira, Venezuela",
-        assignedOfficerId: 1,
-        assignedOfficerName: "Carlos Rodríguez",
-        status: "under_investigation",
-        priority: "high",
-        latitude: 7.785,
-        longitude: -72.220,
-        evidence: [
-            {
-                id: 1,
-                name: "security_camera.jpg",
-                type: "image/jpeg",
-                size: 2048576,
-                url: "https://example.com/evidence1.jpg",
-                uploadedAt: new Date().toISOString()
-            }
-        ],
-        incidentDate: "2024-01-15",
-        createdAt: new Date().toISOString()
-    },
-    {
-        id: 2,
-        title: "Public property vandalism",
-        description: "Damage to benches in Barrio Obrero",
-        complainant_name: "Jose Lopez",
-        complainant_phone: "0424-5556677",
-        complainant_email: "jose.lopez@email.com",
-        country: "Venezuela",
-        state: "Táchira",
-        parish: "Pedro María Morantes",
-        municipality: "San Cristóbal",
-        city: "San Cristóbal",
-        zone: "Barrio Obrero",
-        address: "Carrera 20, entre calles 7 y 8",
-        location: "Carrera 20, entre calles 7 y 8, Barrio Obrero, San Cristóbal, San Cristóbal, Pedro María Morantes, Táchira, Venezuela",
-        assignedOfficerId: 2,
-        assignedOfficerName: "Ana Martínez",
-        status: "received",
-        priority: "medium",
-        latitude: 7.768,
-        longitude: -72.215,
-        evidence: [],
-        incidentDate: "2024-01-14",
-        createdAt: new Date().toISOString()
-    },
-    {
-        id: 3,
-        title: "Traffic accident",
-        description: "Collision at intersection in La Concordia",
-        complainant_name: "Pedro Perez",
-        complainant_phone: "0412-9998877",
-        complainant_email: "pedro.perez@email.com",
-        country: "Venezuela",
-        state: "Táchira",
-        parish: "La Concordia",
-        municipality: "San Cristóbal",
-        city: "San Cristóbal",
-        zone: "La Concordia",
-        address: "Avenida 19 de Abril con Calle 8",
-        location: "Avenida 19 de Abril con Calle 8, La Concordia, San Cristóbal, San Cristóbal, La Concordia, Táchira, Venezuela",
-        assignedOfficerId: null,
-        assignedOfficerName: "",
-        status: "resolved",
-        priority: "low",
-        latitude: 7.740,
-        longitude: -72.225,
-        evidence: [],
-        incidentDate: "2024-01-20",
-        createdAt: new Date().toISOString()
-    }
-]
-
-function load() {
-    try {
-        const raw = localStorage.getItem(KEY)
-        if (!raw) {
-            save(initialComplaints)
-            return initialComplaints
-        }
-        const parsed = JSON.parse(raw)
-        return parsed && parsed.length > 0 ? parsed : initialComplaints
-    } catch (e) {
-        console.error('Error loading complaints:', e)
-        return initialComplaints
-    }
-}
-
-function save(items) {
-    try {
-        localStorage.setItem(KEY, JSON.stringify(items))
-    } catch (e) {
-        console.warn('Error saving complaints:', e)
-    }
-}
-
-function nextId(items) {
-    const maxId = items.reduce((max, item) => Math.max(max, item.id || 0), 0)
-    return maxId + 1
-}
+import { apiService } from './api';
 
 export async function listComplaints() {
-    const data = load()
-    return Promise.resolve(data)
+    try {
+        const response = await apiService.get('/api/complaints');
+        return response.map(c => ({
+            ...c,
+            id: c.Id_complaint,
+            complainant_name: c.user ? `${c.user.first_name} ${c.user.last_name}` : 'Unknown',
+            complainant_email: c.user?.email || '',
+            zone: c.zone?.name_zone || 'Unknown',
+            zoneId: c.Id_zone,
+            location: c.address_detail || 'No address',
+            latitude: c.latitude ? Number(c.latitude) : null,
+            longitude: c.longitude ? Number(c.longitude) : null,
+            assignedOfficerId: c.assigned_officer_id,
+            assignedOfficerName: c.assigned_officer ? `${c.assigned_officer.user?.first_name} ${c.assigned_officer.user?.last_name}` : 'Unassigned',
+            incidentDate: c.incident_date,
+            country: c.zone?.city?.parish?.municipality?.state?.country?.name_country || 'Not specified',
+            state: c.zone?.city?.parish?.municipality?.state?.name_state || 'Not specified',
+            municipality: c.zone?.city?.parish?.municipality?.name_municipality || 'Not specified',
+            parish: c.zone?.city?.parish?.name_parish || 'Not specified',
+            city: c.zone?.city?.name_city || 'Not specified',
+            complainant_phone: c.complainant_phone,
+            complainant_email: c.complainant_email,
+            complainant_name: c.complainant_name || (c.user ? `${c.user.first_name} ${c.user.last_name}` : 'Unknown'),
+            createdAt: c.created_at
+        }));
+    } catch (error) {
+        console.error('Error listing complaints:', error);
+        return [];
+    }
 }
 
 export async function getComplaint(id) {
-    const items = load()
-    return Promise.resolve(items.find(c => c.id === id) || null)
+    try {
+        const c = await apiService.get(`/api/complaints/${id}`);
+        return {
+            ...c,
+            id: c.Id_complaint,
+            complainant_name: c.user ? `${c.user.first_name} ${c.user.last_name}` : 'Unknown',
+            zone: c.zone?.name_zone || 'Unknown',
+            location: c.address_detail || 'No address',
+            latitude: c.latitude ? Number(c.latitude) : null,
+            longitude: c.longitude ? Number(c.longitude) : null,
+            assignedOfficerId: c.assigned_officer_id,
+            incidentDate: c.incident_date,
+            country: c.zone?.city?.parish?.municipality?.state?.country?.name_country || 'Not specified',
+            state: c.zone?.city?.parish?.municipality?.state?.name_state || 'Not specified',
+            municipality: c.zone?.city?.parish?.municipality?.name_municipality || 'Not specified',
+            parish: c.zone?.city?.parish?.name_parish || 'Not specified',
+            city: c.zone?.city?.name_city || 'Not specified',
+            complainant_phone: c.complainant_phone,
+            complainant_email: c.complainant_email,
+            complainant_name: c.complainant_name || (c.user ? `${c.user.first_name} ${c.user.last_name}` : 'Unknown'),
+            createdAt: c.created_at
+        };
+    } catch (error) {
+        console.error('Error getting complaint:', error);
+        return null;
+    }
 }
 
 export async function createComplaint(payload) {
-    const items = load()
-    const id = nextId(items)
-
-    const complaint = {
-        id,
-        title: payload.title || '',
-        description: payload.description || '',
-        complainant_name: payload.complainant_name || '',
-        complainant_phone: payload.complainant_phone || '',
-        complainant_email: payload.complainant_email || '',
-        country: payload.country || 'Venezuela',
-        state: payload.state || 'Táchira',
-        municipality: payload.municipality || 'San Cristóbal',
-        parish: payload.parish || '',
-        city: payload.city || '',
-        zone: payload.zone || '',
-        address: payload.address || '',
-        location: payload.location || '', // Dirección completa
-        assignedOfficerId: payload.assignedOfficerId || null,
-        assignedOfficerName: payload.assignedOfficerName || '',
-        status: (payload.status || 'received').toLowerCase(),
-        priority: (payload.priority || 'medium').toLowerCase(),
-        evidence: payload.evidence || [],
-        incidentDate: payload.incidentDate || new Date().toISOString().split('T')[0],
-        latitude: payload.latitude || null,
-        longitude: payload.longitude || null,
-        createdAt: new Date().toISOString()
+    try {
+        const response = await apiService.post('/api/complaints', {
+            title: payload.title,
+            description: payload.description,
+            Id_zone: payload.Id_zone || payload.zone_id,
+            latitude: payload.latitude,
+            longitude: payload.longitude,
+            address_detail: payload.location || payload.address_detail,
+            incident_date: payload.incidentDate,
+            complainant_phone: payload.complainant_phone,
+            complainant_email: payload.complainant_email,
+            complainant_name: payload.complainant_name
+        });
+        return {
+            ...response,
+            id: response.Id_complaint
+        };
+    } catch (error) {
+        console.error('Error creating complaint:', error);
+        throw error;
     }
-
-    items.push(complaint)
-    save(items)
-    return Promise.resolve(complaint)
 }
 
 export async function updateComplaint(id, payload) {
-    const items = load()
-    const idx = items.findIndex(c => c.id === id)
-    if (idx === -1) return Promise.reject(new Error('Complaint not found'))
+    try {
+        const sanitizedPayload = {
+            title: payload.title,
+            description: payload.description,
+            status: payload.status,
+            priority: payload.priority,
+            Id_zone: payload.Id_zone || payload.zoneId || payload.zone_id,
+            latitude: payload.latitude,
+            longitude: payload.longitude,
+            address_detail: payload.location || payload.address_detail,
+            incident_date: payload.incidentDate,
+            complainant_phone: payload.complainant_phone,
+            complainant_email: payload.complainant_email,
+            complainant_name: payload.complainant_name
+        };
 
-    const updatedPayload = { ...payload }
-    if (payload.status) updatedPayload.status = payload.status.toLowerCase()
-    if (payload.priority) updatedPayload.priority = payload.priority.toLowerCase()
+        // Remove undefined fields
+        Object.keys(sanitizedPayload).forEach(key => {
+            if (sanitizedPayload[key] === undefined) delete sanitizedPayload[key];
+        });
 
-    items[idx] = {
-        ...items[idx],
-        ...updatedPayload
+        const response = await apiService.put(`/api/complaints/${id}`, sanitizedPayload);
+        return {
+            ...response,
+            id: response.Id_complaint
+        };
+    } catch (error) {
+        console.error('Error updating complaint:', error);
+        throw error;
     }
-    save(items)
-    return Promise.resolve(items[idx])
 }
 
 export async function changeComplaintStatus(id, newStatus) {
-    return updateComplaint(id, { status: newStatus.toLowerCase() })
+    return updateComplaint(id, { status: newStatus.toLowerCase() });
+}
+
+export async function assignOfficer(complaintId, officerId) {
+    try {
+        const response = await apiService.post(`/api/complaints/${complaintId}/assign`, {
+            officerId
+        });
+        return response;
+    } catch (error) {
+        console.error('Error assigning officer:', error);
+        throw error;
+    }
 }
 
 export async function deleteComplaint(id) {
-    const items = load()
-    const filtered = items.filter(c => c.id !== id)
-    save(filtered)
-    return Promise.resolve({ success: true })
+    try {
+        await apiService.delete(`/api/complaints/${id}`);
+        return { success: true };
+    } catch (error) {
+        console.error('Error deleting complaint:', error);
+        throw error;
+    }
 }

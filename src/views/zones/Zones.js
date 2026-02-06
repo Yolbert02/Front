@@ -8,7 +8,7 @@ import {
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilMap } from '@coreui/icons'
-import { MapContainer, TileLayer, Polygon, Tooltip, Marker, Popup, useMap } from 'react-leaflet'
+import { MapContainer, TileLayer, Polygon, Tooltip, Marker, Popup, useMap, CircleMarker } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
@@ -50,6 +50,17 @@ const Zones = () => {
     fetchZones()
   }, [])
 
+  useEffect(() => {
+    if (complaints.length > 0) {
+      console.log('Complaints updated:', complaints.length, 'total');
+      const withCoords = complaints.filter(c => c.latitude != null && c.longitude != null);
+      console.log('Complaints with valid coordinates:', withCoords.length);
+      if (withCoords.length > 0) {
+        console.log('Sample coordinate:', withCoords[0].latitude, withCoords[0].longitude);
+      }
+    }
+  }, [complaints])
+
   const fetchZones = async () => {
     try {
       const data = await listZones()
@@ -62,6 +73,7 @@ const Zones = () => {
   const fetchComplaints = async () => {
     try {
       const data = await listComplaints()
+      console.log('Complaints for map:', data.filter(c => c.latitude && c.longitude))
       setComplaints(data || [])
     } catch (error) {
       console.error('Error fetching complaints:', error)
@@ -74,8 +86,8 @@ const Zones = () => {
   }
 
   const handleLocateComplaint = (complaint) => {
-    if (complaint.lat && complaint.lng) {
-      setMapCenter([complaint.lat, complaint.lng])
+    if (complaint.latitude && complaint.longitude) {
+      setMapCenter([complaint.latitude, complaint.longitude])
       setMapZoom(16)
     }
   }
@@ -107,6 +119,9 @@ const Zones = () => {
                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
+
+                {/* Test Circle to verify rendering */}
+                <CircleMarker center={position} radius={5} pathOptions={{ color: 'blue', fillOpacity: 1 }} />
                 {zones.map((zone, index) => (
                   <Polygon
                     key={zone.id || index}
@@ -134,22 +149,46 @@ const Zones = () => {
                   </Polygon>
                 ))}
 
-                {complaints.map((complaint) => (
-                  complaint.lat && complaint.lng ? (
-                    <Marker
-                      key={complaint.id}
-                      position={[complaint.lat, complaint.lng]}
+                {complaints.map((complaint) => {
+                  const lat = parseFloat(complaint.latitude);
+                  const lng = parseFloat(complaint.longitude);
+                  const hasCoords = !isNaN(lat) && !isNaN(lng) && lat !== 0 && lng !== 0;
+
+                  if (!hasCoords) return null;
+
+                  return (
+                    <CircleMarker
+                      key={`complaint-${complaint.id}`}
+                      center={[lat, lng]}
+                      radius={10}
+                      pathOptions={{
+                        fillColor: complaint.status === 'resolved' ? '#2eb85c' : '#e55353',
+                        color: '#ffffff',
+                        weight: 3,
+                        fillOpacity: 1,
+                      }}
+                      style={{ zIndex: 1000 }}
                     >
                       <Popup>
-                        <strong>{complaint.title}</strong><br />
-                        {complaint.location}<br />
-                        <span className={`badge bg-${complaint.status === 'Resolved' ? 'success' : 'warning'}`}>
-                          {complaint.status}
-                        </span>
+                        <div className="p-1" style={{ minWidth: '180px' }}>
+                          <strong className="d-block mb-1 text-primary">{complaint.title}</strong>
+                          <div className="small text-muted mb-2">
+                            <CIcon icon={cilMap} size="xs" className="me-1" />
+                            {complaint.location}
+                          </div>
+                          <div className="d-flex justify-content-between align-items-center mt-2 pt-2 border-top">
+                            <span className={`badge bg-${complaint.status === 'resolved' ? 'success' : 'warning'}`}>
+                              {complaint.status}
+                            </span>
+                            <small className="text-secondary" style={{ fontSize: '0.7rem' }}>
+                              {new Date(complaint.createdAt).toLocaleDateString()}
+                            </small>
+                          </div>
+                        </div>
                       </Popup>
-                    </Marker>
-                  ) : null
-                ))}
+                    </CircleMarker>
+                  )
+                })}
               </MapContainer>
             </div>
             <div className="mt-3 small text-muted text-center">

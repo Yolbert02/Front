@@ -156,10 +156,6 @@ const InfoOfficer = ({ visible, onClose, officer }) => {
                                                 </div>
                                             </CCol>
                                             <CCol md={6}>
-                                                <strong>Officer ID:</strong>
-                                                <div className="text-muted">#{officer.id}</div>
-                                            </CCol>
-                                            <CCol md={6}>
                                                 <strong>Rank:</strong>
                                                 <div className="text-muted">
                                                     {officer.rank || 'Not specified'}
@@ -264,7 +260,7 @@ const InfoOfficer = ({ visible, onClose, officer }) => {
                                     <CTable hover responsive>
                                         <CTableHead>
                                             <CTableRow>
-                                                <CTableHeaderCell>ID</CTableHeaderCell>
+                                                <CTableHeaderCell>Case</CTableHeaderCell>
                                                 <CTableHeaderCell>Title</CTableHeaderCell>
                                                 <CTableHeaderCell>Complainant</CTableHeaderCell>
                                                 <CTableHeaderCell>Location</CTableHeaderCell>
@@ -276,7 +272,9 @@ const InfoOfficer = ({ visible, onClose, officer }) => {
                                         <CTableBody>
                                             {complaints.map(complaint => (
                                                 <CTableRow key={complaint.id}>
-                                                    <CTableDataCell>#{complaint.id}</CTableDataCell>
+                                                    <CTableDataCell>
+                                                        <CIcon icon={cilListRich} className="text-primary" />
+                                                    </CTableDataCell>
                                                     <CTableDataCell>
                                                         <strong>{complaint.title}</strong>
                                                     </CTableDataCell>
