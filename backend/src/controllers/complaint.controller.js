@@ -64,6 +64,11 @@ const getAllComplaints = async (req, res) => {
                             }
                         }
                     }
+                },
+                expedients: {
+                    include: {
+                        evidences: true
+                    }
                 }
             },
             orderBy: { created_at: 'desc' }
@@ -84,7 +89,11 @@ const getComplaintById = async (req, res) => {
             include: {
                 ...locationInclude,
                 user: true,
-                expedients: true,
+                expedients: {
+                    include: {
+                        evidences: true
+                    }
+                },
                 assigned_officer: true
             }
         });
@@ -112,32 +121,82 @@ const createComplaint = async (req, res) => {
     try {
         const {
             title, description, Id_zone, latitude, longitude, address_detail, incident_date,
-            complainant_phone, complainant_email, complainant_name
+            complainant_phone, complainant_email, complainant_name, evidence
         } = req.body;
         const { id: userId } = req.user;
 
+        if (!Id_zone) {
+            return res.status(400).json({ success: false, message: 'Zone ID is required' });
+        }
+
+        const data = {
+            title,
+            description,
+            Id_zone: Number(Id_zone),
+            Id_user: userId,
+            latitude: latitude ? Number(latitude) : null,
+            longitude: longitude ? Number(longitude) : null,
+            address_detail,
+            complainant_phone,
+            complainant_email,
+            complainant_name,
+            incident_date: incident_date ? new Date(incident_date) : null,
+            status: 'received',
+            priority: req.body.priority || 'medium'
+        };
+
         const newComplaint = await prisma.complaint.create({
-            data: {
-                title,
-                description,
-                Id_zone: parseInt(Id_zone),
-                Id_user: userId,
-                latitude,
-                longitude,
-                address_detail,
-                complainant_phone,
-                complainant_email,
-                complainant_name,
-                incident_date: incident_date ? new Date(incident_date) : null,
-                status: 'received',
-                priority: 'medium'
-            },
+            data,
             include: locationInclude
         });
 
+        // Handle evidence if provided
+        if (evidence && Array.isArray(evidence) && evidence.length > 0) {
+            try {
+                // 1. Create a placeholder address for the evidence
+                const addr = await prisma.address.create({
+                    data: {
+                        Id_zone: Number(Id_zone),
+                        name_address: address_detail || 'Incident Location'
+                    }
+                });
+
+                // 2. Create Expedient linked to Complaint
+                const exp = await prisma.expedient.create({
+                    data: {
+                        Id_complaint: newComplaint.Id_complaint
+                    }
+                });
+
+                // 3. Create Evidence records
+                for (const item of evidence) {
+                    await prisma.evidence.create({
+                        data: {
+                            police_report: item.name || 'User Upload',
+                            multimedia_url: item.url, // Base64 data
+                            date_evidence: new Date(),
+                            Id_address: addr.Id_address,
+                            expedients: {
+                                connect: { Id_expedient: exp.Id_expedient }
+                            }
+                        }
+                    });
+                }
+            } catch (evError) {
+                console.error('[ComplaintController] Evidence Save Error:', evError);
+                // We don't fail the whole request if evidence fails, but we log it
+            }
+        }
+
         res.status(201).json(newComplaint);
     } catch (error) {
-        res.status(400).json({ success: false, message: 'Error creating the complaint', error: error.message });
+        console.error('[ComplaintController] Create Error:', error);
+        res.status(400).json({
+            success: false,
+            message: 'Error creating the complaint: ' + error.message,
+            details: error.code === 'P2003' ? 'Foreign key constraint failed (check if zone exists)' : error.message,
+            error: error.message
+        });
     }
 };
 
@@ -158,14 +217,38 @@ const updateComplaint = async (req, res) => {
             return res.status(403).json({ message: 'You do not have permission to modify this complaint' });
         }
 
-        const dataToUpdate = { ...req.body };
+        // Sanitize data to only include valid Complaint fields for Prisma
+        const allowedFields = [
+            'title', 'description', 'status', 'priority', 'latitude', 'longitude',
+            'address_detail', 'complainant_phone', 'complainant_email', 'complainant_name',
+            'incident_date', 'assigned_officer_id', 'Id_zone'
+        ];
+
+        const dataToUpdate = {};
+        allowedFields.forEach(field => {
+            if (req.body[field] !== undefined) {
+                dataToUpdate[field] = req.body[field];
+            }
+        });
+
+        // Special handling for calculated/formatted fields
         if (dataToUpdate.incident_date) {
             dataToUpdate.incident_date = new Date(dataToUpdate.incident_date);
+        }
+        if (dataToUpdate.Id_zone) {
+            dataToUpdate.Id_zone = Number(dataToUpdate.Id_zone);
         }
 
         const updated = await prisma.complaint.update({
             where: { Id_complaint: complaintId },
-            data: dataToUpdate
+            data: dataToUpdate,
+            include: {
+                ...locationInclude,
+                user: true,
+                assigned_officer: {
+                    include: { user: true }
+                }
+            }
         });
 
         res.json(updated);

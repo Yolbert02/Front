@@ -63,6 +63,24 @@ class ApiService {
     });
   }
 
+  patch(endpoint, data) {
+    return this.request(endpoint, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  patchBinary(endpoint, formData) {
+    return this.request(endpoint, {
+      method: 'PATCH',
+      headers: {
+        // Let the browser set the boundary for multipart/form-data
+        'Content-Type': undefined,
+      },
+      body: formData,
+    });
+  }
+
   delete(endpoint) {
     return this.request(endpoint, {
       method: 'DELETE',

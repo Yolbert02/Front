@@ -11,6 +11,7 @@ const getAllUsers = async (req, res) => {
                 first_name: true,
                 last_name: true,
                 email: true,
+                profile_picture: true,
                 status_user: true,
                 role: true,
                 created_at: true

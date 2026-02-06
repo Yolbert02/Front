@@ -24,6 +24,13 @@ export async function listComplaints() {
             complainant_phone: c.complainant_phone,
             complainant_email: c.complainant_email,
             complainant_name: c.complainant_name || (c.user ? `${c.user.first_name} ${c.user.last_name}` : 'Unknown'),
+            evidence: c.expedients?.flatMap(exp => exp.evidences?.map(ev => ({
+                id: ev.Id_evidence,
+                name: ev.police_report,
+                url: ev.multimedia_url,
+                type: ev.multimedia_url?.startsWith('data:image') ? 'image/png' : 'application/octet-stream',
+                uploadedAt: ev.created_at
+            }))) || [],
             createdAt: c.created_at
         }));
     } catch (error) {
@@ -53,6 +60,13 @@ export async function getComplaint(id) {
             complainant_phone: c.complainant_phone,
             complainant_email: c.complainant_email,
             complainant_name: c.complainant_name || (c.user ? `${c.user.first_name} ${c.user.last_name}` : 'Unknown'),
+            evidence: c.expedients?.flatMap(exp => exp.evidences?.map(ev => ({
+                id: ev.Id_evidence,
+                name: ev.police_report,
+                url: ev.multimedia_url,
+                type: ev.multimedia_url?.startsWith('data:image') ? 'image/png' : 'application/octet-stream',
+                uploadedAt: ev.created_at
+            }))) || [],
             createdAt: c.created_at
         };
     } catch (error) {
@@ -73,7 +87,8 @@ export async function createComplaint(payload) {
             incident_date: payload.incidentDate,
             complainant_phone: payload.complainant_phone,
             complainant_email: payload.complainant_email,
-            complainant_name: payload.complainant_name
+            complainant_name: payload.complainant_name,
+            evidence: payload.evidence
         });
         return {
             ...response,
@@ -99,7 +114,8 @@ export async function updateComplaint(id, payload) {
             incident_date: payload.incidentDate,
             complainant_phone: payload.complainant_phone,
             complainant_email: payload.complainant_email,
-            complainant_name: payload.complainant_name
+            complainant_name: payload.complainant_name,
+            assigned_officer_id: payload.assignedOfficerId || payload.assigned_officer_id
         };
 
         // Remove undefined fields

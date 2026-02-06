@@ -466,7 +466,16 @@ const InfoGlobalZone = ({ visible, onClose, zones = [], complaints = [] }) => {
                         )}
                     </div>
 
-                    <div className="d-flex align-items-center">
+                    <div className="d-flex align-items-center gap-2">
+                        <CButton
+                            type="button"
+                            color="primary"
+                            onClick={downloadXLS}
+                            className="d-flex align-items-center"
+                        >
+                            <CIcon icon={cilCloudDownload} className="me-2" />
+                            Download XLS Report
+                        </CButton>
                         {step < 3 ? (
                             <CButton type="button" color="primary" onClick={handleNext}>
                                 Next

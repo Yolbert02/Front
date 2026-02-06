@@ -10,6 +10,7 @@ const getAllOfficers = async (req, res) => {
                         last_name: true,
                         email: true,
                         dni: true,
+                        profile_picture: true,
                         status_user: true
                     }
                 },

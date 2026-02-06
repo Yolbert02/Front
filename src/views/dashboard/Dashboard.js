@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { useDispatch } from 'react-redux'
 import classNames from 'classnames'
 
@@ -58,20 +58,25 @@ import MainChart from './MainChart'
 import { getDashboardStats, downloadComplaintsExcel } from 'src/services/reports'
 
 const Dashboard = () => {
-  const [stats, setStats] = React.useState(null)
-  const [loading, setLoading] = React.useState(true)
+  const [stats, setStats] = useState(null)
+  const [officers, setOfficers] = useState([])
+  const [loading, setLoading] = useState(true)
   const dispatch = useDispatch()
 
-  React.useEffect(() => {
-    loadStats()
+  useEffect(() => {
+    fetchData()
   }, [])
 
-  const loadStats = async () => {
+  const fetchData = async () => {
     try {
-      const data = await getDashboardStats()
-      setStats(data)
+      const [statsData, officersData] = await Promise.all([
+        getDashboardStats(),
+        listOfficers()
+      ])
+      setStats(statsData)
+      setOfficers(officersData)
     } catch (error) {
-      console.error('Error loading dashboard stats:', error)
+      console.error('Error loading data:', error)
     } finally {
       setLoading(false)
     }
@@ -108,117 +113,24 @@ const Dashboard = () => {
     { title: 'Active Complaints', value: `${stats.complaintsByStatus.find(s => s.status === 'received')?.count || 0}`, percent: 0, color: 'danger' },
   ] : []
 
-  const progressGroupExample1 = [
-    { title: 'Monday', value1: 34, value2: 78 },
-    { title: 'Tuesday', value1: 56, value2: 94 },
-    { title: 'Wednesday', value1: 12, value2: 67 },
-    { title: 'Thursday', value1: 43, value2: 91 },
-    { title: 'Friday', value1: 22, value2: 73 },
-    { title: 'Saturday', value1: 53, value2: 82 },
-    { title: 'Sunday', value1: 9, value2: 69 },
-  ]
+  const progressGroupExample1 = stats?.complaintsByStatus ? stats.complaintsByStatus.map(s => ({
+    title: s.status.charAt(0).toUpperCase() + s.status.slice(1).replace('_', ' '),
+    value: s.count,
+    percent: stats.counts.complaints ? Math.round((s.count / stats.counts.complaints) * 100) : 0
+  })) : []
 
-  const progressGroupExample2 = [
-    { title: 'Male', icon: cilUser, value: 53 },
-    { title: 'Female', icon: cilUserFemale, value: 43 },
-  ]
+  const progressGroupExample2 = stats?.complaintsByPriority ? stats.complaintsByPriority.map(p => ({
+    title: p.priority.charAt(0).toUpperCase() + p.priority.slice(1).replace('_', ' '),
+    value: p.count,
+    percent: stats.counts.complaints ? Math.round((p.count / stats.counts.complaints) * 100) : 0,
+    icon: cilUser
+  })) : []
 
   const progressGroupExample3 = [
-    { title: 'Organic Search', icon: cibGoogle, percent: 56, value: '191,235' },
+    { title: 'Google Search', icon: cibGoogle, percent: 56, value: '191,235' },
     { title: 'Facebook', icon: cibFacebook, percent: 15, value: '51,223' },
     { title: 'Twitter', icon: cibTwitter, percent: 11, value: '37,564' },
     { title: 'LinkedIn', icon: cibLinkedin, percent: 8, value: '27,319' },
-  ]
-
-  const tableExample = [
-    {
-      avatar: { src: avatar1, status: 'success' },
-      user: {
-        name: 'Yiorgos Avraamu',
-        new: true,
-        registered: 'Jan 1, 2023',
-      },
-      country: { name: 'USA', flag: cifUs },
-      usage: {
-        value: 50,
-        period: 'Jun 11, 2023 - Jul 10, 2023',
-        color: 'success',
-      },
-      payment: { name: 'Mastercard', icon: cibCcMastercard },
-      activity: '10 sec ago',
-    },
-    {
-      avatar: { src: avatar2, status: 'danger' },
-      user: {
-        name: 'Avram Tarasios',
-        new: false,
-        registered: 'Jan 1, 2023',
-      },
-      country: { name: 'Brazil', flag: cifBr },
-      usage: {
-        value: 22,
-        period: 'Jun 11, 2023 - Jul 10, 2023',
-        color: 'info',
-      },
-      payment: { name: 'Visa', icon: cibCcVisa },
-      activity: '5 minutes ago',
-    },
-    {
-      avatar: { src: avatar3, status: 'warning' },
-      user: { name: 'Quintin Ed', new: true, registered: 'Jan 1, 2023' },
-      country: { name: 'India', flag: cifIn },
-      usage: {
-        value: 74,
-        period: 'Jun 11, 2023 - Jul 10, 2023',
-        color: 'warning',
-      },
-      payment: { name: 'Stripe', icon: cibCcStripe },
-      activity: '1 hour ago',
-    },
-    {
-      avatar: { src: avatar4, status: 'secondary' },
-      user: { name: 'Enéas Kwadwo', new: true, registered: 'Jan 1, 2023' },
-      country: { name: 'France', flag: cifFr },
-      usage: {
-        value: 98,
-        period: 'Jun 11, 2023 - Jul 10, 2023',
-        color: 'danger',
-      },
-      payment: { name: 'PayPal', icon: cibCcPaypal },
-      activity: 'Last month',
-    },
-    {
-      avatar: { src: avatar5, status: 'success' },
-      user: {
-        name: 'Agapetus Tadeáš',
-        new: true,
-        registered: 'Jan 1, 2023',
-      },
-      country: { name: 'Spain', flag: cifEs },
-      usage: {
-        value: 22,
-        period: 'Jun 11, 2023 - Jul 10, 2023',
-        color: 'primary',
-      },
-      payment: { name: 'Google Wallet', icon: cibCcApplePay },
-      activity: 'Last week',
-    },
-    {
-      avatar: { src: avatar6, status: 'danger' },
-      user: {
-        name: 'Friderik Dávid',
-        new: true,
-        registered: 'Jan 1, 2023',
-      },
-      country: { name: 'Poland', flag: cifPl },
-      usage: {
-        value: 43,
-        period: 'Jun 11, 2023 - Jul 10, 2023',
-        color: 'success',
-      },
-      payment: { name: 'Amex', icon: cibCcAmex },
-      activity: 'Last week',
-    },
   ]
 
   return (
@@ -234,6 +146,9 @@ const Dashboard = () => {
               <div className="small text-body-secondary">January - July 2023</div>
             </CCol>
             <CCol sm={7} className="d-none d-md-block">
+              <CButton color="primary" className="float-end" onClick={handleDownloadExcel}>
+                <CIcon icon={cilCloudDownload} />
+              </CButton>
               <CButtonGroup className="float-end me-3">
                 {['Day', 'Month', 'Year'].map((value) => (
                   <CButton
@@ -248,7 +163,7 @@ const Dashboard = () => {
               </CButtonGroup>
             </CCol>
           </CRow>
-          <MainChart />
+          <MainChart data={stats?.complaintsTrend} />
         </CCardBody>
         <CCardFooter>
           <CRow
@@ -279,35 +194,36 @@ const Dashboard = () => {
       <CRow>
         <CCol xs>
           <CCard className="mb-4">
-            <CCardHeader>Traffic {' & '} Sales</CCardHeader>
+            <CCardHeader>Complaints Growth {' & '} Statistics</CCardHeader>
             <CCardBody>
               <CRow>
                 <CCol xs={12} md={6} xl={6}>
                   <CRow>
                     <CCol xs={6}>
                       <div className="border-start border-start-4 border-start-info py-1 px-3">
-                        <div className="text-body-secondary text-truncate small">New Clients</div>
-                        <div className="fs-5 fw-semibold">9,123</div>
+                        <div className="text-body-secondary text-truncate small">Total Complaints</div>
+                        <div className="fs-5 fw-semibold">{stats?.counts.complaints || 0}</div>
                       </div>
                     </CCol>
                     <CCol xs={6}>
                       <div className="border-start border-start-4 border-start-danger py-1 px-3 mb-3">
                         <div className="text-body-secondary text-truncate small">
-                          Recurring Clients
+                          Active Cases
                         </div>
-                        <div className="fs-5 fw-semibold">22,643</div>
+                        <div className="fs-5 fw-semibold">{stats?.complaintsByStatus?.find(s => s.status === 'under_investigation')?.count || 0}</div>
                       </div>
                     </CCol>
                   </CRow>
                   <hr className="mt-0" />
+                  <h6 className="mb-3 small text-uppercase fw-bold text-body-secondary">Complaints by Status</h6>
                   {progressGroupExample1.map((item, index) => (
                     <div className="progress-group mb-4" key={index}>
                       <div className="progress-group-prepend">
                         <span className="text-body-secondary small">{item.title}</span>
+                        <span className="ms-2 fw-semibold small">({item.value})</span>
                       </div>
                       <div className="progress-group-bars">
-                        <CProgress thin color="info" value={item.value1} />
-                        <CProgress thin color="danger" value={item.value2} />
+                        <CProgress thin color="info" value={item.percent} />
                       </div>
                     </div>
                   ))}
@@ -316,19 +232,20 @@ const Dashboard = () => {
                   <CRow>
                     <CCol xs={6}>
                       <div className="border-start border-start-4 border-start-warning py-1 px-3 mb-3">
-                        <div className="text-body-secondary text-truncate small">Pageviews</div>
-                        <div className="fs-5 fw-semibold">78,623</div>
+                        <div className="text-body-secondary text-truncate small">Police Officers</div>
+                        <div className="fs-5 fw-semibold">{stats?.counts.officers || 0}</div>
                       </div>
                     </CCol>
                     <CCol xs={6}>
                       <div className="border-start border-start-4 border-start-success py-1 px-3 mb-3">
-                        <div className="text-body-secondary text-truncate small">Organic</div>
-                        <div className="fs-5 fw-semibold">49,123</div>
+                        <div className="text-body-secondary text-truncate small">Total Users</div>
+                        <div className="fs-5 fw-semibold">{stats?.counts.users || 0}</div>
                       </div>
                     </CCol>
                   </CRow>
 
                   <hr className="mt-0" />
+                  <h6 className="mb-3 small text-uppercase fw-bold text-body-secondary">Complaints by Priority</h6>
 
                   {progressGroupExample2.map((item, index) => (
                     <div className="progress-group mb-4" key={index}>
@@ -365,54 +282,46 @@ const Dashboard = () => {
 
               <br />
 
+              <CCardHeader className="px-0 border-0 bg-transparent">
+                <h5 className="mb-0">Police Officers List</h5>
+              </CCardHeader>
+
               <CTable align="middle" className="mb-0 border" hover responsive>
                 <CTableHead className="text-nowrap">
                   <CTableRow>
                     <CTableHeaderCell className="bg-body-tertiary text-center">
                       <CIcon icon={cilPeople} />
                     </CTableHeaderCell>
-                    <CTableHeaderCell className="bg-body-tertiary">User</CTableHeaderCell>
-                    <CTableHeaderCell className="bg-body-tertiary text-center">
-                      Country
-                    </CTableHeaderCell>
-                    <CTableHeaderCell className="bg-body-tertiary">Usage</CTableHeaderCell>
-                    <CTableHeaderCell className="bg-body-tertiary text-center">
-                      Payment Method
-                    </CTableHeaderCell>
-                    <CTableHeaderCell className="bg-body-tertiary">Activity</CTableHeaderCell>
+                    <CTableHeaderCell className="bg-body-tertiary">Officer</CTableHeaderCell>
+                    <CTableHeaderCell className="bg-body-tertiary">Unit / Rank</CTableHeaderCell>
+                    <CTableHeaderCell className="bg-body-tertiary">Contact</CTableHeaderCell>
+                    <CTableHeaderCell className="bg-body-tertiary text-center">Status</CTableHeaderCell>
                   </CTableRow>
                 </CTableHead>
                 <CTableBody>
-                  {tableExample.map((item, index) => (
-                    <CTableRow v-for="item in tableItems" key={index}>
+                  {officers.map((officer, index) => (
+                    <CTableRow key={index}>
                       <CTableDataCell className="text-center">
-                        <CAvatar size="md" src={item.avatar.src} status={item.avatar.status} />
+                        <CAvatar size="md" src={officer.profile_picture || avatar1} status={officer.active ? 'success' : 'danger'} />
                       </CTableDataCell>
                       <CTableDataCell>
-                        <div>{item.user.name}</div>
-                        <div className="small text-body-secondary text-nowrap">
-                          <span>{item.user.new ? 'New' : 'Recurring'}</span> | Registered:{' '}
-                          {item.user.registered}
+                        <div className="fw-semibold">{officer.name} {officer.lastName}</div>
+                        <div className="small text-body-secondary">
+                          Badge: {officer.badge_number}
                         </div>
                       </CTableDataCell>
-                      <CTableDataCell className="text-center">
-                        <CIcon size="xl" icon={item.country.flag} title={item.country.name} />
+                      <CTableDataCell>
+                        <div>{officer.unit}</div>
+                        <div className="small text-body-secondary">{officer.rank}</div>
                       </CTableDataCell>
                       <CTableDataCell>
-                        <div className="d-flex justify-content-between text-nowrap">
-                          <div className="fw-semibold">{item.usage.value}%</div>
-                          <div className="ms-3">
-                            <small className="text-body-secondary">{item.usage.period}</small>
-                          </div>
-                        </div>
-                        <CProgress thin color={item.usage.color} value={item.usage.value} />
+                        <div className="small text-body-secondary">{officer.email}</div>
+                        <div className="fw-semibold">{officer.idNumber}</div>
                       </CTableDataCell>
                       <CTableDataCell className="text-center">
-                        <CIcon size="xl" icon={item.payment.icon} />
-                      </CTableDataCell>
-                      <CTableDataCell>
-                        <div className="small text-body-secondary text-nowrap">Last login</div>
-                        <div className="fw-semibold text-nowrap">{item.activity}</div>
+                        <span className={`badge bg-${officer.active ? 'success' : 'danger'}`}>
+                          {officer.status}
+                        </span>
                       </CTableDataCell>
                     </CTableRow>
                   ))}

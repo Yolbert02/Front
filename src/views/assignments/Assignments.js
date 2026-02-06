@@ -14,7 +14,7 @@ import CIcon from '@coreui/icons-react'
 import {
     cilPlus, cilPencil, cilTrash, cilCalendar, cilUser,
     cilBalanceScale, cilInfo, cilSearch, cilCheckCircle, cilBan,
-    cilClock, cilWarning, cilPeople, cilListRich, cilApps
+    cilClock, cilWarning, cilPeople, cilListRich, cilApps, cilCloudDownload
 } from '@coreui/icons'
 import AssignmentForm from './AssignmentForm'
 import InfoAssignment from './InfoAssignment'
@@ -22,6 +22,7 @@ import {
     listAssignments, deleteAssignment,
     updateAssignment, createAssignment, changeAssignmentStatus
 } from 'src/services/assignments'
+import { downloadAssignmentPDF } from 'src/services/reports'
 
 import { colorbutton } from 'src/styles/darkModeStyles'
 import ConfirmationModal from 'src/components/ConfirmationModal'
@@ -648,6 +649,15 @@ const Assignments = () => {
                                                                                     shape="rounded-pill"
                                                                                 >
                                                                                     <CIcon icon={cilInfo} />
+                                                                                </CButton>
+                                                                                <CButton
+                                                                                    size="sm"
+                                                                                    className="text-success shadow-sm"
+                                                                                    onClick={() => downloadAssignmentPDF(assignment.id)}
+                                                                                    title="Download PDF"
+                                                                                    shape="rounded-pill"
+                                                                                >
+                                                                                    <CIcon icon={cilCloudDownload} />
                                                                                 </CButton>
                                                                                 {(userRole === 'administrator' || userRole === 'oficial') && (
                                                                                     <>

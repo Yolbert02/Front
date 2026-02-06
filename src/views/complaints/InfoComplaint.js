@@ -394,27 +394,41 @@ const InfoComplaint = ({ visible, onClose, complaint }) => {
                             <CCardBody style={cardStyles.body}>
                                 {complaint.evidence && complaint.evidence.length > 0 ? (
                                     <CListGroup flush>
-                                        {complaint.evidence.map((file, index) => (
-                                            <CListGroupItem key={index} className="px-0">
-                                                <div className="d-flex align-items-center">
-                                                    <CIcon
-                                                        icon={getFileIcon(file.type)}
-                                                        className="me-2 text-primary"
-                                                    />
-                                                    <div className="flex-grow-1">
-                                                        <div className="d-flex justify-content-between align-items-center">
-                                                            <span>{file.name}</span>
-                                                            <small className="text-muted">
-                                                                {formatFileSize(file.size)}
-                                                            </small>
+                                        {complaint.evidence.map((file, index) => {
+                                            const isImage = file.type?.includes('image') || file.url?.startsWith('data:image')
+                                            return (
+                                                <CListGroupItem key={index} className="px-0 py-3 border-bottom">
+                                                    <div className="d-flex align-items-start">
+                                                        <CIcon
+                                                            icon={getFileIcon(file.type || 'image/png')}
+                                                            className="me-3 text-primary mt-1"
+                                                            size="lg"
+                                                        />
+                                                        <div className="flex-grow-1">
+                                                            <div className="d-flex justify-content-between align-items-center mb-1">
+                                                                <span className="fw-semibold">{file.name}</span>
+                                                                <small className="text-muted">
+                                                                    {formatFileSize(file.size || 0)}
+                                                                </small>
+                                                            </div>
+                                                            <div className="small text-muted mb-2">
+                                                                Uploaded: {formatDate(file.uploadedAt)}
+                                                            </div>
+                                                            {isImage && file.url && (
+                                                                <div className="mt-2 rounded overflow-hidden border shadow-sm" style={{ maxWidth: '200px' }}>
+                                                                    <img
+                                                                        src={file.url}
+                                                                        alt={file.name}
+                                                                        style={{ width: '100%', height: 'auto', display: 'block', cursor: 'pointer' }}
+                                                                        onClick={() => window.open(file.url, '_blank')}
+                                                                    />
+                                                                </div>
+                                                            )}
                                                         </div>
-                                                        <small className="text-muted">
-                                                            Uploaded: {formatDate(file.uploadedAt)}
-                                                        </small>
                                                     </div>
-                                                </div>
-                                            </CListGroupItem>
-                                        ))}
+                                                </CListGroupItem>
+                                            )
+                                        })}
                                     </CListGroup>
                                 ) : (
                                     <div className="text-center text-muted py-3">
@@ -444,6 +458,14 @@ const InfoComplaint = ({ visible, onClose, complaint }) => {
                 </CRow>
             </CModalBody>
             <CModalFooter style={modalStyles.footer}>
+                <CButton
+                    color="primary"
+                    onClick={() => downloadPDF(complaint.id)}
+                    className="me-auto"
+                >
+                    <CIcon icon={cilCloudDownload} className="me-2" />
+                    Download PDF Report
+                </CButton>
                 <CButton color="secondary" onClick={onClose}>
                     Close
                 </CButton>

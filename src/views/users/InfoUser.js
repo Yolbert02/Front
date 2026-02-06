@@ -97,7 +97,9 @@ const InfoUser = ({ visible, onClose, user }) => {
                                 <CRow className="g-3 align-items-center">
                                     <CCol md={3} className="text-center">
                                         <AvatarLetterXL
-                                            name={`${user.first_name}`}
+                                            name={user.first_name}
+                                            lastName={user.last_name}
+                                            src={user.profile_picture}
                                             size="xl"
                                             className="mb-2"
                                         />

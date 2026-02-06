@@ -79,7 +79,7 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
                 setMunicipality(initial.municipality || 'San Cristóbal')
                 setCity(initial.city || '')
                 setZone(initial.zoneId || initial.Id_zone || '')
-                setAddress(initial.address || '')
+                setAddress(initial.address || initial.location || initial.address_detail || '')
             } else {
                 setTitle('')
                 setDescription('')
@@ -188,27 +188,35 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
         for (const file of files) {
             const fileId = Date.now() + Math.random()
 
-            const newEvidence = {
-                id: fileId,
-                name: file.name,
-                type: file.type,
-                size: file.size,
-                url: URL.createObjectURL(file),
-                uploadedAt: new Date().toISOString(),
-                status: 'uploading'
-            }
+            // Read file as Base64/DataURL
+            const reader = new FileReader()
+            reader.readAsDataURL(file)
 
-            setEvidence(prev => [...prev, newEvidence])
+            reader.onload = async (e) => {
+                const base64Data = e.target.result
 
-            await simulateUpload(fileId)
+                const newEvidence = {
+                    id: fileId,
+                    name: file.name,
+                    type: file.type,
+                    size: file.size,
+                    url: base64Data, // Now using real Base64 data
+                    uploadedAt: new Date().toISOString(),
+                    status: 'uploading'
+                }
 
-            setEvidence(prev =>
-                prev.map(item =>
-                    item.id === fileId
-                        ? { ...item, status: 'completed' }
-                        : item
+                setEvidence(prev => [...prev, newEvidence])
+
+                await simulateUpload(fileId)
+
+                setEvidence(prev =>
+                    prev.map(item =>
+                        item.id === fileId
+                            ? { ...item, status: 'completed' }
+                            : item
+                    )
                 )
-            )
+            }
         }
         event.target.value = ''
     }
@@ -247,7 +255,8 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
         setSaving(true)
 
         try {
-            const fullAddress = `${address}, ${zone}, ${city}, ${municipality}${parish ? ', ' + parish : ''}, ${state}, ${country}`
+            const zoneName = zones.find(z => z.id === parseInt(zone))?.name || ''
+            const fullAddress = `${address}, ${zoneName}, ${city}, ${municipality}${parish ? ', ' + parish : ''}, ${state}, ${country}`
 
             let latitude = null
             let longitude = null
@@ -276,7 +285,8 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
                 complainant_name: complainant_name.trim(),
                 complainant_phone: complainant_phone.trim(),
                 complainant_email: complainant_email.trim(),
-                location: fullAddress,
+                location: address.trim(), // Use ONLY the street address for address_detail
+                full_address: fullAddress, // Keep the full string for other uses if needed
                 country: country.trim(),
                 state: state.trim(),
                 parish: parish.trim(),

@@ -17,6 +17,7 @@ export async function listUsers() {
             first_name: user.first_name || '',
             last_name: user.last_name || '',
             email: user.email || '',
+            profile_picture: user.profile_picture || null,
             phone: user.number_phone || user.phone || ''
         }));
     } catch (error) {

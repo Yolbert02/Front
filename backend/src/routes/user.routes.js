@@ -13,7 +13,8 @@ router.post('/', validate(createUserSchema), userController.createUser);
 // Protected routes
 router.get('/', verifyToken, authorize('administrator'), userController.getAllUsers);
 router.get('/:id', verifyToken, authorize(['administrator', 'oficial']), userController.getUserById);
-router.put('/:id', verifyToken, userController.updateUser); // Controller will check if self or admin
+router.put('/:id', verifyToken, userController.updateUser);
+router.patch('/:id', verifyToken, userController.updateUser);
 router.delete('/:id', verifyToken, authorize('administrator'), userController.deleteUser);
 
 module.exports = router;

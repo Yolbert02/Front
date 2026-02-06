@@ -292,7 +292,16 @@ const InfoZone = ({ visible, onClose, zone, complaints = [] }) => {
                             Next
                         </CButton>
                     ) : null}
-                    <div className="ms-auto d-flex align-items-center">
+                    <div className="ms-auto d-flex align-items-center gap-2">
+                        <CButton
+                            type="button"
+                            color="primary"
+                            onClick={downloadXLS}
+                            className="d-flex align-items-center"
+                        >
+                            <CIcon icon={cilCloudDownload} className="me-2" />
+                            Download XLS Report
+                        </CButton>
                         <CButton type="button" color="secondary" onClick={onClose}>
                             Cancel
                         </CButton>

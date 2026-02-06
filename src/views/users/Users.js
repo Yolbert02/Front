@@ -334,7 +334,9 @@ const Users = () => {
                                                                 <CTableDataCell className="ps-4">
                                                                     <div className="d-flex align-items-center py-2">
                                                                         <AvatarLetter
-                                                                            name={`${user.first_name}`}
+                                                                            name={user.first_name}
+                                                                            lastName={user.last_name}
+                                                                            src={user.profile_picture}
                                                                             size={44}
                                                                             className="shadow-sm border border-2 border-white"
                                                                         />

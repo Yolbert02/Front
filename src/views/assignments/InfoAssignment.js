@@ -371,6 +371,14 @@ const InfoAssignment = ({ visible, onClose, assignment }) => {
                 </CRow>
             </CModalBody>
             <CModalFooter style={modalStyles.footer}>
+                <CButton
+                    color="primary"
+                    onClick={() => downloadPDF(assignment.id)}
+                    className="me-auto"
+                >
+                    <CIcon icon={cilCloudDownload} className="me-2" />
+                    Download PDF Report
+                </CButton>
                 <CButton color="secondary" onClick={onClose}>
                     Close
                 </CButton>

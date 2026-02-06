@@ -23,7 +23,7 @@ import {
 } from '@coreui/react'
 import SearchInput from 'src/components/SearchInput'
 import CIcon from '@coreui/icons-react'
-import { cilPlus, cilPencil, cilTrash, cilInfo, cilFolderOpen, cilMap, cilUser, cilSearch, cilWarning, cilCheckCircle, cilBan, cilFile } from '@coreui/icons'
+import { cilPlus, cilPencil, cilTrash, cilInfo, cilFolderOpen, cilMap, cilUser, cilSearch, cilWarning, cilCheckCircle, cilBan, cilFile, cilCloudDownload } from '@coreui/icons'
 import ComplaintForm from './ComplaintForm'
 import InfoComplaint from './InfoComplaint'
 import { listComplaints, createComplaint, updateComplaint, deleteComplaint, changeComplaintStatus } from 'src/services/complaints'
@@ -396,6 +396,15 @@ const Complaints = () => {
                                                                             shape="rounded-pill"
                                                                         >
                                                                             <CIcon icon={cilInfo} />
+                                                                        </CButton>
+                                                                        <CButton
+                                                                            size="sm"
+                                                                            className="text-success shadow-sm"
+                                                                            onClick={() => downloadComplaintPDF(complaint.id)}
+                                                                            title="Download PDF"
+                                                                            shape="rounded-pill"
+                                                                        >
+                                                                            <CIcon icon={cilCloudDownload} />
                                                                         </CButton>
                                                                         {(userRole === 'administrator' || userRole === 'oficial') && (
                                                                             <>

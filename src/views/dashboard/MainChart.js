@@ -3,8 +3,11 @@ import React, { useEffect, useRef } from 'react'
 import { CChartLine } from '@coreui/react-chartjs'
 import { getStyle } from '@coreui/utils'
 
-const MainChart = () => {
+const MainChart = ({ data = [] }) => {
   const chartRef = useRef(null)
+
+  const chartLabels = data.length > 0 ? data.map(d => d.month) : ['January', 'February', 'March', 'April', 'May', 'June', 'July']
+  const chartValues = data.length > 0 ? data.map(d => d.count) : [0, 0, 0, 0, 0, 0, 0]
 
   useEffect(() => {
     const handleColorSchemeChange = () => {
@@ -30,58 +33,23 @@ const MainChart = () => {
       document.documentElement.removeEventListener('ColorSchemeChange', handleColorSchemeChange)
   }, [chartRef])
 
-  const random = (min = 0, max = 100) => Math.floor(Math.random() * (max - min + 1)) + min
-
   return (
     <>
       <CChartLine
         ref={chartRef}
         style={{ height: '300px', marginTop: '40px' }}
         data={{
-          labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
+          labels: chartLabels,
           datasets: [
             {
-              label: 'My First dataset',
+              label: 'Complaints Trend',
               backgroundColor: `rgba(${getStyle('--cui-info-rgb')}, .1)`,
               borderColor: getStyle('--cui-info'),
               pointHoverBackgroundColor: getStyle('--cui-info'),
               borderWidth: 2,
-              data: [
-                random(50, 200),
-                random(50, 200),
-                random(50, 200),
-                random(50, 200),
-                random(50, 200),
-                random(50, 200),
-                random(50, 200),
-              ],
+              data: chartValues,
               fill: true,
-            },
-            {
-              label: 'My Second dataset',
-              backgroundColor: 'transparent',
-              borderColor: getStyle('--cui-success'),
-              pointHoverBackgroundColor: getStyle('--cui-success'),
-              borderWidth: 2,
-              data: [
-                random(50, 200),
-                random(50, 200),
-                random(50, 200),
-                random(50, 200),
-                random(50, 200),
-                random(50, 200),
-                random(50, 200),
-              ],
-            },
-            {
-              label: 'My Third dataset',
-              backgroundColor: 'transparent',
-              borderColor: getStyle('--cui-danger'),
-              pointHoverBackgroundColor: getStyle('--cui-danger'),
-              borderWidth: 1,
-              borderDash: [8, 5],
-              data: [65, 65, 65, 65, 65, 65, 65],
-            },
+            }
           ],
         }}
         options={{
@@ -109,11 +77,9 @@ const MainChart = () => {
               grid: {
                 color: getStyle('--cui-border-color-translucent'),
               },
-              max: 250,
               ticks: {
                 color: getStyle('--cui-body-color'),
                 maxTicksLimit: 5,
-                stepSize: Math.ceil(250 / 5),
               },
             },
           },
