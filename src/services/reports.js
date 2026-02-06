@@ -12,8 +12,7 @@ export const downloadComplaintsExcel = async () => {
     // For downloads we need the blob response, but our apiService handles JSON
     // Let's use fetch directly with the token for this specific case
     const token = sessionStorage.getItem('token');
-    const BASE = import.meta.env.VITE_API_URL ?? '';
-    const response = await fetch(`${BASE}/api/stats/reports/excel`, {
+    const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api/stats/reports/excel`, {
         method: 'GET',
         headers: {
             'Authorization': `Bearer ${token}`
@@ -34,8 +33,7 @@ export const downloadComplaintsExcel = async () => {
 
 export const downloadComplaintPDF = async (complaintId) => {
     const token = sessionStorage.getItem('token');
-    const BASE = import.meta.env.VITE_API_URL ?? '';
-    const response = await fetch(`${BASE}/api/stats/reports/pdf/${complaintId}`, {
+    const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api/stats/reports/pdf/${complaintId}`, {
         method: 'GET',
         headers: {
             'Authorization': `Bearer ${token}`
@@ -56,8 +54,7 @@ export const downloadComplaintPDF = async (complaintId) => {
 
 export const downloadAssignmentPDF = async (assignmentId) => {
     const token = sessionStorage.getItem('token');
-    const BASE = import.meta.env.VITE_API_URL ?? '';
-    const response = await fetch(`${BASE}/api/stats/reports/assignment/${assignmentId}`, {
+    const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/api/stats/reports/assignment/${assignmentId}`, {
         method: 'GET',
         headers: {
             'Authorization': `Bearer ${token}`
