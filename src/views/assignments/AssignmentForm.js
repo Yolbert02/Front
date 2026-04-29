@@ -14,7 +14,8 @@ import {
     CFormTextarea,
     CCard,
     CCardBody,
-    CSpinner
+    CSpinner,
+    CAlert
 } from '@coreui/react'
 import { colorbutton } from 'src/styles/darkModeStyles'
 import CIcon from '@coreui/icons-react'
@@ -45,6 +46,7 @@ const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
 
     const [loading, setLoading] = useState(false)
     const [saving, setSaving] = useState(false)
+    const [errors, setErrors] = useState({})
 
     const [step, setStep] = useState(1)
 
@@ -75,32 +77,82 @@ const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
         }
     }, [visible, initial])
 
+    const today = new Date().toISOString().split('T')[0]
+
     const validateStep = (currentStep) => {
+        const newErrors = {}
+
         if (currentStep === 1) {
-            if (!caseTitle.trim() || !caseDescription.trim()) {
-                return false
-            }
-            return true
+            if (!caseTitle.trim())
+                newErrors.caseTitle = 'Case title is required'
+            else if (caseTitle.trim().length < 5)
+                newErrors.caseTitle = 'Case title must be at least 5 characters'
+
+            if (!caseDescription.trim())
+                newErrors.caseDescription = 'Case description is required'
+            else if (caseDescription.trim().length < 10)
+                newErrors.caseDescription = 'Description must be at least 10 characters'
+
+            if (!judgeId)
+                newErrors.judgeId = 'A judge must be assigned to the case'
         }
+
         if (currentStep === 2) {
-            return true
+            if (!hearingDate)
+                newErrors.hearingDate = 'Hearing date is required'
+            else if (hearingDate < today)
+                newErrors.hearingDate = 'Hearing date cannot be in the past'
+
+            if (trialDate && trialDate < today)
+                newErrors.trialDate = 'Trial date cannot be in the past'
+
+            if (hearingDate && trialDate && trialDate < hearingDate)
+                newErrors.trialDate = 'Trial date must be after the hearing date'
         }
+
         if (currentStep === 3) {
-            return true
+            // Check for unselected officials
+            const unselectedOfficials = officials.filter(o => !o.user_id)
+            if (unselectedOfficials.length > 0)
+                newErrors.officials = 'All added officials must have a user selected'
+
+            const unselectedFuncionaries = funcionaries.filter(f => !f.user_id)
+            if (unselectedFuncionaries.length > 0)
+                newErrors.funcionaries = 'All added functionaries must have a user selected'
+
+            const unselectedWitnesses = witnesses.filter(w => !w.user_id)
+            if (unselectedWitnesses.length > 0)
+                newErrors.witnesses = 'All added witnesses must have a user selected'
+
+            const unselectedJury = jury.filter(j => !j.user_id)
+            if (unselectedJury.length > 0)
+                newErrors.jury = 'All added jury members must have a user selected'
+
+            // Check for duplicate participants
+            const allOfficialIds = officials.map(o => o.user_id).filter(Boolean)
+            if (new Set(allOfficialIds).size !== allOfficialIds.length)
+                newErrors.officialsDuplicate = 'Duplicate officials detected — each official must be unique'
+
+            const allWitnessIds = witnesses.map(w => w.user_id).filter(Boolean)
+            const allJuryIds = jury.map(j => j.user_id).filter(Boolean)
+            if (new Set(allJuryIds).size !== allJuryIds.length)
+                newErrors.juryDuplicate = 'Duplicate jury members detected'
         }
-        return true
+
+        setErrors(newErrors)
+        return Object.keys(newErrors).length === 0
     }
 
     const handleNext = (e) => {
         if (e) e.preventDefault()
         if (validateStep(step)) {
             setStep(step + 1)
-        } else {
         }
     }
 
     const handleBack = (e) => {
         if (e) e.preventDefault()
+        setErrors({})
         setStep(step - 1)
     }
 
@@ -448,6 +500,16 @@ const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
             <CForm onSubmit={handleSubmit}>
                 <CModalBody style={{ maxHeight: '70vh', overflowY: 'auto' }}>
 
+                    {Object.keys(errors).length > 0 && (
+                        <CAlert color="danger" className="mb-3 py-2">
+                            <ul className="mb-0 small">
+                                {Object.values(errors).map((err, i) => (
+                                    <li key={i}>{err}</li>
+                                ))}
+                            </ul>
+                        </CAlert>
+                    )}>
+
                     {/* SECCIÓN 1: CASE INFORMATION */}
                     {step === 1 && (
                         <>
@@ -459,6 +521,8 @@ const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
                                         placeholder="Robbery in public space"
                                         value={caseTitle}
                                         onChange={(e) => setCaseTitle(e.target.value)}
+                                        invalid={!!errors.caseTitle}
+                                        feedback={errors.caseTitle}
                                         required
                                     />
                                 </CCol>
@@ -471,6 +535,8 @@ const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
                                     rows="3"
                                     value={caseDescription}
                                     onChange={(e) => setCaseDescription(e.target.value)}
+                                    invalid={!!errors.caseDescription}
+                                    feedback={errors.caseDescription}
                                     required
                                 />
                             </div>
@@ -498,10 +564,12 @@ const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
                             <CRow className="g-3">
                                 <CCol md={12}>
                                     <CFormSelect
-                                        label="Assigned Judge"
+                                        label="Assigned Judge *"
                                         value={judgeId}
                                         onChange={(e) => setJudgeId(e.target.value)}
                                         disabled={loading}
+                                        invalid={!!errors.judgeId}
+                                        feedback={errors.judgeId}
                                     >
                                         <option value="">Select a judge</option>
                                         {availableOfficials.map(official => (
@@ -522,10 +590,13 @@ const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
                             <CRow className="g-3">
                                 <CCol md={6}>
                                     <CFormInput
-                                        label="Hearing Date"
+                                        label="Hearing Date *"
                                         type="date"
                                         value={hearingDate}
+                                        min={today}
                                         onChange={(e) => setHearingDate(e.target.value)}
+                                        invalid={!!errors.hearingDate}
+                                        feedback={errors.hearingDate}
                                     />
                                 </CCol>
                                 <CCol md={6}>
@@ -544,7 +615,10 @@ const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
                                         label="Trial Date"
                                         type="date"
                                         value={trialDate}
+                                        min={hearingDate || today}
                                         onChange={(e) => setTrialDate(e.target.value)}
+                                        invalid={!!errors.trialDate}
+                                        feedback={errors.trialDate}
                                     />
                                 </CCol>
                                 <CCol md={6}>

@@ -221,8 +221,10 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
             const controller = new AbortController()
             setAbortController(controller)
             
-            const zoneName = zones.find(z => z.id === parseInt(zone))?.name || ''
-            const fullAddress = `${address}, ${zoneName}, ${city}, ${municipality}${parish ? ', ' + parish : ''}, ${state}, ${country}`
+            // Build search query using only real geographic info (not internal zone names)
+            const cityOrMunicipality = city.trim() || municipality.trim()
+            const fullAddress = [address.trim(), cityOrMunicipality, state.trim(), country.trim()]
+                .filter(Boolean).join(', ')
             
             try {
                 // Nominatim search to verify address exists
@@ -571,137 +573,60 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
                         <>
                             <h6 className="mb-3 mt-4 text-primary">Complainant Information</h6>
 
-                            {isAdminOrOfficer && (
-                                <div className="mb-4 border rounded shadow-sm" style={{ overflow: 'hidden' }}>
-                                    <div className="bg-primary px-3 py-2">
-                                        <h6 className="mb-0 text-white small fw-bold">
-                                            👤 Seleccionar Denunciante del Sistema
-                                        </h6>
-                                    </div>
-                                    <div className="p-3 bg-light">
-                                        <CFormInput
-                                            size="sm"
-                                            placeholder="Buscar por nombre o correo..."
-                                            className="mb-2"
-                                            onChange={(e) => {
-                                                const val = e.target.value.toLowerCase()
-                                                setFilteredUsers(
-                                                    val.length === 0
-                                                        ? users
-                                                        : users.filter(u =>
-                                                            `${u.first_name} ${u.last_name}`.toLowerCase().includes(val) ||
-                                                            (u.email && u.email.toLowerCase().includes(val))
-                                                        )
-                                                )
-                                            }}
-                                        />
-                                        <div
-                                            style={{ maxHeight: '160px', overflowY: 'auto', borderRadius: '6px' }}
-                                            className="border bg-white"
-                                        >
-                                            {filteredUsers.length === 0 ? (
-                                                <div className="p-3 text-center text-muted small">
-                                                    {users.length === 0 ? 'Cargando usuarios...' : 'No se encontraron usuarios'}
-                                                </div>
-                                            ) : (
-                                                filteredUsers.map(u => (
-                                                    <div
-                                                        key={u.id}
-                                                        onClick={() => handleUserSelect(u.id)}
-                                                        className={`p-2 border-bottom small d-flex align-items-center gap-2`}
-                                                        style={{
-                                                            cursor: 'pointer',
-                                                            backgroundColor: String(selectedUserId) === String(u.id) ? '#dbeafe' : '#fff',
-                                                            borderLeft: String(selectedUserId) === String(u.id) ? '3px solid #3b82f6' : '3px solid transparent'
-                                                        }}
-                                                        onMouseOver={(e) => {
-                                                            if (String(selectedUserId) !== String(u.id))
-                                                                e.currentTarget.style.backgroundColor = '#f0f4f8'
-                                                        }}
-                                                        onMouseOut={(e) => {
-                                                            if (String(selectedUserId) !== String(u.id))
-                                                                e.currentTarget.style.backgroundColor = '#fff'
-                                                        }}
-                                                    >
-                                                        <div
-                                                            className="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center flex-shrink-0"
-                                                            style={{ width: '30px', height: '30px', fontSize: '12px', fontWeight: 'bold' }}
-                                                        >
-                                                            {(u.first_name?.[0] || '?').toUpperCase()}
-                                                        </div>
-                                                        <div className="flex-grow-1 overflow-hidden">
-                                                            <div className="fw-bold text-dark" style={{ fontSize: '13px' }}>
-                                                                {u.first_name} {u.last_name}
-                                                                {String(selectedUserId) === String(u.id) && (
-                                                                    <span className="ms-1 badge bg-primary" style={{ fontSize: '9px' }}>Seleccionado</span>
-                                                                )}
-                                                            </div>
-                                                            <div className="text-muted" style={{ fontSize: '11px' }}>{u.email || 'Sin correo'}</div>
-                                                        </div>
-                                                    </div>
-                                                ))
-                                            )}
-                                        </div>
-                                        {selectedUserId && (
-                                            <div className="mt-2 d-flex justify-content-end">
-                                                <small
-                                                    className="text-danger"
-                                                    style={{ cursor: 'pointer', fontSize: '11px' }}
-                                                    onClick={() => {
-                                                        setSelectedUserId('')
-                                                        setComplainantName('')
-                                                        setComplainantEmail('')
-                                                        setComplainantPhoneNumber('')
-                                                        setComplainantPhonePrefix('0414')
-                                                    }}
-                                                >
-                                                    ✕ Limpiar selección
-                                                </small>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
+
                             
 
 
                             <CRow className="g-3">
                                 <CCol md={6} style={{ position: 'relative' }}>
                                     <CFormInput
-                                        label="Complainant Name *"
-                                        placeholder="Full name"
+                                        label={isAdminOrOfficer ? 'Nombre del Denunciante * (escribe para buscar)' : 'Complainant Name *'}
+                                        placeholder={isAdminOrOfficer ? 'Escribe el nombre...' : 'Full name'}
                                         value={complainant_name}
                                         onChange={(e) => handleNameChange(e.target.value)}
                                         onFocus={() => {
-                                            if (isAdminOrOfficer && complainant_name.length > 1) setShowSuggestions(true)
+                                            if (isAdminOrOfficer && complainant_name.length > 0) setShowSuggestions(true)
                                         }}
+                                        onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                                         invalid={!!errors.complainant_name}
                                         feedback={errors.complainant_name}
                                         required
                                         readOnly={!isAdminOrOfficer}
+                                        autoComplete="off"
                                     />
-                                    {showSuggestions && suggestions.length > 0 && (
-                                        <div 
-                                            className="position-absolute w-100 shadow-sm border rounded bg-white" 
-                                            style={{ 
-                                                zIndex: 1000, 
-                                                top: '100%', 
-                                                left: 0, 
-                                                maxHeight: '200px', 
-                                                overflowY: 'auto' 
-                                            }}
+                                    {isAdminOrOfficer && showSuggestions && filteredUsers.length > 0 && (
+                                        <div
+                                            className="position-absolute w-100 shadow border rounded bg-white"
+                                            style={{ zIndex: 1050, top: '100%', left: 0, maxHeight: '220px', overflowY: 'auto' }}
                                         >
-                                            {suggestions.map(u => (
-                                                <div 
+                                            {filteredUsers.map(u => (
+                                                <div
                                                     key={u.id}
-                                                    className="p-2 border-bottom hover-bg-light cursor-pointer"
-                                                    style={{ cursor: 'pointer' }}
-                                                    onClick={() => handleUserSelect(u.id)}
-                                                    onMouseOver={(e) => e.target.style.backgroundColor = '#f8f9fa'}
-                                                    onMouseOut={(e) => e.target.style.backgroundColor = '#fff'}
+                                                    className="p-2 border-bottom d-flex align-items-center gap-2"
+                                                    style={{
+                                                        cursor: 'pointer',
+                                                        backgroundColor: String(selectedUserId) === String(u.id) ? '#dbeafe' : '#fff'
+                                                    }}
+                                                    onMouseDown={() => handleUserSelect(u.id)}
+                                                    onMouseOver={(e) => {
+                                                        if (String(selectedUserId) !== String(u.id))
+                                                            e.currentTarget.style.backgroundColor = '#f0f4f8'
+                                                    }}
+                                                    onMouseOut={(e) => {
+                                                        if (String(selectedUserId) !== String(u.id))
+                                                            e.currentTarget.style.backgroundColor = String(selectedUserId) === String(u.id) ? '#dbeafe' : '#fff'
+                                                    }}
                                                 >
-                                                    <div className="fw-bold">{u.first_name} {u.last_name}</div>
-                                                    <small className="text-muted">{u.email}</small>
+                                                    <div
+                                                        className="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center flex-shrink-0"
+                                                        style={{ width: '28px', height: '28px', fontSize: '11px', fontWeight: 'bold' }}
+                                                    >
+                                                        {(u.first_name?.[0] || '?').toUpperCase()}
+                                                    </div>
+                                                    <div>
+                                                        <div className="fw-bold small text-dark">{u.first_name} {u.last_name}</div>
+                                                        <div className="text-muted" style={{ fontSize: '11px' }}>{u.email || 'Sin correo'}</div>
+                                                    </div>
                                                 </div>
                                             ))}
                                         </div>
