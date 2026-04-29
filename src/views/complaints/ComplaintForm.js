@@ -59,6 +59,7 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
     const [suggestions, setSuggestions] = useState([])
     const [showSuggestions, setShowSuggestions] = useState(false)
     const [verifyingAddress, setVerifyingAddress] = useState(false)
+    const [abortController, setAbortController] = useState(null)
 
     const userStr = sessionStorage.getItem('user')
     const currentUserSession = userStr ? JSON.parse(userStr) : null
@@ -213,32 +214,40 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
             setVerifyingAddress(true)
             setErrors({})
             
+            const controller = new AbortController()
+            setAbortController(controller)
+            
             const zoneName = zones.find(z => z.id === parseInt(zone))?.name || ''
             const fullAddress = `${address}, ${zoneName}, ${city}, ${municipality}${parish ? ', ' + parish : ''}, ${state}, ${country}`
             
             try {
                 // Nominatim search to verify address exists
-                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullAddress.trim())}`)
+                const response = await fetch(
+                    `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(fullAddress.trim())}`,
+                    { signal: controller.signal }
+                )
                 if (response.ok) {
                     const data = await response.json()
                     if (data && data.length > 0) {
-                        // Success: Address found
                         setStep(step + 1)
                     } else {
-                        // Fail: Address not found in OpenStreetMap
                         setErrors({ 
                             address: 'This address could not be found on the map. Please verify the street name and patrol zone.' 
                         })
                     }
                 } else {
-                    // API error: Allow as fallback
                     setStep(step + 1)
                 }
             } catch (error) {
-                console.error('Address verification error:', error)
-                setStep(step + 1) // Allow as fallback
+                if (error.name === 'AbortError') {
+                    console.log('Verification aborted by user')
+                } else {
+                    console.error('Address verification error:', error)
+                    setStep(step + 1)
+                }
             } finally {
                 setVerifyingAddress(false)
+                setAbortController(null)
             }
         } else {
             setStep(step + 1)
@@ -247,7 +256,17 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
 
     const handleBack = (e) => {
         if (e) e.preventDefault()
+        if (verifyingAddress && abortController) {
+            abortController.abort()
+        }
         setStep(step - 1)
+    }
+
+    const handleClose = () => {
+        if (verifyingAddress && abortController) {
+            abortController.abort()
+        }
+        onClose()
     }
 
     const loadOfficers = async () => {
@@ -475,7 +494,7 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
     }
 
     return (
-        <CModal size="lg" visible={visible} onClose={onClose}>
+        <CModal size="lg" visible={visible} onClose={handleClose}>
             <CModalHeader>
                 <CModalTitle>
                     {initial ? 'Edit Complaint' : 'New Complaint'} - Step {step} of 4
