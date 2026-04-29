@@ -16,7 +16,8 @@ import {
     CCardBody,
     CBadge,
     CProgress,
-    CSpinner
+    CSpinner,
+    CAlert
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import { cilPaperclip, cilImage, cilFile, cilVideo, cilTrash, cilLocationPin } from '@coreui/icons'
