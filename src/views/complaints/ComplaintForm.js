@@ -57,6 +57,7 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
     const [selectedUserId, setSelectedUserId] = useState('')
     const [suggestions, setSuggestions] = useState([])
     const [showSuggestions, setShowSuggestions] = useState(false)
+    const [verifyingAddress, setVerifyingAddress] = useState(false)
 
     const userStr = sessionStorage.getItem('user')
     const currentUserSession = userStr ? JSON.parse(userStr) : null
@@ -202,11 +203,44 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
         return Object.keys(newErrors).length === 0
     }
 
-    const handleNext = (e) => {
+    const handleNext = async (e) => {
         if (e) e.preventDefault()
-        if (validateStep(step)) {
-            setStep(step + 1)
+        
+        if (!validateStep(step)) return
+
+        if (step === 3) {
+            setVerifyingAddress(true)
+            setErrors({})
+            
+            const zoneName = zones.find(z => z.id === parseInt(zone))?.name || ''
+            const fullAddress = `${address}, ${zoneName}, ${city}, ${municipality}${parish ? ', ' + parish : ''}, ${state}, ${country}`
+            
+            try {
+                // Nominatim search to verify address exists
+                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullAddress.trim())}`)
+                if (response.ok) {
+                    const data = await response.json()
+                    if (data && data.length > 0) {
+                        // Success: Address found
+                        setStep(step + 1)
+                    } else {
+                        // Fail: Address not found in OpenStreetMap
+                        setErrors({ 
+                            address: 'This address could not be found on the map. Please verify the street name and patrol zone.' 
+                        })
+                    }
+                } else {
+                    // API error: Allow as fallback
+                    setStep(step + 1)
+                }
+            } catch (error) {
+                console.error('Address verification error:', error)
+                setStep(step + 1) // Allow as fallback
+            } finally {
+                setVerifyingAddress(false)
+            }
         } else {
+            setStep(step + 1)
         }
     }
 
@@ -843,8 +877,15 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
                         </CButton>
                     )}
                     {step < 4 ? (
-                        <CButton type="button" color="primary colorbutton" style={colorbutton} onClick={handleNext} disabled={saving}>
-                            Next
+                        <CButton type="button" color="primary colorbutton" style={colorbutton} onClick={handleNext} disabled={saving || verifyingAddress}>
+                            {verifyingAddress ? (
+                                <>
+                                    <CSpinner size="sm" className="me-2" />
+                                    Verifying...
+                                </>
+                            ) : (
+                                'Next'
+                            )}
                         </CButton>
                     ) : (
                         <CButton type="submit" color="success" disabled={saving}>
