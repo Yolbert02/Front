@@ -166,15 +166,20 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
             if (!complainant_name || !complainant_name.trim()) {
                 newErrors.complainant_name = 'Complainant name is required'
             }
-            
-            if (!complainant_phone_number || !complainant_phone_number.trim()) {
-                newErrors.complainant_phone = 'Phone number is required'
-            } else if (!/^\d{7}$/.test(complainant_phone_number.trim())) {
-                newErrors.complainant_phone = 'Phone number must be exactly 7 digits'
+
+            const hasEmail = complainant_email && complainant_email.trim()
+            const hasPhone = complainant_phone_number && complainant_phone_number.trim()
+
+            if (!hasEmail && !hasPhone) {
+                newErrors.contact = 'At least one contact method (email or phone) is required'
             }
-            
-            if (complainant_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(complainant_email.trim())) {
+
+            if (hasEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(complainant_email.trim())) {
                 newErrors.complainant_email = 'Invalid email format'
+            }
+
+            if (hasPhone && !/^\d{7}$/.test(complainant_phone_number.trim())) {
+                newErrors.complainant_phone = 'Phone number must be exactly 7 digits'
             }
         }
         

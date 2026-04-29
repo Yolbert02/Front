@@ -107,12 +107,18 @@ const OfficerForm = ({ visible, onClose, onSave, initial = null }) => {
         }
         
         if (currentStep === 2) {
-            if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+            const hasEmail = email && email.trim()
+            const hasPhone = phoneNumber && phoneNumber.trim()
+
+            if (!hasEmail && !hasPhone) {
+                newErrors.contact = 'At least one contact method (email or phone) is required'
+            }
+
+            if (hasEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
                 newErrors.email = 'Invalid email format'
             }
-            if (!phoneNumber.trim()) {
-                newErrors.phone = 'Phone number is required'
-            } else if (!/^\d{7}$/.test(phoneNumber.trim())) {
+
+            if (hasPhone && !/^\d{7}$/.test(phoneNumber.trim())) {
                 newErrors.phone = 'Phone number must be exactly 7 digits'
             }
         }

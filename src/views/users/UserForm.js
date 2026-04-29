@@ -120,12 +120,18 @@ const UserForm = ({ visible, onClose, onSave, initial = null }) => {
         }
 
         if (currentStep === 2) {
-            if (!email.trim()) newErrors.email = 'Email is required';
-            if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) newErrors.email = 'Invalid email format';
-            
-            if (!phoneNumber.trim()) {
-                newErrors.phone = 'Phone number is required';
-            } else if (!/^\d{7}$/.test(phoneNumber.trim())) {
+            const hasEmail = email && email.trim();
+            const hasPhone = phoneNumber && phoneNumber.trim();
+
+            if (!hasEmail && !hasPhone) {
+                newErrors.contact = 'At least one contact method (email or phone) is required';
+            }
+
+            if (hasEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+                newErrors.email = 'Invalid email format';
+            }
+
+            if (hasPhone && !/^\d{7}$/.test(phoneNumber.trim())) {
                 newErrors.phone = 'Phone number must be exactly 7 digits';
             }
         }
