@@ -55,6 +55,8 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
     const [step, setStep] = useState(1)
     const [users, setUsers] = useState([])
     const [selectedUserId, setSelectedUserId] = useState('')
+    const [suggestions, setSuggestions] = useState([])
+    const [showSuggestions, setShowSuggestions] = useState(false)
 
     const userStr = sessionStorage.getItem('user')
     const currentUserSession = userStr ? JSON.parse(userStr) : null
@@ -245,25 +247,44 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
     }
 
     const handleUserSelect = (userId) => {
-        setSelectedUserId(userId)
-        if (userId) {
-            const user = users.find(u => String(u.id) === String(userId))
-            if (user) {
-                setComplainantName(`${user.first_name || ''} ${user.last_name || ''}`.trim())
-                setComplainantEmail(user.email || '')
-                
-                // Parse phone
-                const phone = (user.phone || '').replace(/\D/g, '')
-                const prefixMatch = phone.match(/^(0414|0424|0412|0416|0426)/)
-                if (prefixMatch) {
-                    setComplainantPhonePrefix(prefixMatch[0])
-                    setComplainantPhoneNumber(phone.substring(prefixMatch[0].length).substring(0, 7))
-                } else {
-                    setComplainantPhonePrefix('0414')
-                    setComplainantPhoneNumber(phone.substring(0, 7))
-                }
+        const user = users.find(u => String(u.id) === String(userId))
+        if (user) {
+            setComplainantName(`${user.first_name || ''} ${user.last_name || ''}`.trim())
+            setComplainantEmail(user.email || '')
+            setSelectedUserId(userId)
+            
+            // Parse phone
+            const phone = (user.phone || '').replace(/\D/g, '')
+            const prefixMatch = phone.match(/^(0414|0424|0412|0416|0426)/)
+            if (prefixMatch) {
+                setComplainantPhonePrefix(prefixMatch[0])
+                setComplainantPhoneNumber(phone.substring(prefixMatch[0].length).substring(0, 7))
+            } else {
+                setComplainantPhonePrefix('0414')
+                setComplainantPhoneNumber(phone.substring(0, 7))
             }
         }
+        setShowSuggestions(false)
+    }
+
+    const handleNameChange = (value) => {
+        const cleanValue = value.replace(/[0-9]/g, '')
+        setComplainantName(cleanValue)
+        
+        if (isAdminOrOfficer && cleanValue.length > 1) {
+            const filtered = users.filter(u => 
+                `${u.first_name} ${u.last_name}`.toLowerCase().includes(cleanValue.toLowerCase()) ||
+                (u.email && u.email.toLowerCase().includes(cleanValue.toLowerCase()))
+            )
+            setSuggestions(filtered)
+            setShowSuggestions(true)
+        } else {
+            setSuggestions([])
+            setShowSuggestions(false)
+        }
+        
+        // Clear selected user if they manually type something else
+        setSelectedUserId('')
     }
 
     const simulateUpload = (fileId) => {
@@ -490,38 +511,49 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
                         <>
                             <h6 className="mb-3 mt-4 text-primary">Complainant Information</h6>
                             
-                            {isAdminOrOfficer && (
-                                <div className="mb-4 p-3 rounded border bg-light">
-                                    <CFormSelect
-                                        label="Select Complainant from System (Optional)"
-                                        value={selectedUserId}
-                                        onChange={(e) => handleUserSelect(e.target.value)}
-                                    >
-                                        <option value="">-- Custom Complainant --</option>
-                                        {users.map(u => (
-                                            <option key={u.id} value={u.id}>
-                                                {u.first_name} {u.last_name} ({u.email || 'No email'})
-                                            </option>
-                                        ))}
-                                    </CFormSelect>
-                                    <small className="text-muted mt-1 d-block">
-                                        Select a user to auto-fill their contact details.
-                                    </small>
-                                </div>
-                            )}
+
 
                             <CRow className="g-3">
-                                <CCol md={6}>
+                                <CCol md={6} style={{ position: 'relative' }}>
                                     <CFormInput
                                         label="Complainant Name *"
                                         placeholder="Full name"
                                         value={complainant_name}
-                                        onChange={(e) => setComplainantName(e.target.value.replace(/[0-9]/g, ''))}
+                                        onChange={(e) => handleNameChange(e.target.value)}
+                                        onFocus={() => {
+                                            if (isAdminOrOfficer && complainant_name.length > 1) setShowSuggestions(true)
+                                        }}
                                         invalid={!!errors.complainant_name}
                                         feedback={errors.complainant_name}
                                         required
                                         readOnly={!isAdminOrOfficer}
                                     />
+                                    {showSuggestions && suggestions.length > 0 && (
+                                        <div 
+                                            className="position-absolute w-100 shadow-sm border rounded bg-white" 
+                                            style={{ 
+                                                zIndex: 1000, 
+                                                top: '100%', 
+                                                left: 0, 
+                                                maxHeight: '200px', 
+                                                overflowY: 'auto' 
+                                            }}
+                                        >
+                                            {suggestions.map(u => (
+                                                <div 
+                                                    key={u.id}
+                                                    className="p-2 border-bottom hover-bg-light cursor-pointer"
+                                                    style={{ cursor: 'pointer' }}
+                                                    onClick={() => handleUserSelect(u.id)}
+                                                    onMouseOver={(e) => e.target.style.backgroundColor = '#f8f9fa'}
+                                                    onMouseOut={(e) => e.target.style.backgroundColor = '#fff'}
+                                                >
+                                                    <div className="fw-bold">{u.first_name} {u.last_name}</div>
+                                                    <small className="text-muted">{u.email}</small>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </CCol>
                                 <CCol md={6}>
                                     <div className="mb-3">
