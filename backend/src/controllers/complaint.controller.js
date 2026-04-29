@@ -123,7 +123,8 @@ const createComplaint = async (req, res) => {
             title, description, Id_zone, latitude, longitude, address_detail, incident_date,
             complainant_phone, complainant_email, complainant_name, evidence
         } = req.body;
-        const { id: userId } = req.user;
+        const { id: userId, role } = req.user;
+        const isAdminOrOfficer = ['administrator', 'oficial'].includes(role?.toLowerCase());
 
         if (!Id_zone) {
             return res.status(400).json({ success: false, message: 'Zone ID is required' });
@@ -133,7 +134,7 @@ const createComplaint = async (req, res) => {
             title,
             description,
             Id_zone: Number(Id_zone),
-            Id_user: userId,
+            Id_user: (isAdminOrOfficer && req.body.Id_user) ? Number(req.body.Id_user) : userId,
             latitude: latitude ? Number(latitude) : null,
             longitude: longitude ? Number(longitude) : null,
             address_detail,

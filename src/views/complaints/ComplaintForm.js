@@ -402,6 +402,7 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
                 status: status.toLowerCase(),
                 priority: priority.toLowerCase(),
                 incidentDate,
+                Id_user: isAdminOrOfficer && selectedUserId ? parseInt(selectedUserId) : null,
                 latitude,
                 longitude,
                 evidence: evidence.filter(item => item.status === 'completed')
