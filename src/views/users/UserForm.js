@@ -143,8 +143,6 @@ const UserForm = ({ visible, onClose, onSave, initial = null }) => {
         if (e) e.preventDefault();
         if (validateStep(step)) {
             setStep(step + 1);
-        } else {
-            setErrors({ ...errors });
         }
     };
 
@@ -219,7 +217,7 @@ const UserForm = ({ visible, onClose, onSave, initial = null }) => {
                                         label="First Name *"
                                         placeholder="John"
                                         value={first_name}
-                                        onChange={(e) => setFirstName(e.target.value)}
+                                        onChange={(e) => setFirstName(e.target.value.replace(/[0-9]/g, ''))}
                                         invalid={!!errors.first_name}
                                         feedback={errors.first_name}
                                         required
@@ -230,7 +228,7 @@ const UserForm = ({ visible, onClose, onSave, initial = null }) => {
                                         label="Last Name *"
                                         placeholder="Doe"
                                         value={last_name}
-                                        onChange={(e) => setLastName(e.target.value)}
+                                        onChange={(e) => setLastName(e.target.value.replace(/[0-9]/g, ''))}
                                         invalid={!!errors.last_name}
                                         feedback={errors.last_name}
                                         required
