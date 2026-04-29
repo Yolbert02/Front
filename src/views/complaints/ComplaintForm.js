@@ -544,6 +544,46 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
                     {step === 2 && (
                         <>
                             <h6 className="mb-3 mt-4 text-primary">Complainant Information</h6>
+
+                            {isAdminOrOfficer && (
+                                <div className="mb-4 border rounded p-3 bg-light shadow-sm">
+                                    <h6 className="small fw-bold mb-2 text-dark">Select from System Users</h6>
+                                    <div className="mb-2 text-center">
+                                        <CFormInput 
+                                            size="sm"
+                                            placeholder="Type name to filter users..."
+                                            onChange={(e) => {
+                                                const val = e.target.value.toLowerCase();
+                                                const filtered = users.filter(u => 
+                                                    `${u.first_name} ${u.last_name}`.toLowerCase().includes(val) ||
+                                                    (u.email && u.email.toLowerCase().includes(val))
+                                                );
+                                                setSuggestions(filtered);
+                                            }}
+                                            style={{ borderRadius: '20px' }}
+                                        />
+                                    </div>
+                                    <div style={{ maxHeight: '140px', overflowY: 'auto', borderRadius: '8px' }} className="border bg-white shadow-inner">
+                                        {(suggestions.length > 0 ? suggestions : users).map(u => (
+                                            <div 
+                                                key={u.id}
+                                                className="p-2 border-bottom user-list-item"
+                                                style={{ cursor: 'pointer', transition: '0.2s' }}
+                                                onClick={() => handleUserSelect(u.id)}
+                                                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f0f4f8'}
+                                                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#fff'}
+                                            >
+                                                <div className="fw-bold text-primary small">{u.first_name} {u.last_name}</div>
+                                                <div className="text-muted" style={{ fontSize: '11px' }}>{u.email || 'No email'}</div>
+                                            </div>
+                                        ))}
+                                        {users.length === 0 && <div className="p-3 text-center text-muted small">No users found.</div>}
+                                    </div>
+                                    <small className="text-muted mt-2 d-block text-center small">
+                                        <em>Tip: Choose a user from the list to populate fields automatically.</em>
+                                    </small>
+                                </div>
+                            )}
                             
 
 
