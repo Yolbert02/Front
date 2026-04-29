@@ -19,12 +19,17 @@ const OfficerForm = ({ visible, onClose, onSave, initial = null }) => {
     const [step, setStep] = useState(1)
     const [name, setName] = useState('')
     const [lastName, setLastName] = useState('')
+    const [idPrefix, setIdPrefix] = useState('V')
+    const [idNumberOnly, setIdNumberOnly] = useState('')
     const [idNumber, setIdNumber] = useState('')
     const [unit, setUnit] = useState('')
     const [email, setEmail] = useState('')
+    const [phonePrefix, setPhonePrefix] = useState('0414')
+    const [phoneNumber, setPhoneNumber] = useState('')
     const [phone, setPhone] = useState('')
     const [rank, setRank] = useState('')
     const [status, setStatus] = useState('Active')
+    const [errors, setErrors] = useState({})
     const [saving, setSaving] = useState(false)
 
     useEffect(() => {
@@ -34,41 +39,90 @@ const OfficerForm = ({ visible, onClose, onSave, initial = null }) => {
                 console.log('Editing officer:', initial)
                 setName(initial.name || '')
                 setLastName(initial.lastName || '')
-                setIdNumber(initial.idNumber || '')
+                
+                const initialId = initial.idNumber || ''
+                const prefixMatch = initialId.match(/^([VE])-?/)
+                if (prefixMatch) {
+                    setIdPrefix(prefixMatch[1])
+                    setIdNumberOnly(initialId.substring(prefixMatch[0].length).replace(/\D/g, ''))
+                } else {
+                    setIdPrefix('V')
+                    setIdNumberOnly(initialId.replace(/\D/g, ''))
+                }
                 setUnit(initial.unit || '')
                 setEmail(initial.email || '')
                 setPhone(initial.phone || '')
                 setRank(initial.rank || '')
                 setStatus(initial.status || 'Active')
+
+                // Parse initial phone
+                const initialPhone = initial.phone || ''
+                const phoneMatch = initialPhone.match(/^(0414|0424|0412|0416|0426)/)
+                if (phoneMatch) {
+                    setPhonePrefix(phoneMatch[0])
+                    setPhoneNumber(initialPhone.substring(phoneMatch[0].length))
+                } else {
+                    setPhonePrefix('0414')
+                    setPhoneNumber(initialPhone)
+                }
             } else {
                 console.log('Creating new officer')
                 setName('')
                 setLastName('')
-                setIdNumber('')
+                setIdPrefix('V')
+                setIdNumberOnly('')
                 setUnit('')
                 setEmail('')
-                setPhone('')
+                setPhonePrefix('0414')
+                setPhoneNumber('')
                 setRank('')
                 setStatus('Active')
             }
+            setErrors({})
         }
     }, [visible, initial])
 
     const validateStep = (currentStep) => {
+        const newErrors = {}
+        const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
+
         if (currentStep === 1) {
-            if (!name.trim() || !lastName.trim()) {
-                return false
+            if (!name.trim()) {
+                newErrors.name = 'Name is required'
+            } else if (!nameRegex.test(name.trim())) {
+                newErrors.name = 'Name cannot contain numbers'
             }
-            return true
+
+            if (!lastName.trim()) {
+                newErrors.lastName = 'Last name is required'
+            } else if (!nameRegex.test(lastName.trim())) {
+                newErrors.lastName = 'Last name cannot contain numbers'
+            }
+
+            if (!idNumberOnly.trim()) {
+                newErrors.idNumber = 'ID is required'
+            } else if (idNumberOnly.length < 7 || idNumberOnly.length > 8) {
+                newErrors.idNumber = 'ID must be between 7 and 8 digits'
+            }
         }
+        
         if (currentStep === 2) {
-            return true
+            if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+                newErrors.email = 'Invalid email format'
+            }
+            if (!phoneNumber.trim()) {
+                newErrors.phone = 'Phone number is required'
+            } else if (!/^\d{7}$/.test(phoneNumber.trim())) {
+                newErrors.phone = 'Phone number must be exactly 7 digits'
+            }
         }
+        
         if (currentStep === 3) {
-            if (!unit.trim()) return false
-            return true
+            if (!unit.trim()) newErrors.unit = 'Unit is required'
         }
-        return true
+
+        setErrors(newErrors)
+        return Object.keys(newErrors).length === 0
     }
 
     const handleNext = (e) => {
@@ -98,10 +152,10 @@ const OfficerForm = ({ visible, onClose, onSave, initial = null }) => {
             const payload = {
                 name: name.trim(),
                 lastName: lastName.trim(),
-                idNumber: idNumber.trim(),
+                idNumber: `${idPrefix}-${idNumberOnly.trim()}`,
                 unit: unit.trim(),
                 email: email.trim(),
-                phone: phone.trim(),
+                phone: `${phonePrefix}${phoneNumber.trim()}`,
                 rank: rank.trim(),
                 status
             }
@@ -144,7 +198,9 @@ const OfficerForm = ({ visible, onClose, onSave, initial = null }) => {
                                         label="Name *"
                                         placeholder="John"
                                         value={name}
-                                        onChange={(e) => setName(e.target.value)}
+                                        onChange={(e) => setName(e.target.value.replace(/[0-9]/g, ''))}
+                                        invalid={!!errors.name}
+                                        feedback={errors.name}
                                         required
                                     />
                                 </CCol>
@@ -153,17 +209,34 @@ const OfficerForm = ({ visible, onClose, onSave, initial = null }) => {
                                         label="Last Name *"
                                         placeholder="Doe"
                                         value={lastName}
-                                        onChange={(e) => setLastName(e.target.value)}
+                                        onChange={(e) => setLastName(e.target.value.replace(/[0-9]/g, ''))}
+                                        invalid={!!errors.lastName}
+                                        feedback={errors.lastName}
                                         required
                                     />
                                 </CCol>
                                 <CCol md={12}>
-                                    <CFormInput
-                                        label="ID Number"
-                                        placeholder="V-12345678"
-                                        value={idNumber}
-                                        onChange={(e) => setIdNumber(e.target.value)}
-                                    />
+                                    <div className="mb-3">
+                                        <label className="form-label">ID Number *</label>
+                                        <div className="input-group">
+                                            <CFormSelect
+                                                style={{ maxWidth: '70px' }}
+                                                value={idPrefix}
+                                                onChange={(e) => setIdPrefix(e.target.value)}
+                                            >
+                                                <option value="V">V</option>
+                                                <option value="E">E</option>
+                                            </CFormSelect>
+                                            <CFormInput
+                                                placeholder="12345678"
+                                                value={idNumberOnly}
+                                                onChange={(e) => setIdNumberOnly(e.target.value.replace(/\D/g, '').substring(0, 8))}
+                                                invalid={!!errors.idNumber}
+                                                required
+                                            />
+                                        </div>
+                                        {errors.idNumber && <div className="text-danger small mt-1">{errors.idNumber}</div>}
+                                    </div>
                                 </CCol>
                             </CRow>
                         </>
@@ -180,15 +253,35 @@ const OfficerForm = ({ visible, onClose, onSave, initial = null }) => {
                                         placeholder="john.doe@example.com"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
+                                        invalid={!!errors.email}
+                                        feedback={errors.email}
                                     />
                                 </CCol>
                                 <CCol md={6}>
-                                    <CFormInput
-                                        label="Phone"
-                                        placeholder="0414-1234567"
-                                        value={phone}
-                                        onChange={(e) => setPhone(e.target.value)}
-                                    />
+                                    <div className="mb-3">
+                                        <label className="form-label">Phone *</label>
+                                        <div className="input-group">
+                                            <CFormSelect
+                                                style={{ maxWidth: '100px' }}
+                                                value={phonePrefix}
+                                                onChange={(e) => setPhonePrefix(e.target.value)}
+                                            >
+                                                <option value="0414">0414</option>
+                                                <option value="0424">0424</option>
+                                                <option value="0412">0412</option>
+                                                <option value="0416">0416</option>
+                                                <option value="0426">0426</option>
+                                            </CFormSelect>
+                                            <CFormInput
+                                                placeholder="1234567"
+                                                value={phoneNumber}
+                                                onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, '').substring(0, 7))}
+                                                invalid={!!errors.phone}
+                                                required
+                                            />
+                                        </div>
+                                        {errors.phone && <div className="text-danger small mt-1">{errors.phone}</div>}
+                                    </div>
                                 </CCol>
                             </CRow>
                         </>
@@ -204,6 +297,8 @@ const OfficerForm = ({ visible, onClose, onSave, initial = null }) => {
                                         placeholder="CICPC - Homicides"
                                         value={unit}
                                         onChange={(e) => setUnit(e.target.value)}
+                                        invalid={!!errors.unit}
+                                        feedback={errors.unit}
                                         required
                                     />
                                 </CCol>

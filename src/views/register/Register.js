@@ -25,30 +25,49 @@ const Register = () => {
     first_name: '',
     last_name: '',
     email: '',
-    document: ''
+    documentPrefix: 'V',
+    documentNumber: '',
+    document: '',
+    phonePrefix: '0414',
+    phoneNumber: ''
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
   const navigate = useNavigate()
 
+  const validate = () => {
+    const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
+    if (!formData.first_name.trim()) return 'First name is required';
+    if (!nameRegex.test(formData.first_name)) return 'First name cannot contain numbers';
+    if (!formData.last_name.trim()) return 'Last name is required';
+    if (!nameRegex.test(formData.last_name)) return 'Last name cannot contain numbers';
+    if (!formData.email.trim()) return 'Email is required';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) return 'Invalid email format';
+    
+    if (!formData.documentNumber.trim()) return 'Document is required';
+    if (formData.documentNumber.length < 7 || formData.documentNumber.length > 8) return 'Document must be between 7 and 8 digits';
+    
+    if (!formData.phoneNumber.trim()) return 'Phone number is required';
+    if (!/^\d{7}$/.test(formData.phoneNumber)) return 'Phone number must be exactly 7 digits';
+    
+    if (!formData.password) return 'Password is required';
+    if (formData.password.length < 6) return 'Password must be at least 6 characters';
+    if (formData.password !== formData.confirmPassword) return 'Passwords do not match';
+    return null;
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+    
+    const validationError = validate();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
     setLoading(true)
-
-    if (!formData.password || !formData.confirmPassword ||
-      !formData.first_name || !formData.last_name || !formData.email || !formData.document) {
-      setError('All fields are required')
-      setLoading(false)
-      return
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match')
-      setLoading(false)
-      return
-    }
 
     try {
       setTimeout(() => {
@@ -63,9 +82,26 @@ const Register = () => {
   }
 
   const handleInputChange = (field, value) => {
+    let cleanedValue = value;
+    
+    // Auto-clean names
+    if (field === 'first_name' || field === 'last_name') {
+      cleanedValue = value.replace(/[0-9]/g, '');
+    }
+    
+    // Auto-clean document number
+    if (field === 'documentNumber') {
+      cleanedValue = value.replace(/\D/g, '').substring(0, 8);
+    }
+
+    // Auto-clean phone number
+    if (field === 'phoneNumber') {
+      cleanedValue = value.replace(/\D/g, '').substring(0, 7);
+    }
+
     setFormData(prev => ({
       ...prev,
-      [field]: value
+      [field]: cleanedValue
     }))
   }
 
@@ -138,13 +174,41 @@ const Register = () => {
                   </CInputGroup>
 
                   <CInputGroup className="mb-3">
-                    <CInputGroupText>
-                      <CIcon icon={cilUser} />
-                    </CInputGroupText>
+                    <CFormSelect
+                      style={{ maxWidth: '70px' }}
+                      value={formData.documentPrefix}
+                      onChange={(e) => handleInputChange('documentPrefix', e.target.value)}
+                      disabled={loading}
+                    >
+                      <option value="V">V</option>
+                      <option value="E">E</option>
+                    </CFormSelect>
                     <CFormInput
-                      placeholder="Document"
-                      value={formData.document}
-                      onChange={(e) => handleInputChange('document', e.target.value)}
+                      placeholder="Document (7-8 digits)"
+                      value={formData.documentNumber}
+                      onChange={(e) => handleInputChange('documentNumber', e.target.value)}
+                      disabled={loading}
+                      required
+                    />
+                  </CInputGroup>
+
+                  <CInputGroup className="mb-3">
+                    <CFormSelect
+                      style={{ maxWidth: '100px' }}
+                      value={formData.phonePrefix}
+                      onChange={(e) => handleInputChange('phonePrefix', e.target.value)}
+                      disabled={loading}
+                    >
+                      <option value="0414">0414</option>
+                      <option value="0424">0424</option>
+                      <option value="0412">0412</option>
+                      <option value="0416">0416</option>
+                      <option value="0426">0426</option>
+                    </CFormSelect>
+                    <CFormInput
+                      placeholder="Phone Number (7 digits)"
+                      value={formData.phoneNumber}
+                      onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
                       disabled={loading}
                       required
                     />

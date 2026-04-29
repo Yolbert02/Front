@@ -32,6 +32,8 @@ const Profile = () => {
         newPassword: '',
         confirmPassword: ''
     })
+    const [phonePrefix, setPhonePrefix] = useState('0414')
+    const [phoneNumber, setPhoneNumber] = useState('')
 
     useEffect(() => {
         loadProfileData()
@@ -51,6 +53,17 @@ const Profile = () => {
                 department: data.department || '',
                 location: data.location || '',
             })
+
+            // Parse initial phone
+            const initialPhone = data.number_phone || ''
+            const prefixMatch = initialPhone.match(/^(0414|0424|0412|0416|0426)/)
+            if (prefixMatch) {
+                setPhonePrefix(prefixMatch[0])
+                setPhoneNumber(initialPhone.substring(prefixMatch[0].length))
+            } else {
+                setPhonePrefix('0414')
+                setPhoneNumber(initialPhone)
+            }
         } catch (error) {
             console.error('Error loading profile:', error)
             setMessage({ type: 'danger', text: 'Error loading profile' })
@@ -93,10 +106,31 @@ const Profile = () => {
 
     const handleSaveProfile = async (e) => {
         e.preventDefault()
+        
+        const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
+        if (formData.first_name && !nameRegex.test(formData.first_name.trim())) {
+            setMessage({ type: 'danger', text: 'First name cannot contain numbers' })
+            return
+        }
+        if (formData.last_name && !nameRegex.test(formData.last_name.trim())) {
+            setMessage({ type: 'danger', text: 'Last name cannot contain numbers' })
+            return
+        }
+
+        if (phoneNumber && !/^\d{7}$/.test(phoneNumber.trim())) {
+            setMessage({ type: 'danger', text: 'Phone number must be exactly 7 digits' })
+            return
+        }
+
         setSaving(true)
+        setMessage({ type: '', text: '' })
 
         try {
-            const updatedProfile = await updateProfile(formData)
+            const dataToSave = {
+                ...formData,
+                number_phone: `${phonePrefix}${phoneNumber.trim()}`
+            }
+            const updatedProfile = await updateProfile(dataToSave)
             setProfile(updatedProfile)
             setMessage({ type: 'success', text: 'Profile updated successfully' })
         } catch (error) {
@@ -269,7 +303,7 @@ const Profile = () => {
                                             <CFormInput
                                                 label="First Name *"
                                                 value={formData.first_name || ''}
-                                                onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                                                onChange={(e) => setFormData({ ...formData, first_name: e.target.value.replace(/[0-9]/g, '') })}
                                                 required
                                             />
                                         </CCol>
@@ -277,7 +311,7 @@ const Profile = () => {
                                             <CFormInput
                                                 label="Last Name *"
                                                 value={formData.last_name || ''}
-                                                onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                                                onChange={(e) => setFormData({ ...formData, last_name: e.target.value.replace(/[0-9]/g, '') })}
                                                 required
                                             />
                                         </CCol>
@@ -293,11 +327,27 @@ const Profile = () => {
                                             />
                                         </CCol>
                                         <CCol md={6}>
-                                            <CFormInput
-                                                label="Phone Number"
-                                                value={formData.number_phone || ''}
-                                                onChange={(e) => setFormData({ ...formData, number_phone: e.target.value })}
-                                            />
+                                            <div className="mb-3">
+                                                <label className="form-label">Phone Number</label>
+                                                <div className="input-group">
+                                                    <CFormSelect
+                                                        style={{ maxWidth: '100px' }}
+                                                        value={phonePrefix}
+                                                        onChange={(e) => setPhonePrefix(e.target.value)}
+                                                    >
+                                                        <option value="0414">0414</option>
+                                                        <option value="0424">0424</option>
+                                                        <option value="0412">0412</option>
+                                                        <option value="0416">0416</option>
+                                                        <option value="0426">0426</option>
+                                                    </CFormSelect>
+                                                    <CFormInput
+                                                        placeholder="1234567"
+                                                        value={phoneNumber}
+                                                        onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, '').substring(0, 7))}
+                                                    />
+                                                </div>
+                                            </div>
                                         </CCol>
                                     </CRow>
                                     <div className="mt-3">

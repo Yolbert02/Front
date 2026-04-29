@@ -28,6 +28,8 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
     const [title, setTitle] = useState('')
     const [description, setDescription] = useState('')
     const [complainant_name, setComplainantName] = useState('')
+    const [complainant_phone_prefix, setComplainantPhonePrefix] = useState('0414')
+    const [complainant_phone_number, setComplainantPhoneNumber] = useState('')
     const [complainant_phone, setComplainantPhone] = useState('')
     const [complainant_email, setComplainantEmail] = useState('')
     const [location, setLocation] = useState('')
@@ -60,11 +62,25 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
             loadOfficers()
             loadZones()
 
+            const userStr = sessionStorage.getItem('user')
+            const currentUser = userStr ? JSON.parse(userStr) : null
+
             if (initial) {
                 setTitle(initial.title || '')
                 setDescription(initial.description || '')
                 setComplainantName(initial.complainant_name || '')
-                setComplainantPhone(initial.complainant_phone || '')
+                
+                // Parse initial phone
+                const initialPhone = initial.complainant_phone || ''
+                const prefixMatch = initialPhone.match(/^(0414|0424|0412|0416|0426)/)
+                if (prefixMatch) {
+                    setComplainantPhonePrefix(prefixMatch[0])
+                    setComplainantPhoneNumber(initialPhone.substring(prefixMatch[0].length))
+                } else {
+                    setComplainantPhonePrefix('0414')
+                    setComplainantPhoneNumber(initialPhone)
+                }
+
                 setComplainantEmail(initial.complainant_email || '')
                 setLocation(initial.location || '')
                 setAssignedOfficerId(initial.assignedOfficerId || '')
@@ -83,9 +99,29 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
             } else {
                 setTitle('')
                 setDescription('')
-                setComplainantName('')
-                setComplainantPhone('')
-                setComplainantEmail('')
+                
+                // Si el usuario está logueado, auto-completar sus datos
+                if (currentUser) {
+                    setComplainantName(`${currentUser.first_name || ''} ${currentUser.last_name || ''}`.trim())
+                    
+                    const userPhone = currentUser.phone || ''
+                    const userPhoneMatch = userPhone.match(/^(0414|0424|0412|0416|0426)/)
+                    if (userPhoneMatch) {
+                        setComplainantPhonePrefix(userPhoneMatch[0])
+                        setComplainantPhoneNumber(userPhone.substring(userPhoneMatch[0].length))
+                    } else {
+                        setComplainantPhonePrefix('0414')
+                        setComplainantPhoneNumber(userPhone)
+                    }
+                    
+                    setComplainantEmail(currentUser.email || '')
+                } else {
+                    setComplainantName('')
+                    setComplainantPhonePrefix('0414')
+                    setComplainantPhoneNumber('')
+                    setComplainantEmail('')
+                }
+                
                 setLocation('')
                 setAssignedOfficerId('')
                 setStatus('received')
@@ -102,32 +138,55 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
                 setAddress('')
             }
             setUploadProgress({})
+            setErrors({})
         }
     }, [visible, initial])
 
+    const [errors, setErrors] = useState({})
+
     const validateStep = (currentStep) => {
-        if (currentStep === 1) {
-            if (!title.trim() || !description.trim() || !incidentDate) {
-                return false
-            }
-            return true
+        const newErrors = {}
+        const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
+        
+        // Verificar si el usuario está autenticado
+        const userStr = sessionStorage.getItem('user')
+        if (!userStr) {
+            newErrors.auth = 'You must be logged in to create or edit a complaint'
+            setErrors(newErrors)
+            return false
         }
+
+        if (currentStep === 1) {
+            if (!title.trim()) newErrors.title = 'Title is required'
+            if (!description.trim()) newErrors.description = 'Description is required'
+            if (!incidentDate) newErrors.incidentDate = 'Date is required'
+        }
+        
         if (currentStep === 2) {
             if (!complainant_name.trim()) {
-                return false
+                newErrors.complainant_name = 'Complainant name is required'
+            } else if (!nameRegex.test(complainant_name.trim())) {
+                newErrors.complainant_name = 'Name cannot contain numbers'
             }
-            return true
+            
+            if (!complainant_phone_number.trim()) {
+                newErrors.complainant_phone = 'Phone number is required'
+            } else if (!/^\d{7}$/.test(complainant_phone_number.trim())) {
+                newErrors.complainant_phone = 'Phone number must be exactly 7 digits'
+            }
+            
+            if (complainant_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(complainant_email.trim())) {
+                newErrors.complainant_email = 'Invalid email format'
+            }
         }
+        
         if (currentStep === 3) {
-            if (!address.trim()) {
-                return false
-            }
-            return true
+            if (!zone) newErrors.zone = 'Zone is required'
+            if (!address.trim()) newErrors.address = 'Street address is required'
         }
-        if (currentStep === 4) {
-            return true
-        }
-        return true
+
+        setErrors(newErrors)
+        return Object.keys(newErrors).length === 0
     }
 
     const handleNext = (e) => {
@@ -283,7 +342,7 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
                 title: title.trim(),
                 description: description.trim(),
                 complainant_name: complainant_name.trim(),
-                complainant_phone: complainant_phone.trim(),
+                complainant_phone: `${complainant_phone_prefix}${complainant_phone_number.trim()}`,
                 complainant_email: complainant_email.trim(),
                 location: address.trim(), // Use ONLY the street address for address_detail
                 full_address: fullAddress, // Keep the full string for other uses if needed
@@ -324,6 +383,17 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
             </CModalHeader>
             <CForm onSubmit={handleSubmit}>
                 <CModalBody style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+                    {errors.auth && (
+                        <CAlert color="danger" className="mb-3">
+                            {errors.auth}
+                        </CAlert>
+                    )}
+                    
+                    {Object.keys(errors).length > 0 && !errors.auth && (
+                        <CAlert color="danger" className="mb-3 py-2">
+                            <small>Please fix the errors before continuing.</small>
+                        </CAlert>
+                    )}
                     {step === 1 && (
                         <>
                             <h6 className="mb-3 text-primary">Complaint Information</h6>
@@ -334,6 +404,8 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
                                         placeholder="Brief description of the incident"
                                         value={title}
                                         onChange={(e) => setTitle(e.target.value)}
+                                        invalid={!!errors.title}
+                                        feedback={errors.title}
                                         required
                                     />
                                 </CCol>
@@ -346,6 +418,8 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
                                     rows="4"
                                     value={description}
                                     onChange={(e) => setDescription(e.target.value)}
+                                    invalid={!!errors.description}
+                                    feedback={errors.description}
                                     required
                                 />
                             </div>
@@ -357,6 +431,8 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
                                         type="date"
                                         value={incidentDate}
                                         onChange={(e) => setIncidentDate(e.target.value)}
+                                        invalid={!!errors.incidentDate}
+                                        feedback={errors.incidentDate}
                                         required
                                     />
                                 </CCol>
@@ -373,17 +449,37 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
                                         label="Complainant Name *"
                                         placeholder="Full name"
                                         value={complainant_name}
-                                        onChange={(e) => setComplainantName(e.target.value)}
+                                        onChange={(e) => setComplainantName(e.target.value.replace(/[0-9]/g, ''))}
+                                        invalid={!!errors.complainant_name}
+                                        feedback={errors.complainant_name}
                                         required
                                     />
                                 </CCol>
                                 <CCol md={6}>
-                                    <CFormInput
-                                        label="Phone Number"
-                                        placeholder="Contact number"
-                                        value={complainant_phone}
-                                        onChange={(e) => setComplainantPhone(e.target.value)}
-                                    />
+                                    <div className="mb-3">
+                                        <label className="form-label">Phone Number *</label>
+                                        <div className="input-group">
+                                            <CFormSelect
+                                                style={{ maxWidth: '100px' }}
+                                                value={complainant_phone_prefix}
+                                                onChange={(e) => setComplainantPhonePrefix(e.target.value)}
+                                            >
+                                                <option value="0414">0414</option>
+                                                <option value="0424">0424</option>
+                                                <option value="0412">0412</option>
+                                                <option value="0416">0416</option>
+                                                <option value="0426">0426</option>
+                                            </CFormSelect>
+                                            <CFormInput
+                                                placeholder="1234567"
+                                                value={complainant_phone_number}
+                                                onChange={(e) => setComplainantPhoneNumber(e.target.value.replace(/\D/g, '').substring(0, 7))}
+                                                invalid={!!errors.complainant_phone}
+                                                required
+                                            />
+                                        </div>
+                                        {errors.complainant_phone && <div className="text-danger small mt-1">{errors.complainant_phone}</div>}
+                                    </div>
                                 </CCol>
                             </CRow>
 
@@ -394,6 +490,8 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
                                     placeholder="email@example.com"
                                     value={complainant_email}
                                     onChange={(e) => setComplainantEmail(e.target.value)}
+                                    invalid={!!errors.complainant_email}
+                                    feedback={errors.complainant_email}
                                 />
                             </div>
                         </>
@@ -465,6 +563,8 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
                                         label="Zone/Neighborhood *"
                                         value={zone}
                                         onChange={(e) => setZone(e.target.value)}
+                                        invalid={!!errors.zone}
+                                        feedback={errors.zone}
                                         required
                                     >
                                         <option value="">Select a zone</option>
@@ -480,6 +580,8 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
                                         placeholder="e.g., Carrera 10 #20-30, Plaza Bolívar"
                                         value={address}
                                         onChange={(e) => setAddress(e.target.value)}
+                                        invalid={!!errors.address}
+                                        feedback={errors.address}
                                         required
                                     />
                                     <small className="text-muted">Specific street address or landmark</small>

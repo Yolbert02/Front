@@ -18,11 +18,15 @@ import { colorbutton } from 'src/styles/darkModeStyles';
 
 const UserForm = ({ visible, onClose, onSave, initial = null }) => {
     const [step, setStep] = useState(1);
+    const [dniPrefix, setDniPrefix] = useState('V');
+    const [dniNumber, setDniNumber] = useState('');
     const [dni, setDni] = useState('');
     const [document_image, setDocumentImage] = useState(null);
     const [first_name, setFirstName] = useState('');
     const [last_name, setLastName] = useState('');
     const [password, setPassword] = useState('');
+    const [phonePrefix, setPhonePrefix] = useState('0414');
+    const [phoneNumber, setPhoneNumber] = useState('');
     const [phone, setPhone] = useState('');
     const [email, setEmail] = useState('');
     const [role, setRole] = useState('civil');
@@ -34,7 +38,15 @@ const UserForm = ({ visible, onClose, onSave, initial = null }) => {
         if (visible) {
             setStep(1);
             if (initial) {
-                setDni(initial.dni || '');
+                const initialDni = initial.dni || '';
+                const prefixMatch = initialDni.match(/^([VE])-?/);
+                if (prefixMatch) {
+                    setDniPrefix(prefixMatch[1]);
+                    setDniNumber(initialDni.substring(prefixMatch[0].length).replace(/\D/g, ''));
+                } else {
+                    setDniPrefix('V');
+                    setDniNumber(initialDni.replace(/\D/g, ''));
+                }
                 setDocumentImage(null);
                 setFirstName(initial.first_name || '');
                 setLastName(initial.last_name || '');
@@ -43,13 +55,29 @@ const UserForm = ({ visible, onClose, onSave, initial = null }) => {
                 setEmail(initial.email || '');
                 setRole(initial.role || 'civil');
                 setStatus(initial.status || 'active');
+                
+                // Parse initial phone
+                const initialPhone = initial.phone || '';
+                const phoneMatch = initialPhone.match(/^(0414|0424|0412|0416|0426)/);
+                if (phoneMatch) {
+                    setPhonePrefix(phoneMatch[0]);
+                    setPhoneNumber(initialPhone.substring(phoneMatch[0].length));
+                } else {
+                    setPhonePrefix('0414');
+                    setPhoneNumber(initialPhone);
+                }
+                setStatus(initial.status || 'active');
+                
+                // ... (phone logic)
             } else {
-                setDni('V-');
+                setDniPrefix('V');
+                setDniNumber('');
                 setDocumentImage(null);
                 setFirstName('');
                 setLastName('');
                 setPassword('');
-                setPhone('');
+                setPhonePrefix('0414');
+                setPhoneNumber('');
                 setEmail('');
                 setRole('civil');
                 setStatus('active');
@@ -58,21 +86,9 @@ const UserForm = ({ visible, onClose, onSave, initial = null }) => {
         }
     }, [visible, initial]);
 
-    const handleDniChange = (e) => {
-        let value = e.target.value.toUpperCase();
-
-        if (!value.startsWith('V-')) {
-            value = 'V-' + value.replace(/V-|\s/g, '');
-        }
-
-        if (value === 'V') {
-            value = 'V-';
-        }
-
-        const docValue = value.substring(2);
-        const cleanedDocValue = docValue.replace(/[^A-Z0-9]/g, '');
-
-        setDni('V-' + cleanedDocValue);
+    const handleDniNumberChange = (e) => {
+        const value = e.target.value.replace(/\D/g, '').substring(0, 8);
+        setDniNumber(value);
     };
 
     const handleDocumentImageChange = (e) => {
@@ -81,18 +97,37 @@ const UserForm = ({ visible, onClose, onSave, initial = null }) => {
 
     const validateStep = (currentStep) => {
         const newErrors = {};
+        const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
 
         if (currentStep === 1) {
-            if (!first_name.trim()) newErrors.first_name = 'First name is required';
-            if (!last_name.trim()) newErrors.last_name = 'Last name is required';
-            if (!dni.trim() || dni.trim() === 'V-') newErrors.dni = 'DNI is required';
-            // if (!initial && !document_image) newErrors.document_image = 'Document image is required';
+            if (!first_name.trim()) {
+                newErrors.first_name = 'First name is required';
+            } else if (!nameRegex.test(first_name.trim())) {
+                newErrors.first_name = 'Name cannot contain numbers or special characters';
+            }
+
+            if (!last_name.trim()) {
+                newErrors.last_name = 'Last name is required';
+            } else if (!nameRegex.test(last_name.trim())) {
+                newErrors.last_name = 'Last name cannot contain numbers or special characters';
+            }
+
+            if (!dniNumber.trim()) {
+                newErrors.dni = 'DNI is required';
+            } else if (dniNumber.length < 7 || dniNumber.length > 8) {
+                newErrors.dni = 'DNI must be between 7 and 8 digits';
+            }
         }
 
         if (currentStep === 2) {
             if (!email.trim()) newErrors.email = 'Email is required';
             if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) newErrors.email = 'Invalid email format';
-            if (!phone.trim()) newErrors.phone = 'Phone number is required';
+            
+            if (!phoneNumber.trim()) {
+                newErrors.phone = 'Phone number is required';
+            } else if (!/^\d{7}$/.test(phoneNumber.trim())) {
+                newErrors.phone = 'Phone number must be exactly 7 digits';
+            }
         }
 
         if (currentStep === 3) {
@@ -131,10 +166,10 @@ const UserForm = ({ visible, onClose, onSave, initial = null }) => {
 
         try {
             const payload = {
-                dni: dni.trim(),
+                dni: `${dniPrefix}-${dniNumber.trim()}`,
                 first_name: first_name.trim(),
                 last_name: last_name.trim(),
-                phone: phone.trim(),
+                phone: `${phonePrefix}${phoneNumber.trim()}`,
                 email: email.trim(),
                 role: role.toLowerCase(),
                 status: status.toLowerCase()
@@ -198,15 +233,27 @@ const UserForm = ({ visible, onClose, onSave, initial = null }) => {
                                     />
                                 </CCol>
                                 <CCol md={6}>
-                                    <CFormInput
-                                        label="DNI *"
-                                        placeholder="V-12345678"
-                                        value={dni}
-                                        onChange={handleDniChange}
-                                        invalid={!!errors.dni}
-                                        feedback={errors.dni}
-                                        required
-                                    />
+                                    <div className="mb-3">
+                                        <label className="form-label">DNI *</label>
+                                        <div className="input-group">
+                                            <CFormSelect
+                                                style={{ maxWidth: '70px' }}
+                                                value={dniPrefix}
+                                                onChange={(e) => setDniPrefix(e.target.value)}
+                                            >
+                                                <option value="V">V</option>
+                                                <option value="E">E</option>
+                                            </CFormSelect>
+                                            <CFormInput
+                                                placeholder="12345678"
+                                                value={dniNumber}
+                                                onChange={handleDniNumberChange}
+                                                invalid={!!errors.dni}
+                                                required
+                                            />
+                                        </div>
+                                        {errors.dni && <div className="text-danger small mt-1">{errors.dni}</div>}
+                                    </div>
                                 </CCol>
                                 <CCol md={6}>
                                     <CFormInput
@@ -240,15 +287,30 @@ const UserForm = ({ visible, onClose, onSave, initial = null }) => {
                                     />
                                 </CCol>
                                 <CCol md={6}>
-                                    <CFormInput
-                                        label="Phone Number *"
-                                        placeholder="0414-1234567"
-                                        value={phone}
-                                        onChange={(e) => setPhone(e.target.value)}
-                                        invalid={!!errors.phone}
-                                        feedback={errors.phone}
-                                        required
-                                    />
+                                    <div className="mb-3">
+                                        <label className="form-label">Phone Number *</label>
+                                        <div className="input-group">
+                                            <CFormSelect
+                                                style={{ maxWidth: '100px' }}
+                                                value={phonePrefix}
+                                                onChange={(e) => setPhonePrefix(e.target.value)}
+                                            >
+                                                <option value="0414">0414</option>
+                                                <option value="0424">0424</option>
+                                                <option value="0412">0412</option>
+                                                <option value="0416">0416</option>
+                                                <option value="0426">0426</option>
+                                            </CFormSelect>
+                                            <CFormInput
+                                                placeholder="1234567"
+                                                value={phoneNumber}
+                                                onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, '').substring(0, 7))}
+                                                invalid={!!errors.phone}
+                                                required
+                                            />
+                                        </div>
+                                        {errors.phone && <div className="text-danger small mt-1">{errors.phone}</div>}
+                                    </div>
                                 </CCol>
                             </CRow>
                         </>
