@@ -55,6 +55,7 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
 
     const [step, setStep] = useState(1)
     const [users, setUsers] = useState([])
+    const [filteredUsers, setFilteredUsers] = useState([])
     const [selectedUserId, setSelectedUserId] = useState('')
     const [suggestions, setSuggestions] = useState([])
     const [showSuggestions, setShowSuggestions] = useState(false)
@@ -64,7 +65,10 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
     const userStr = sessionStorage.getItem('user')
     const currentUserSession = userStr ? JSON.parse(userStr) : null
     const userRole = currentUserSession ? currentUserSession.role : 'civil'
-    const isAdminOrOfficer = ['administrador', 'oficial'].includes(userRole?.toLowerCase())
+    const isAdminOrOfficer = [
+        'administrador', 'oficial',
+        'administrator', 'officer'
+    ].includes(userRole?.toLowerCase())
 
     useEffect(() => {
         if (visible) {
@@ -294,9 +298,11 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
         try {
             const allUsers = await listUsers()
             setUsers(allUsers || [])
+            setFilteredUsers(allUsers || [])
         } catch (error) {
             console.error('Error loading users:', error)
             setUsers([])
+            setFilteredUsers([])
         }
     }
 
@@ -566,42 +572,94 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
                             <h6 className="mb-3 mt-4 text-primary">Complainant Information</h6>
 
                             {isAdminOrOfficer && (
-                                <div className="mb-4 border rounded p-3 bg-light shadow-sm">
-                                    <h6 className="small fw-bold mb-2 text-dark">Select from System Users</h6>
-                                    <div className="mb-2 text-center">
-                                        <CFormInput 
+                                <div className="mb-4 border rounded shadow-sm" style={{ overflow: 'hidden' }}>
+                                    <div className="bg-primary px-3 py-2">
+                                        <h6 className="mb-0 text-white small fw-bold">
+                                            👤 Seleccionar Denunciante del Sistema
+                                        </h6>
+                                    </div>
+                                    <div className="p-3 bg-light">
+                                        <CFormInput
                                             size="sm"
-                                            placeholder="Type name to filter users..."
+                                            placeholder="Buscar por nombre o correo..."
+                                            className="mb-2"
                                             onChange={(e) => {
-                                                const val = e.target.value.toLowerCase();
-                                                const filtered = users.filter(u => 
-                                                    `${u.first_name} ${u.last_name}`.toLowerCase().includes(val) ||
-                                                    (u.email && u.email.toLowerCase().includes(val))
-                                                );
-                                                setSuggestions(filtered);
+                                                const val = e.target.value.toLowerCase()
+                                                setFilteredUsers(
+                                                    val.length === 0
+                                                        ? users
+                                                        : users.filter(u =>
+                                                            `${u.first_name} ${u.last_name}`.toLowerCase().includes(val) ||
+                                                            (u.email && u.email.toLowerCase().includes(val))
+                                                        )
+                                                )
                                             }}
-                                            style={{ borderRadius: '20px' }}
                                         />
-                                    </div>
-                                    <div style={{ maxHeight: '140px', overflowY: 'auto', borderRadius: '8px' }} className="border bg-white shadow-inner">
-                                        {(suggestions.length > 0 ? suggestions : users).map(u => (
-                                            <div 
-                                                key={u.id}
-                                                className="p-2 border-bottom user-list-item"
-                                                style={{ cursor: 'pointer', transition: '0.2s' }}
-                                                onClick={() => handleUserSelect(u.id)}
-                                                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f0f4f8'}
-                                                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#fff'}
-                                            >
-                                                <div className="fw-bold text-primary small">{u.first_name} {u.last_name}</div>
-                                                <div className="text-muted" style={{ fontSize: '11px' }}>{u.email || 'No email'}</div>
+                                        <div
+                                            style={{ maxHeight: '160px', overflowY: 'auto', borderRadius: '6px' }}
+                                            className="border bg-white"
+                                        >
+                                            {filteredUsers.length === 0 ? (
+                                                <div className="p-3 text-center text-muted small">
+                                                    {users.length === 0 ? 'Cargando usuarios...' : 'No se encontraron usuarios'}
+                                                </div>
+                                            ) : (
+                                                filteredUsers.map(u => (
+                                                    <div
+                                                        key={u.id}
+                                                        onClick={() => handleUserSelect(u.id)}
+                                                        className={`p-2 border-bottom small d-flex align-items-center gap-2`}
+                                                        style={{
+                                                            cursor: 'pointer',
+                                                            backgroundColor: String(selectedUserId) === String(u.id) ? '#dbeafe' : '#fff',
+                                                            borderLeft: String(selectedUserId) === String(u.id) ? '3px solid #3b82f6' : '3px solid transparent'
+                                                        }}
+                                                        onMouseOver={(e) => {
+                                                            if (String(selectedUserId) !== String(u.id))
+                                                                e.currentTarget.style.backgroundColor = '#f0f4f8'
+                                                        }}
+                                                        onMouseOut={(e) => {
+                                                            if (String(selectedUserId) !== String(u.id))
+                                                                e.currentTarget.style.backgroundColor = '#fff'
+                                                        }}
+                                                    >
+                                                        <div
+                                                            className="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center flex-shrink-0"
+                                                            style={{ width: '30px', height: '30px', fontSize: '12px', fontWeight: 'bold' }}
+                                                        >
+                                                            {(u.first_name?.[0] || '?').toUpperCase()}
+                                                        </div>
+                                                        <div className="flex-grow-1 overflow-hidden">
+                                                            <div className="fw-bold text-dark" style={{ fontSize: '13px' }}>
+                                                                {u.first_name} {u.last_name}
+                                                                {String(selectedUserId) === String(u.id) && (
+                                                                    <span className="ms-1 badge bg-primary" style={{ fontSize: '9px' }}>Seleccionado</span>
+                                                                )}
+                                                            </div>
+                                                            <div className="text-muted" style={{ fontSize: '11px' }}>{u.email || 'Sin correo'}</div>
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                        {selectedUserId && (
+                                            <div className="mt-2 d-flex justify-content-end">
+                                                <small
+                                                    className="text-danger"
+                                                    style={{ cursor: 'pointer', fontSize: '11px' }}
+                                                    onClick={() => {
+                                                        setSelectedUserId('')
+                                                        setComplainantName('')
+                                                        setComplainantEmail('')
+                                                        setComplainantPhoneNumber('')
+                                                        setComplainantPhonePrefix('0414')
+                                                    }}
+                                                >
+                                                    ✕ Limpiar selección
+                                                </small>
                                             </div>
-                                        ))}
-                                        {users.length === 0 && <div className="p-3 text-center text-muted small">No users found.</div>}
+                                        )}
                                     </div>
-                                    <small className="text-muted mt-2 d-block text-center small">
-                                        <em>Tip: Choose a user from the list to populate fields automatically.</em>
-                                    </small>
                                 </div>
                             )}
                             
