@@ -71,14 +71,14 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
                 setComplainantName(initial.complainant_name || '')
                 
                 // Parse initial phone
-                const initialPhone = initial.complainant_phone || ''
+                const initialPhone = (initial.complainant_phone || '').replace(/\D/g, '')
                 const prefixMatch = initialPhone.match(/^(0414|0424|0412|0416|0426)/)
                 if (prefixMatch) {
                     setComplainantPhonePrefix(prefixMatch[0])
-                    setComplainantPhoneNumber(initialPhone.substring(prefixMatch[0].length))
+                    setComplainantPhoneNumber(initialPhone.substring(prefixMatch[0].length).substring(0, 7))
                 } else {
                     setComplainantPhonePrefix('0414')
-                    setComplainantPhoneNumber(initialPhone)
+                    setComplainantPhoneNumber(initialPhone.substring(0, 7))
                 }
 
                 setComplainantEmail(initial.complainant_email || '')
@@ -104,14 +104,14 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
                 if (currentUser) {
                     setComplainantName(`${currentUser.first_name || ''} ${currentUser.last_name || ''}`.trim())
                     
-                    const userPhone = currentUser.phone || ''
+                    const userPhone = (currentUser.phone || '').replace(/\D/g, '')
                     const userPhoneMatch = userPhone.match(/^(0414|0424|0412|0416|0426)/)
                     if (userPhoneMatch) {
                         setComplainantPhonePrefix(userPhoneMatch[0])
-                        setComplainantPhoneNumber(userPhone.substring(userPhoneMatch[0].length))
+                        setComplainantPhoneNumber(userPhone.substring(userPhoneMatch[0].length).substring(0, 7))
                     } else {
                         setComplainantPhonePrefix('0414')
-                        setComplainantPhoneNumber(userPhone)
+                        setComplainantPhoneNumber(userPhone.substring(0, 7))
                     }
                     
                     setComplainantEmail(currentUser.email || '')
@@ -163,13 +163,11 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
         }
         
         if (currentStep === 2) {
-            if (!complainant_name.trim()) {
+            if (!complainant_name || !complainant_name.trim()) {
                 newErrors.complainant_name = 'Complainant name is required'
-            } else if (!nameRegex.test(complainant_name.trim())) {
-                newErrors.complainant_name = 'Name cannot contain numbers'
             }
             
-            if (!complainant_phone_number.trim()) {
+            if (!complainant_phone_number || !complainant_phone_number.trim()) {
                 newErrors.complainant_phone = 'Phone number is required'
             } else if (!/^\d{7}$/.test(complainant_phone_number.trim())) {
                 newErrors.complainant_phone = 'Phone number must be exactly 7 digits'
