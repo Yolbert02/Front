@@ -37,7 +37,7 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
     const [assignedOfficerId, setAssignedOfficerId] = useState('')
     const [status, setStatus] = useState('received')
     const [priority, setPriority] = useState('medium')
-    const [incidentDate, setIncidentDate] = useState('')
+    const [incidentDate, setIncidentDate] = useState(new Date().toISOString().split('T')[0])
     const [evidence, setEvidence] = useState([])
     const [officers, setOfficers] = useState([])
     const [zones, setZones] = useState([])
@@ -94,7 +94,7 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
                 setAssignedOfficerId(initial.assignedOfficerId || '')
                 setStatus(initial.status || 'received')
                 setPriority(initial.priority || 'medium')
-                setIncidentDate(initial.incidentDate ? new Date(initial.incidentDate).toISOString().split('T')[0] : '')
+                setIncidentDate(initial.incidentDate ? new Date(initial.incidentDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0])
                 setEvidence(initial.evidence || [])
 
                 setCountry(initial.country || 'Venezuela')
@@ -477,9 +477,7 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
                                         label="Incident Date *"
                                         type="date"
                                         value={incidentDate}
-                                        onChange={(e) => setIncidentDate(e.target.value)}
-                                        invalid={!!errors.incidentDate}
-                                        feedback={errors.incidentDate}
+                                        readOnly
                                         required
                                     />
                                 </CCol>
