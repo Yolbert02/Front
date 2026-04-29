@@ -189,6 +189,15 @@ const OfficerForm = ({ visible, onClose, onSave, initial = null }) => {
             </CModalHeader>
             <CForm onSubmit={handleSubmit}>
                 <CModalBody>
+                    {Object.keys(errors).length > 0 && (
+                        <CAlert color="danger" className="mb-3">
+                            <ul className="mb-0">
+                                {Object.values(errors).map((err, index) => (
+                                    <li key={index}>{err}</li>
+                                ))}
+                            </ul>
+                        </CAlert>
+                    )}
                     {step === 1 && (
                         <>
                             <h5 className="mb-3 text-primary">Personal Information</h5>

@@ -202,7 +202,11 @@ const UserForm = ({ visible, onClose, onSave, initial = null }) => {
                 <CModalBody>
                     {hasErrors && (
                         <CAlert color="danger" className="mb-3">
-                            Please fix the errors below before proceeding.
+                            <ul className="mb-0">
+                                {Object.values(errors).map((err, index) => (
+                                    <li key={index}>{err}</li>
+                                ))}
+                            </ul>
                         </CAlert>
                     )}
 

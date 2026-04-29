@@ -391,7 +391,11 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
                     
                     {Object.keys(errors).length > 0 && !errors.auth && (
                         <CAlert color="danger" className="mb-3 py-2">
-                            <small>Please fix the errors before continuing.</small>
+                            <ul className="mb-0 small">
+                                {Object.values(errors).map((err, index) => (
+                                    <li key={index}>{err}</li>
+                                ))}
+                            </ul>
                         </CAlert>
                     )}
                     {step === 1 && (

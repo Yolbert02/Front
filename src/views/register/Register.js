@@ -31,39 +31,44 @@ const Register = () => {
     phonePrefix: '0414',
     phoneNumber: ''
   })
-  const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [errors, setErrors] = useState([])
+  const [loading, setLoading] = useState(false)
 
   const navigate = useNavigate()
 
   const validate = () => {
+    const newErrors = [];
     const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
-    if (!formData.first_name.trim()) return 'First name is required';
-    if (!nameRegex.test(formData.first_name)) return 'First name cannot contain numbers';
-    if (!formData.last_name.trim()) return 'Last name is required';
-    if (!nameRegex.test(formData.last_name)) return 'Last name cannot contain numbers';
-    if (!formData.email.trim()) return 'Email is required';
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) return 'Invalid email format';
+    if (!formData.first_name.trim()) newErrors.push('First name is required');
+    else if (!nameRegex.test(formData.first_name)) newErrors.push('First name cannot contain numbers');
     
-    if (!formData.documentNumber.trim()) return 'Document is required';
-    if (formData.documentNumber.length < 7 || formData.documentNumber.length > 8) return 'Document must be between 7 and 8 digits';
+    if (!formData.last_name.trim()) newErrors.push('Last name is required');
+    else if (!nameRegex.test(formData.last_name)) newErrors.push('Last name cannot contain numbers');
     
-    if (!formData.phoneNumber.trim()) return 'Phone number is required';
-    if (!/^\d{7}$/.test(formData.phoneNumber)) return 'Phone number must be exactly 7 digits';
+    if (!formData.email.trim()) newErrors.push('Email is required');
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) newErrors.push('Invalid email format');
     
-    if (!formData.password) return 'Password is required';
-    if (formData.password.length < 6) return 'Password must be at least 6 characters';
-    if (formData.password !== formData.confirmPassword) return 'Passwords do not match';
-    return null;
+    if (!formData.documentNumber.trim()) newErrors.push('Document is required');
+    else if (formData.documentNumber.length < 7 || formData.documentNumber.length > 8) newErrors.push('Document must be between 7 and 8 digits');
+    
+    if (!formData.phoneNumber.trim()) newErrors.push('Phone number is required');
+    else if (!/^\d{7}$/.test(formData.phoneNumber)) newErrors.push('Phone number must be exactly 7 digits');
+    
+    if (!formData.password) newErrors.push('Password is required');
+    else if (formData.password.length < 6) newErrors.push('Password must be at least 6 characters');
+    
+    if (formData.password !== formData.confirmPassword) newErrors.push('Passwords do not match');
+    
+    setErrors(newErrors);
+    return newErrors.length === 0;
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setError('')
+    setErrors([])
     
-    const validationError = validate();
-    if (validationError) {
-      setError(validationError);
+    if (!validate()) {
       return;
     }
 
@@ -127,9 +132,13 @@ const Register = () => {
                     <p className="text-body-secondary">User Registration</p>
                   </div>
 
-                  {error && (
-                    <CAlert color="danger" className="py-2">
-                      <small>{error}</small>
+                  {errors.length > 0 && (
+                    <CAlert color="danger" className="py-2 mb-4">
+                      <ul className="mb-0 small">
+                        {errors.map((err, index) => (
+                          <li key={index}>{err}</li>
+                        ))}
+                      </ul>
                     </CAlert>
                   )}
 
