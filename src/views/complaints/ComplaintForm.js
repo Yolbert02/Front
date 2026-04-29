@@ -22,6 +22,7 @@ import CIcon from '@coreui/icons-react'
 import { cilPaperclip, cilImage, cilFile, cilVideo, cilTrash, cilLocationPin } from '@coreui/icons'
 import { listOfficers } from 'src/services/officers'
 import { listZones } from 'src/services/zones'
+import { listUsers } from 'src/services/users'
 import { containerStyles, textStyles, colorbutton, upgradebutton } from 'src/styles/darkModeStyles'
 
 const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
@@ -52,15 +53,22 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
     const [address, setAddress] = useState('')
 
     const [step, setStep] = useState(1)
+    const [users, setUsers] = useState([])
+    const [selectedUserId, setSelectedUserId] = useState('')
 
     const userStr = sessionStorage.getItem('user')
-    const userRole = userStr ? JSON.parse(userStr).role : 'civil'
+    const currentUserSession = userStr ? JSON.parse(userStr) : null
+    const userRole = currentUserSession ? currentUserSession.role : 'civil'
+    const isAdminOrOfficer = ['administrador', 'oficial'].includes(userRole?.toLowerCase())
 
     useEffect(() => {
         if (visible) {
             setStep(1)
             loadOfficers()
             loadZones()
+            if (isAdminOrOfficer) {
+                loadUsers()
+            }
 
             const userStr = sessionStorage.getItem('user')
             const currentUser = userStr ? JSON.parse(userStr) : null
@@ -223,6 +231,38 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
         } catch (error) {
             console.error('Error loading zones:', error)
             setZones([])
+        }
+    }
+
+    const loadUsers = async () => {
+        try {
+            const allUsers = await listUsers()
+            setUsers(allUsers || [])
+        } catch (error) {
+            console.error('Error loading users:', error)
+            setUsers([])
+        }
+    }
+
+    const handleUserSelect = (userId) => {
+        setSelectedUserId(userId)
+        if (userId) {
+            const user = users.find(u => String(u.id) === String(userId))
+            if (user) {
+                setComplainantName(`${user.first_name || ''} ${user.last_name || ''}`.trim())
+                setComplainantEmail(user.email || '')
+                
+                // Parse phone
+                const phone = (user.phone || '').replace(/\D/g, '')
+                const prefixMatch = phone.match(/^(0414|0424|0412|0416|0426)/)
+                if (prefixMatch) {
+                    setComplainantPhonePrefix(prefixMatch[0])
+                    setComplainantPhoneNumber(phone.substring(prefixMatch[0].length).substring(0, 7))
+                } else {
+                    setComplainantPhonePrefix('0414')
+                    setComplainantPhoneNumber(phone.substring(0, 7))
+                }
+            }
         }
     }
 
@@ -450,6 +490,27 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
                     {step === 2 && (
                         <>
                             <h6 className="mb-3 mt-4 text-primary">Complainant Information</h6>
+                            
+                            {isAdminOrOfficer && (
+                                <div className="mb-4 p-3 rounded border bg-light">
+                                    <CFormSelect
+                                        label="Select Complainant from System (Optional)"
+                                        value={selectedUserId}
+                                        onChange={(e) => handleUserSelect(e.target.value)}
+                                    >
+                                        <option value="">-- Custom Complainant --</option>
+                                        {users.map(u => (
+                                            <option key={u.id} value={u.id}>
+                                                {u.first_name} {u.last_name} ({u.email || 'No email'})
+                                            </option>
+                                        ))}
+                                    </CFormSelect>
+                                    <small className="text-muted mt-1 d-block">
+                                        Select a user to auto-fill their contact details.
+                                    </small>
+                                </div>
+                            )}
+
                             <CRow className="g-3">
                                 <CCol md={6}>
                                     <CFormInput
@@ -460,6 +521,7 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
                                         invalid={!!errors.complainant_name}
                                         feedback={errors.complainant_name}
                                         required
+                                        readOnly={!isAdminOrOfficer}
                                     />
                                 </CCol>
                                 <CCol md={6}>
@@ -470,6 +532,7 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
                                                 style={{ maxWidth: '100px' }}
                                                 value={complainant_phone_prefix}
                                                 onChange={(e) => setComplainantPhonePrefix(e.target.value)}
+                                                disabled={!isAdminOrOfficer}
                                             >
                                                 <option value="0414">0414</option>
                                                 <option value="0424">0424</option>
@@ -483,6 +546,7 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
                                                 onChange={(e) => setComplainantPhoneNumber(e.target.value.replace(/\D/g, '').substring(0, 7))}
                                                 invalid={!!errors.complainant_phone}
                                                 required
+                                                readOnly={!isAdminOrOfficer}
                                             />
                                         </div>
                                         {errors.complainant_phone && <div className="text-danger small mt-1">{errors.complainant_phone}</div>}
@@ -499,6 +563,7 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
                                     onChange={(e) => setComplainantEmail(e.target.value)}
                                     invalid={!!errors.complainant_email}
                                     feedback={errors.complainant_email}
+                                    readOnly={!isAdminOrOfficer}
                                 />
                             </div>
                         </>
