@@ -9,6 +9,7 @@ const { createUserSchema } = require('../validators/userSchema');
 
 // Public/Registration
 router.post('/', validate(createUserSchema), userController.createUser);
+router.get('/check-dni/:dni', userController.checkDni);
 
 // Protected routes
 router.get('/', verifyToken, authorize('administrator'), userController.getAllUsers);

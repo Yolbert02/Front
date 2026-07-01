@@ -1,5 +1,5 @@
 import React from 'react'
-import { AppContent, AppSidebar, AppFooter, AppHeader, AppAlert } from '../components/index'
+import { AppContent, AppSidebar, AppFooter, AppHeader, AppAlert, UserTour } from '../components/index'
 
 const DefaultLayout = () => {
   return (
@@ -13,8 +13,10 @@ const DefaultLayout = () => {
         </div>
         <AppFooter />
       </div>
+      <UserTour />
     </div>
   )
 }
+
 
 export default DefaultLayout

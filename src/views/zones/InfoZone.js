@@ -59,18 +59,18 @@ const InfoZone = ({ visible, onClose, zone, complaints = [] }) => {
     }
 
     const statusLabels = {
-        'received': 'Received',
-        'under_investigation': 'Under Investigation',
-        'resolved': 'Resolved',
-        'dismissed': 'Dismissed',
-        'rejected': 'Rejected'
+        'received': 'Recibida',
+        'under_investigation': 'En Investigación',
+        'resolved': 'Resuelta',
+        'dismissed': 'Desestimada',
+        'rejected': 'Rechazada'
     }
 
     const priorityLabels = {
-        'low': 'Low',
-        'medium': 'Medium',
-        'high': 'High',
-        'critical': 'Critical'
+        'low': 'Baja',
+        'medium': 'Media',
+        'high': 'Alta',
+        'critical': 'Crítica'
     }
 
     zoneComplaints.forEach(complaint => {
@@ -128,7 +128,7 @@ const InfoZone = ({ visible, onClose, zone, complaints = [] }) => {
                 appAlert: {
                     visible: true,
                     color: 'success',
-                    message: 'Your XLS downloaded successfully',
+                    message: 'Su XLS se descargó correctamente',
                 },
             })
         } catch (error) {
@@ -138,7 +138,7 @@ const InfoZone = ({ visible, onClose, zone, complaints = [] }) => {
                 appAlert: {
                     visible: true,
                     color: 'danger',
-                    message: 'Error downloading Excel report',
+                    message: 'Error al descargar el informe Excel',
                 },
             })
         }
@@ -150,23 +150,23 @@ const InfoZone = ({ visible, onClose, zone, complaints = [] }) => {
                 <CModalHeader style={modalStyles.header}>
                     <CModalTitle>
                         <CIcon icon={cilLocationPin} className="me-2" />
-                        Zone: {zone.name} - Step {step} of 3
+                        Zona: {zone.name} - Paso {step} de 3
                     </CModalTitle>
                 </CModalHeader>
                 <CModalBody style={{ maxHeight: '70vh', overflowY: 'auto' }}>
                     {step === 1 && (
                         <>
-                            <CCard className="mb-4 border-0 shadow-sm" style={cardStyles.card}>
+                            <CCard className="tour-zone-info-status mb-4 border-0 shadow-sm" style={cardStyles.card}>
                                 <CCardHeader className="border-0" style={cardStyles.header}>
-                                    <h6 className="mb-0">Statistics by Status</h6>
+                                    <h6 className="mb-0">Estadísticas por Estado</h6>
                                 </CCardHeader>
                                 <CCardBody style={cardStyles.body}>
                                     <div className="text-center mb-3">
                                         <h3 className="text-primary">{totalComplaints}</h3>
-                                        <p className="text-muted mb-0">Total Complaints</p>
+                                        <p className="text-muted mb-0">Total de Denuncias</p>
                                     </div>
 
-                                    <h6 className="mb-3">Distribution by Status:</h6>
+                                    <h6 className="mb-3">Distribución por Estado:</h6>
                                     <CRow className="g-3">
                                         {Object.entries(statusStats).map(([status, count]) => (
                                             <CCol xs={12} sm={6} key={status}>
@@ -181,7 +181,7 @@ const InfoZone = ({ visible, onClose, zone, complaints = [] }) => {
                                                         size="sm"
                                                     />
                                                     <small className="text-muted mt-1 d-block">
-                                                        {totalComplaints > 0 ? Math.round((count / totalComplaints * 100)) : 0}% of total
+                                                        {totalComplaints > 0 ? Math.round((count / totalComplaints * 100)) : 0}% del total
                                                     </small>
                                                 </div>
                                             </CCol>
@@ -194,17 +194,17 @@ const InfoZone = ({ visible, onClose, zone, complaints = [] }) => {
 
                     {step === 2 && (
                         <>
-                            <CCard className="mb-4 border-0 shadow-sm" style={cardStyles.card}>
+                            <CCard className="tour-zone-info-priority mb-4 border-0 shadow-sm" style={cardStyles.card}>
                                 <CCardHeader className="border-0" style={cardStyles.header}>
-                                    <h6 className="mb-0">Statistics by Priority</h6>
+                                    <h6 className="mb-0">Estadísticas por Prioridad</h6>
                                 </CCardHeader>
                                 <CCardBody style={cardStyles.body}>
                                     <div className="text-center mb-3">
                                         <h3 className="text-primary">{totalComplaints}</h3>
-                                        <p className="text-muted mb-0">Total Complaints</p>
+                                        <p className="text-muted mb-0">Total de Denuncias</p>
                                     </div>
 
-                                    <h6 className="mb-3">Distribution by Priority:</h6>
+                                    <h6 className="mb-3">Distribución por Prioridad:</h6>
                                     <CRow className="g-3">
                                         {Object.entries(priorityStats).map(([priority, count]) => (
                                             <CCol xs={12} sm={6} key={priority}>
@@ -219,7 +219,7 @@ const InfoZone = ({ visible, onClose, zone, complaints = [] }) => {
                                                         size="sm"
                                                     />
                                                     <small className="text-muted mt-1 d-block">
-                                                        {totalComplaints > 0 ? Math.round((count / totalComplaints * 100)) : 0}% of total
+                                                        {totalComplaints > 0 ? Math.round((count / totalComplaints * 100)) : 0}% del total
                                                     </small>
                                                 </div>
                                             </CCol>
@@ -232,9 +232,9 @@ const InfoZone = ({ visible, onClose, zone, complaints = [] }) => {
 
                     {step === 3 && (
                         <>
-                            <CCard className="mb-4 border-0 shadow-sm" style={cardStyles.card}>
+                            <CCard className="tour-zone-info-list mb-4 border-0 shadow-sm" style={cardStyles.card}>
                                 <CCardHeader className="border-0" style={cardStyles.header}>
-                                    <h6 className="mb-0">Complaints List ({totalComplaints})</h6>
+                                    <h6 className="mb-0">Lista de Denuncias ({totalComplaints})</h6>
                                 </CCardHeader>
                                 <CCardBody style={cardStyles.body}>
                                     {zoneComplaints.length > 0 ? (
@@ -273,7 +273,7 @@ const InfoZone = ({ visible, onClose, zone, complaints = [] }) => {
                                     ) : (
                                         <div className="text-center text-muted py-4">
                                             <CIcon icon={cilWarning} size="xl" className="mb-2 opacity-25" />
-                                            <div>No complaints found for this zone.</div>
+                                            <div>No se encontraron denuncias para esta zona.</div>
                                         </div>
                                     )}
                                 </CCardBody>
@@ -284,12 +284,12 @@ const InfoZone = ({ visible, onClose, zone, complaints = [] }) => {
                 <CModalFooter>
                     {step > 1 && (
                         <CButton type="button" color="secondary" onClick={handleBack}>
-                            Back
+                            Atrás
                         </CButton>
                     )}
                     {step < 3 ? (
                         <CButton type="button" color="primary" onClick={handleNext}>
-                            Next
+                            Siguiente
                         </CButton>
                     ) : null}
                     <div className="ms-auto d-flex align-items-center gap-2">
@@ -297,13 +297,13 @@ const InfoZone = ({ visible, onClose, zone, complaints = [] }) => {
                             type="button"
                             color="primary"
                             onClick={downloadXLS}
-                            className="d-flex align-items-center"
+                            className="tour-zone-info-xls-btn d-flex align-items-center"
                         >
                             <CIcon icon={cilCloudDownload} className="me-2" />
-                            Download XLS Report
+                            Descargar Informe XLS
                         </CButton>
                         <CButton type="button" color="secondary" onClick={onClose}>
-                            Cancel
+                            Cancelar
                         </CButton>
                     </div>
                 </CModalFooter>

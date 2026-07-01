@@ -34,9 +34,9 @@ const InfoUser = ({ visible, onClose, user }) => {
     const getRoleBadge = (role) => {
         const r = role?.toLowerCase()
         const roleConfig = {
-            'administrator': { color: 'danger', text: 'Administrator', icon: cilShieldAlt },
-            'functionary': { color: 'info', text: 'Functionary', icon: cilPeople },
-            'officer': { color: 'primary', text: 'Officer', icon: cilShieldAlt },
+            'administrator': { color: 'danger', text: 'Administrador', icon: cilShieldAlt },
+            'functionary': { color: 'info', text: 'Funcionario', icon: cilPeople },
+            'officer': { color: 'primary', text: 'Oficial', icon: cilShieldAlt },
             'civil': { color: 'success', text: 'Civil', icon: cilUser }
         }
 
@@ -52,10 +52,10 @@ const InfoUser = ({ visible, onClose, user }) => {
     const getStatusBadge = (status) => {
         const s = status?.toLowerCase()
         const statusConfig = {
-            'active': { color: 'success', text: 'Active' },
-            'suspended': { color: 'warning', text: 'Suspended' },
-            'inactive': { color: 'secondary', text: 'Inactive' },
-            'deleted': { color: 'danger', text: 'Deleted' }
+            'active': { color: 'success', text: 'Activo' },
+            'suspended': { color: 'warning', text: 'Suspendido' },
+            'inactive': { color: 'secondary', text: 'Inactivo' },
+            'deleted': { color: 'danger', text: 'Eliminado' }
         }
 
         const config = statusConfig[s] || { color: 'secondary', text: status }
@@ -63,15 +63,15 @@ const InfoUser = ({ visible, onClose, user }) => {
     }
 
     const formatDate = (dateString) => {
-        if (!dateString) return 'Not available'
+        if (!dateString) return 'No disponible'
         try {
-            return new Date(dateString).toLocaleDateString('en-US', {
+            return new Date(dateString).toLocaleDateString('es-ES', {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric'
             })
         } catch (e) {
-            return 'Invalid date'
+            return 'Fecha inválida'
         }
     }
 
@@ -80,17 +80,17 @@ const InfoUser = ({ visible, onClose, user }) => {
             <CModalHeader style={modalStyles.header}>
                 <CModalTitle>
                     <CIcon icon={cilUser} className="me-2" />
-                    User Information - {user.first_name} {user.last_name}
+                    Información del Usuario - {user.first_name} {user.second_name ? user.second_name + ' ' : ''}{user.last_name} {user.second_last_name || ''}
                 </CModalTitle>
             </CModalHeader>
             <CModalBody style={modalStyles.body}>
                 <CRow className="g-3">
                     <CCol md={12}>
-                        <CCard className="mb-4" style={cardStyles.card}>
+                        <CCard className="mb-4 tour-user-info-profile" style={cardStyles.card}>
                             <CCardHeader style={cardStyles.header}>
                                 <h6 className="mb-0">
                                     <CIcon icon={cilUser} className="me-2" />
-                                    Profile Information
+                                    Información del Perfil
                                 </h6>
                             </CCardHeader>
                             <CCardBody style={cardStyles.body}>
@@ -110,17 +110,35 @@ const InfoUser = ({ visible, onClose, user }) => {
                                     <CCol md={9}>
                                         <CRow className="g-3">
                                             <CCol md={6}>
-                                                <strong>Full Name:</strong>
+                                                <strong>Primer Nombre:</strong>
                                                 <div className="text-muted">
-                                                    {user.first_name} {user.last_name}
+                                                    {user.first_name}
                                                 </div>
                                             </CCol>
                                             <CCol md={6}>
-                                                <strong>Status:</strong>
+                                                <strong>Segundo Nombre:</strong>
+                                                <div className="text-muted">
+                                                    {user.second_name || 'No especificado'}
+                                                </div>
+                                            </CCol>
+                                            <CCol md={6}>
+                                                <strong>Primer Apellido:</strong>
+                                                <div className="text-muted">
+                                                    {user.last_name}
+                                                </div>
+                                            </CCol>
+                                            <CCol md={6}>
+                                                <strong>Segundo Apellido:</strong>
+                                                <div className="text-muted">
+                                                    {user.second_last_name || 'No especificado'}
+                                                </div>
+                                            </CCol>
+                                            <CCol md={6}>
+                                                <strong>Estado:</strong>
                                                 <div>{getStatusBadge(user.status)}</div>
                                             </CCol>
                                             <CCol md={6}>
-                                                <strong>Member Since:</strong>
+                                                <strong>Miembro desde:</strong>
                                                 <div className="text-muted">
                                                     {formatDate(user.createdAt)}
                                                 </div>
@@ -134,11 +152,11 @@ const InfoUser = ({ visible, onClose, user }) => {
 
                     {/* Contact Information */}
                     <CCol md={6}>
-                        <CCard className="h-100" style={cardStyles.card}>
+                        <CCard className="h-100 tour-user-info-contact" style={cardStyles.card}>
                             <CCardHeader style={cardStyles.header}>
                                 <h6 className="mb-0">
                                     <CIcon icon={cilAddressBook} className="me-2" />
-                                    Identification & Contact
+                                    Identificación y Contacto
                                 </h6>
                             </CCardHeader>
                             <CCardBody style={cardStyles.body}>
@@ -153,14 +171,14 @@ const InfoUser = ({ visible, onClose, user }) => {
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
                                         <span className="d-flex align-items-center">
                                             <CIcon icon={cilEnvelopeOpen} className="me-2 text-primary" />
-                                            Email:
+                                            Correo Electrónico:
                                         </span>
                                         <strong>{user.email}</strong>
                                     </CListGroupItem>
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
                                         <span className="d-flex align-items-center">
                                             <CIcon icon={cilPhone} className="me-2 text-primary" />
-                                            Phone:
+                                            Teléfono:
                                         </span>
                                         <strong>{user.phone}</strong>
                                     </CListGroupItem>
@@ -171,27 +189,27 @@ const InfoUser = ({ visible, onClose, user }) => {
 
                     {/* System Information */}
                     <CCol md={6}>
-                        <CCard className="h-100" style={cardStyles.card}>
+                        <CCard className="h-100 tour-user-info-system" style={cardStyles.card}>
                             <CCardHeader style={cardStyles.header}>
                                 <h6 className="mb-0">
                                     <CIcon icon={cilShieldAlt} className="me-2" />
-                                    System Information
+                                    Información del Sistema
                                 </h6>
                             </CCardHeader>
                             <CCardBody style={cardStyles.body}>
                                 <CListGroup flush>
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
-                                        <span>Role:</span>
+                                        <span>Rol:</span>
                                         {getRoleBadge(user.role)}
                                     </CListGroupItem>
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
-                                        <span>Status:</span>
+                                        <span>Estado:</span>
                                         {getStatusBadge(user.status)}
                                     </CListGroupItem>
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
                                         <span className="d-flex align-items-center">
                                             <CIcon icon={cilCalendar} className="me-2 text-primary" />
-                                            Created:
+                                            Creado:
                                         </span>
                                         <small className="text-muted">
                                             {formatDate(user.createdAt)}
@@ -200,7 +218,7 @@ const InfoUser = ({ visible, onClose, user }) => {
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
                                         <span className="d-flex align-items-center">
                                             <CIcon icon={cilCalendar} className="me-2 text-primary" />
-                                            Last Updated:
+                                            Última Actualización:
                                         </span>
                                         <small className="text-muted">
                                             {formatDate(user.updatedAt)}
@@ -214,19 +232,19 @@ const InfoUser = ({ visible, onClose, user }) => {
                         <CCol md={12}>
                             <CCard style={cardStyles.card}>
                                 <CCardHeader style={cardStyles.header}>
-                                    <h6 className="mb-0">Additional Information</h6>
+                                    <h6 className="mb-0">Información Adicional</h6>
                                 </CCardHeader>
                                 <CCardBody style={cardStyles.body}>
                                     <CRow className="g-3">
                                         {user.department && (
                                             <CCol md={6}>
-                                                <strong>Department:</strong>
+                                                <strong>Departamento:</strong>
                                                 <div className="text-muted">{user.department}</div>
                                             </CCol>
                                         )}
                                         {user.location && (
                                             <CCol md={6}>
-                                                <strong>Location:</strong>
+                                                <strong>Ubicación:</strong>
                                                 <div className="text-muted">{user.location}</div>
                                             </CCol>
                                         )}
@@ -247,7 +265,7 @@ const InfoUser = ({ visible, onClose, user }) => {
             </CModalBody>
             <CModalFooter style={modalStyles.footer}>
                 <CButton color="secondary" onClick={onClose}>
-                    Close
+                    Cerrar
                 </CButton>
             </CModalFooter>
         </CModal>

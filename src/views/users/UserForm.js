@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
     CModal,
     CModalHeader,
@@ -15,6 +15,7 @@ import {
     CSpinner
 } from '@coreui/react';
 import { colorbutton } from 'src/styles/darkModeStyles';
+import { checkDniExists, listUsers } from 'src/services/users';
 
 const UserForm = ({ visible, onClose, onSave, initial = null }) => {
     const [step, setStep] = useState(1);
@@ -22,17 +23,24 @@ const UserForm = ({ visible, onClose, onSave, initial = null }) => {
     const [dniNumber, setDniNumber] = useState('');
     const [dni, setDni] = useState('');
     const [document_image, setDocumentImage] = useState(null);
-    const [first_name, setFirstName] = useState('');
-    const [last_name, setLastName] = useState('');
+    const [primerNombre, setPrimerNombre] = useState('');
+    const [segundoNombre, setSegundoNombre] = useState('');
+    const [primerApellido, setPrimerApellido] = useState('');
+    const [segundoApellido, setSegundoApellido] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [phonePrefix, setPhonePrefix] = useState('0414');
     const [phoneNumber, setPhoneNumber] = useState('');
     const [phone, setPhone] = useState('');
     const [email, setEmail] = useState('');
+    const [dateBirth, setDateBirth] = useState('');
     const [role, setRole] = useState('civil');
     const [status, setStatus] = useState('active');
     const [errors, setErrors] = useState({});
     const [saving, setSaving] = useState(false);
+    const [dniStatus, setDniStatus] = useState(null); // null | 'checking' | 'exists' | 'available'
+    const [dniOwner, setDniOwner] = useState('');
+    const dniCheckTimeout = useRef(null);
 
     useEffect(() => {
         if (visible) {
@@ -48,11 +56,15 @@ const UserForm = ({ visible, onClose, onSave, initial = null }) => {
                     setDniNumber(initialDni.replace(/\D/g, ''));
                 }
                 setDocumentImage(null);
-                setFirstName(initial.first_name || '');
-                setLastName(initial.last_name || '');
+                setPrimerNombre(initial.first_name || '');
+                setSegundoNombre(initial.second_name || '');
+                setPrimerApellido(initial.last_name || '');
+                setSegundoApellido(initial.second_last_name || '');
                 setPassword('');
+                setConfirmPassword('');
                 setPhone(initial.phone || '');
                 setEmail(initial.email || '');
+                setDateBirth(initial.date_birth ? new Date(initial.date_birth).toISOString().split('T')[0] : '');
                 setRole(initial.role || 'civil');
                 setStatus(initial.status || 'active');
                 
@@ -67,28 +79,75 @@ const UserForm = ({ visible, onClose, onSave, initial = null }) => {
                     setPhoneNumber(initialPhone);
                 }
                 setStatus(initial.status || 'active');
-                
-                // ... (phone logic)
             } else {
                 setDniPrefix('V');
                 setDniNumber('');
                 setDocumentImage(null);
-                setFirstName('');
-                setLastName('');
+                setPrimerNombre('');
+                setSegundoNombre('');
+                setPrimerApellido('');
+                setSegundoApellido('');
                 setPassword('');
+                setConfirmPassword('');
                 setPhonePrefix('0414');
                 setPhoneNumber('');
                 setEmail('');
+                setDateBirth('');
                 setRole('civil');
                 setStatus('active');
             }
             setErrors({});
+            setDniStatus(null);
+            setDniOwner('');
         }
     }, [visible, initial]);
 
     const handleDniNumberChange = (e) => {
         const value = e.target.value.replace(/\D/g, '').substring(0, 8);
         setDniNumber(value);
+
+        // Clear previous timeout
+        if (dniCheckTimeout.current) clearTimeout(dniCheckTimeout.current);
+
+        // Only check if the number has valid length (7-8 digits)
+        if (value.length >= 7 && value.length <= 8 && !initial) {
+            setDniStatus('checking');
+            dniCheckTimeout.current = setTimeout(async () => {
+                const fullDni = `${dniPrefix}-${value}`;
+                const res = await checkDniExists(fullDni);
+                setDniStatus(res.exists ? 'exists' : 'available');
+                if (res.exists) {
+                    let ownerName = res.name || '';
+                    if (!ownerName) {
+                        try {
+                            const users = await listUsers();
+                            const matchingUser = users.find(u => u.dni === fullDni);
+                            if (matchingUser) {
+                                ownerName = [
+                                    matchingUser.first_name,
+                                    matchingUser.second_name,
+                                    matchingUser.last_name,
+                                    matchingUser.second_last_name
+                                ].filter(Boolean).join(' ');
+                            }
+                        } catch (err) {
+                            console.error('Error fetching users for fallback check:', err);
+                        }
+                    }
+                    setDniOwner(ownerName || 'Usuario Registrado');
+                    setErrors(prev => ({ ...prev, dni: `Esta cédula ya está registrada en el sistema a nombre de: ${ownerName || 'Usuario Registrado'}` }));
+                } else {
+                    setDniOwner('');
+                    setErrors(prev => {
+                        const { dni, ...rest } = prev;
+                        return rest;
+                    });
+                }
+            }, 500);
+        } else {
+            setDniStatus(null);
+            setDniOwner('');
+        }
     };
 
     const handleDocumentImageChange = (e) => {
@@ -100,22 +159,45 @@ const UserForm = ({ visible, onClose, onSave, initial = null }) => {
         const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
 
         if (currentStep === 1) {
-            if (!first_name.trim()) {
-                newErrors.first_name = 'First name is required';
-            } else if (!nameRegex.test(first_name.trim())) {
-                newErrors.first_name = 'Name cannot contain numbers or special characters';
+            if (!primerNombre.trim()) {
+                newErrors.primerNombre = 'El primer nombre es obligatorio';
+            } else if (!nameRegex.test(primerNombre.trim())) {
+                newErrors.primerNombre = 'El primer nombre no puede contener números ni caracteres especiales';
             }
 
-            if (!last_name.trim()) {
-                newErrors.last_name = 'Last name is required';
-            } else if (!nameRegex.test(last_name.trim())) {
-                newErrors.last_name = 'Last name cannot contain numbers or special characters';
+            if (segundoNombre.trim() && !nameRegex.test(segundoNombre.trim())) {
+                newErrors.segundoNombre = 'El segundo nombre no puede contener números ni caracteres especiales';
+            }
+
+            if (!primerApellido.trim()) {
+                newErrors.primerApellido = 'El primer apellido es obligatorio';
+            } else if (!nameRegex.test(primerApellido.trim())) {
+                newErrors.primerApellido = 'El primer apellido no puede contener números ni caracteres especiales';
+            }
+
+            if (segundoApellido.trim() && !nameRegex.test(segundoApellido.trim())) {
+                newErrors.segundoApellido = 'El segundo apellido no puede contener números ni caracteres especiales';
             }
 
             if (!dniNumber.trim()) {
-                newErrors.dni = 'DNI is required';
+                newErrors.dni = 'La cédula es obligatoria';
             } else if (dniNumber.length < 7 || dniNumber.length > 8) {
-                newErrors.dni = 'DNI must be between 7 and 8 digits';
+                newErrors.dni = 'La cédula debe tener entre 7 y 8 dígitos';
+            } else if (dniStatus === 'exists' && !initial) {
+                newErrors.dni = 'Esta cédula ya está registrada en el sistema';
+            }
+
+            if (!dateBirth) {
+                newErrors.dateBirth = 'La fecha de nacimiento es obligatoria';
+            } else {
+                const birth = new Date(dateBirth);
+                const today = new Date();
+                let age = today.getFullYear() - birth.getFullYear();
+                const m = today.getMonth() - birth.getMonth();
+                if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+                if (age < 18) {
+                    newErrors.dateBirth = 'El usuario debe ser mayor de edad (18 años)';
+                }
             }
         }
 
@@ -124,21 +206,24 @@ const UserForm = ({ visible, onClose, onSave, initial = null }) => {
             const hasPhone = phoneNumber && phoneNumber.trim();
 
             if (!hasEmail && !hasPhone) {
-                newErrors.contact = 'At least one contact method (email or phone) is required';
+                newErrors.contact = 'Se requiere al menos un método de contacto (correo o teléfono)';
             }
 
             if (hasEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-                newErrors.email = 'Invalid email format';
+                newErrors.email = 'Formato de correo electrónico no válido';
             }
 
             if (hasPhone && !/^\d{7}$/.test(phoneNumber.trim())) {
-                newErrors.phone = 'Phone number must be exactly 7 digits';
+                newErrors.phone = 'El número de teléfono debe tener exactamente 7 dígitos';
             }
         }
 
         if (currentStep === 3) {
-            if (!initial && !password.trim()) newErrors.password = 'Password is required';
-            if (password.trim() && password.length < 6) newErrors.password = 'Password must be at least 6 characters';
+            if (!initial && !password.trim()) newErrors.password = 'La contraseña es obligatoria';
+            if (password.trim() && password.length < 6) newErrors.password = 'La contraseña debe tener al menos 6 caracteres';
+            if (!initial && password !== confirmPassword) {
+                newErrors.confirmPassword = 'Las contraseñas no coinciden';
+            }
         }
 
         setErrors(newErrors);
@@ -171,10 +256,13 @@ const UserForm = ({ visible, onClose, onSave, initial = null }) => {
         try {
             const payload = {
                 dni: `${dniPrefix}-${dniNumber.trim()}`,
-                first_name: first_name.trim(),
-                last_name: last_name.trim(),
+                first_name: primerNombre.trim(),
+                second_name: segundoNombre.trim() || null,
+                last_name: primerApellido.trim(),
+                second_last_name: segundoApellido.trim() || null,
                 phone: `${phonePrefix}${phoneNumber.trim()}`,
                 email: email.trim(),
+                date_birth: dateBirth,
                 role: role.toLowerCase(),
                 status: status.toLowerCase()
             };
@@ -195,11 +283,16 @@ const UserForm = ({ visible, onClose, onSave, initial = null }) => {
 
     const hasErrors = Object.keys(errors).length > 0;
 
+    // Calculate max date for birth (must be at least 18 years ago)
+    const maxBirthDate = new Date();
+    maxBirthDate.setFullYear(maxBirthDate.getFullYear() - 18);
+    const maxBirthDateStr = maxBirthDate.toISOString().split('T')[0];
+
     return (
-        <CModal size="lg" visible={visible} onClose={onClose}>
+        <CModal size="lg" visible={visible} onClose={onClose} backdrop="static" keyboard={false}>
             <CModalHeader>
                 <CModalTitle>
-                    {initial ? 'Edit User' : 'New User'} - Step {step} of 3
+                    {initial ? 'Editar Usuario' : 'Nuevo Usuario'} - Paso {step} de 3
                 </CModalTitle>
             </CModalHeader>
             <CForm onSubmit={handleSubmit}>
@@ -216,56 +309,111 @@ const UserForm = ({ visible, onClose, onSave, initial = null }) => {
 
                     {step === 1 && (
                         <>
-                            <h5 className="mb-3 text-primary">Personal Data</h5>
+                            <h5 className="mb-3 text-primary">Datos Personales</h5>
                             <CRow className="g-3">
                                 <CCol md={6}>
                                     <CFormInput
-                                        label="First Name *"
-                                        placeholder="John"
-                                        value={first_name}
-                                        onChange={(e) => setFirstName(e.target.value.replace(/[0-9]/g, ''))}
-                                        invalid={!!errors.first_name}
-                                        feedback={errors.first_name}
+                                        className="tour-user-form-firstname"
+                                        label="Primer Nombre *"
+                                        placeholder="Juan"
+                                        value={primerNombre}
+                                        onChange={(e) => setPrimerNombre(e.target.value.replace(/[0-9]/g, ''))}
+                                        invalid={!!errors.primerNombre}
+                                        feedback={errors.primerNombre}
                                         required
                                     />
                                 </CCol>
                                 <CCol md={6}>
                                     <CFormInput
-                                        label="Last Name *"
-                                        placeholder="Doe"
-                                        value={last_name}
-                                        onChange={(e) => setLastName(e.target.value.replace(/[0-9]/g, ''))}
-                                        invalid={!!errors.last_name}
-                                        feedback={errors.last_name}
+                                        label="Segundo Nombre"
+                                        placeholder="Carlos"
+                                        value={segundoNombre}
+                                        onChange={(e) => setSegundoNombre(e.target.value.replace(/[0-9]/g, ''))}
+                                        invalid={!!errors.segundoNombre}
+                                        feedback={errors.segundoNombre}
+                                    />
+                                </CCol>
+                                <CCol md={6}>
+                                    <CFormInput
+                                        className="tour-user-form-lastname"
+                                        label="Primer Apellido *"
+                                        placeholder="Pérez"
+                                        value={primerApellido}
+                                        onChange={(e) => setPrimerApellido(e.target.value.replace(/[0-9]/g, ''))}
+                                        invalid={!!errors.primerApellido}
+                                        feedback={errors.primerApellido}
                                         required
+                                    />
+                                </CCol>
+                                <CCol md={6}>
+                                    <CFormInput
+                                        label="Segundo Apellido"
+                                        placeholder="Gómez"
+                                        value={segundoApellido}
+                                        onChange={(e) => setSegundoApellido(e.target.value.replace(/[0-9]/g, ''))}
+                                        invalid={!!errors.segundoApellido}
+                                        feedback={errors.segundoApellido}
                                     />
                                 </CCol>
                                 <CCol md={6}>
                                     <div className="mb-3">
-                                        <label className="form-label">DNI *</label>
+                                        <label className="form-label">Cédula de Identidad *</label>
                                         <div className="input-group">
                                             <CFormSelect
                                                 style={{ maxWidth: '70px' }}
                                                 value={dniPrefix}
                                                 onChange={(e) => setDniPrefix(e.target.value)}
+                                                disabled={!!initial}
                                             >
                                                 <option value="V">V</option>
                                                 <option value="E">E</option>
                                             </CFormSelect>
                                             <CFormInput
+                                                className="tour-user-form-dni"
                                                 placeholder="12345678"
                                                 value={dniNumber}
                                                 onChange={handleDniNumberChange}
                                                 invalid={!!errors.dni}
                                                 required
+                                                disabled={!!initial}
                                             />
+                                            {!initial && dniStatus === 'checking' && (
+                                                <span className="input-group-text bg-transparent border-0 px-2">
+                                                    <CSpinner size="sm" />
+                                                </span>
+                                            )}
                                         </div>
-                                        {errors.dni && <div className="text-danger small mt-1">{errors.dni}</div>}
+                                        {dniStatus === 'exists' && (
+                                            <div className="text-danger small mt-1">
+                                                ⚠️ Esta cédula ya está registrada (Pertenece a: <strong>{dniOwner || 'Desconocido'}</strong>)
+                                            </div>
+                                        )}
+                                        {dniStatus === 'available' && (
+                                            <div className="text-success small mt-1">
+                                                ✅ Cédula disponible
+                                            </div>
+                                        )}
+                                        {errors.dni && dniStatus !== 'exists' && <div className="text-danger small mt-1">{errors.dni}</div>}
                                     </div>
                                 </CCol>
                                 <CCol md={6}>
                                     <CFormInput
-                                        label={`Document Image ${initial ? '(Optional for Edit)' : '(Optional)'}`}
+                                        className="tour-user-form-birth"
+                                        label="Fecha de Nacimiento *"
+                                        type="date"
+                                        value={dateBirth}
+                                        onChange={(e) => setDateBirth(e.target.value)}
+                                        invalid={!!errors.dateBirth}
+                                        feedback={errors.dateBirth}
+                                        max={maxBirthDateStr}
+                                        required
+                                    />
+                                    {errors.dateBirth && <div className="text-danger small mt-1">{errors.dateBirth}</div>}
+                                    <small className="text-muted">Debe ser mayor de 18 años</small>
+                                </CCol>
+                                <CCol md={6}>
+                                    <CFormInput
+                                        label={`Imagen del Documento ${initial ? '(Opcional para Editar)' : '(Opcional)'}`}
                                         type="file"
                                         accept="image/*"
                                         onChange={handleDocumentImageChange}
@@ -280,11 +428,12 @@ const UserForm = ({ visible, onClose, onSave, initial = null }) => {
 
                     {step === 2 && (
                         <>
-                            <h5 className="mb-3 text-primary">Contact</h5>
+                            <h5 className="mb-3 text-primary">Contacto</h5>
                             <CRow className="g-3">
                                 <CCol md={6}>
                                     <CFormInput
-                                        label="Email *"
+                                        className="tour-user-form-email"
+                                        label="Correo Electrónico *"
                                         type="email"
                                         placeholder="user@example.com"
                                         value={email}
@@ -296,7 +445,7 @@ const UserForm = ({ visible, onClose, onSave, initial = null }) => {
                                 </CCol>
                                 <CCol md={6}>
                                     <div className="mb-3">
-                                        <label className="form-label">Phone Number *</label>
+                                        <label className="form-label">Número de Teléfono *</label>
                                         <div className="input-group">
                                             <CFormSelect
                                                 style={{ maxWidth: '100px' }}
@@ -310,6 +459,7 @@ const UserForm = ({ visible, onClose, onSave, initial = null }) => {
                                                 <option value="0426">0426</option>
                                             </CFormSelect>
                                             <CFormInput
+                                                className="tour-user-form-phone"
                                                 placeholder="1234567"
                                                 value={phoneNumber}
                                                 onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, '').substring(0, 7))}
@@ -326,56 +476,74 @@ const UserForm = ({ visible, onClose, onSave, initial = null }) => {
 
                     {step === 3 && (
                         <>
-                            <h5 className="mb-3 text-primary">System Data</h5>
+                            <h5 className="mb-3 text-primary">Datos del Sistema</h5>
                             <CRow className="g-3">
                                 <CCol md={6}>
                                     <CFormSelect
-                                        label="Role *"
+                                        className="tour-user-form-role"
+                                        label="Rol *"
                                         value={role}
                                         onChange={(e) => setRole(e.target.value)}
                                     >
                                         <option value="civil">Civil</option>
-                                        <option value="functionary">Functionary</option>
-                                        <option value="officer">Officer</option>
-                                        <option value="administrator">Administrator</option>
+                                        <option value="functionary">Funcionario</option>
+                                        <option value="officer">Oficial</option>
+                                        <option value="administrator">Administrador</option>
                                     </CFormSelect>
                                 </CCol>
                                 <CCol md={6}>
                                     <CFormSelect
-                                        label="Status *"
+                                        className="tour-user-form-status"
+                                        label="Estado *"
                                         value={status}
                                         onChange={(e) => setStatus(e.target.value)}
                                     >
-                                        <option value="active">Active</option>
-                                        <option value="suspended">Suspended</option>
-                                        <option value="inactive">Inactive</option>
+                                        <option value="active">Activo</option>
+                                        <option value="suspended">Suspendido</option>
+                                        <option value="inactive">Inactivo</option>
                                     </CFormSelect>
                                 </CCol>
-                                <CCol md={12}>
-                                    <CFormInput
-                                        label={`Password * ${initial ? '(Leave blank to keep existing)' : ''}`}
-                                        type="password"
-                                        placeholder="Minimum 6 characters"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        invalid={!!errors.password}
-                                        feedback={errors.password}
-                                        required={!initial}
-                                    />
-                                </CCol>
+                                {!initial && (
+                                    <>
+                                        <CCol md={6}>
+                                            <CFormInput
+                                                className="tour-user-form-password"
+                                                label="Contraseña *"
+                                                type="password"
+                                                placeholder="Mínimo 6 caracteres"
+                                                value={password}
+                                                onChange={(e) => setPassword(e.target.value)}
+                                                invalid={!!errors.password}
+                                                feedback={errors.password}
+                                            />
+                                        </CCol>
+                                        <CCol md={6}>
+                                            <CFormInput
+                                                className="tour-user-form-confirm-password"
+                                                label="Confirmar Contraseña *"
+                                                type="password"
+                                                placeholder="Repita la contraseña"
+                                                value={confirmPassword}
+                                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                                invalid={!!errors.confirmPassword}
+                                                feedback={errors.confirmPassword}
+                                            />
+                                        </CCol>
+                                    </>
+                                )}
                             </CRow>
                         </>
                     )}
 
                     <div className="mt-3">
-                        <small className="text-muted">* Required fields</small>
+                        <small className="text-muted">* Campos obligatorios</small>
                     </div>
                 </CModalBody>
 
                 <CModalFooter>
                     {step > 1 && (
                         <CButton type="button" color="secondary" onClick={handleBack}>
-                            Back
+                            Atrás
                         </CButton>
                     )}
 
@@ -388,23 +556,23 @@ const UserForm = ({ visible, onClose, onSave, initial = null }) => {
                             onClick={handleNext}
                             disabled={saving}
                         >
-                            Next
+                            Siguiente
                         </CButton>
                     ) : (
                         <CButton type="submit" color="success" disabled={saving}>
                             {saving ? (
                                 <>
                                     <CSpinner size="sm" className="me-2" />
-                                    Saving...
+                                    Guardando...
                                 </>
                             ) : (
-                                <>{initial ? 'Update' : 'Create'} User</>
+                                <>{initial ? 'Actualizar' : 'Crear'} Usuario</>
                             )}
                         </CButton>
                     )}
 
                     <CButton type="button" color="light" onClick={onClose} className="ms-auto">
-                        Cancel
+                        Cancelar
                     </CButton>
                 </CModalFooter>
             </CForm>

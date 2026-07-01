@@ -100,12 +100,12 @@ const Zones = () => {
           <CCardHeader className="border-bottom-0 pt-4 pb-3 px-4">
             <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
               <div>
-                <h4 className="mb-1 fw-bold" style={{ letterSpacing: '-0.5px' }}>
+                <h4 className="mb-1 fw-bold tour-zones-title" style={{ letterSpacing: '-0.5px' }}>
                   <CIcon icon={cilMap} className="me-2 text-primary" />
-                  Patrol Zones Map
+                  Mapa de Zonas de Patrullaje
                 </h4>
                 <p className="text-muted mb-0 small">
-                  Geographical distribution of jurisdiction and active reports
+                  Distribución geográfica de la jurisdicción y reportes activos
                 </p>
               </div>
             </div>
@@ -178,10 +178,10 @@ const Zones = () => {
                           </div>
                           <div className="d-flex justify-content-between align-items-center mt-2 pt-2 border-top">
                             <span className={`badge bg-${complaint.status === 'resolved' ? 'success' : 'warning'}`}>
-                              {complaint.status}
+                              {complaint.status === 'resolved' ? 'Resuelto' : 'Pendiente'}
                             </span>
                             <small className="text-secondary" style={{ fontSize: '0.7rem' }}>
-                              {new Date(complaint.createdAt).toLocaleDateString()}
+                              {new Date(complaint.createdAt).toLocaleDateString('es-ES')}
                             </small>
                           </div>
                         </div>
@@ -192,7 +192,7 @@ const Zones = () => {
               </MapContainer>
             </div>
             <div className="mt-3 small text-muted text-center">
-              Click on any zone highlighted above to view detailed statistics and active complaints in that area.
+              Haga clic en cualquier zona resaltada arriba para ver estadísticas detalladas y denuncias activas en esa área.
             </div>
           </CCardBody>
         </CCard>

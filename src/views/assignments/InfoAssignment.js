@@ -47,39 +47,39 @@ const InfoAssignment = ({ visible, onClose, assignment }) => {
     const getStatusBadge = (status) => {
         const s = status?.toLowerCase()
         const statusConfig = {
-            'scheduled': { color: 'primary' },
-            'in_progress': { color: 'warning' },
-            'completed': { color: 'success' },
-            'cancelled': { color: 'danger' },
-            'postponed': { color: 'info' }
+            'scheduled': { color: 'primary', label: 'Programada' },
+            'in_progress': { color: 'warning', label: 'En Progreso' },
+            'completed': { color: 'success', label: 'Completada' },
+            'cancelled': { color: 'danger', label: 'Cancelada' },
+            'postponed': { color: 'info', label: 'Pospuesta' }
         }
 
-        const config = statusConfig[s] || { color: 'secondary' }
-        return <CBadge color={config.color}>{formatLabel(status)}</CBadge>
+        const config = statusConfig[s] || { color: 'secondary', label: status }
+        return <CBadge color={config.color}>{config.label}</CBadge>
     }
 
     const getPriorityBadge = (priority) => {
         const p = priority?.toLowerCase()
         const priorityConfig = {
-            'high': { color: 'danger' },
-            'medium': { color: 'warning' },
-            'low': { color: 'success' }
+            'high': { color: 'danger', label: 'Alta' },
+            'medium': { color: 'warning', label: 'Media' },
+            'low': { color: 'success', label: 'Baja' }
         }
 
-        const config = priorityConfig[p] || { color: 'secondary' }
-        return <CBadge color={config.color}>{formatLabel(priority)}</CBadge>
+        const config = priorityConfig[p] || { color: 'secondary', label: priority }
+        return <CBadge color={config.color}>{config.label}</CBadge>
     }
 
     const formatDate = (dateString) => {
-        if (!dateString) return 'Not available'
+        if (!dateString) return 'No disponible'
         try {
-            return new Date(dateString).toLocaleDateString('en-US', {
+            return new Date(dateString).toLocaleDateString('es-ES', {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric'
             })
         } catch (e) {
-            return 'Invalid date'
+            return 'Fecha inválida'
         }
     }
 
@@ -104,7 +104,7 @@ const InfoAssignment = ({ visible, onClose, assignment }) => {
                 appAlert: {
                     visible: true,
                     color: 'success',
-                    message: 'Your PDF downloaded successfully',
+                    message: 'Su PDF se descargó correctamente',
                 },
             })
         } catch (error) {
@@ -114,7 +114,7 @@ const InfoAssignment = ({ visible, onClose, assignment }) => {
                 appAlert: {
                     visible: true,
                     color: 'danger',
-                    message: 'Error downloading Assignment report',
+                    message: 'Error al descargar el informe de asignación',
                 },
             })
         }
@@ -125,17 +125,17 @@ const InfoAssignment = ({ visible, onClose, assignment }) => {
             <CModalHeader style={modalStyles.header}>
                 <CModalTitle>
                     <CIcon icon={cilBalanceScale} className="me-2" />
-                    Assignment - {assignment.case_number}
+                    Asignación - {assignment.case_number}
                 </CModalTitle>
             </CModalHeader>
             <CModalBody style={modalStyles.bodyScrollable}>
                 <CRow className="g-3">
                     <CCol md={12}>
-                        <CCard className="mb-4" style={cardStyles.card}>
+                        <CCard className="tour-assignment-info-case-card mb-4" style={cardStyles.card}>
                             <CCardHeader style={cardStyles.header}>
                                 <h6 className="mb-0">
                                     <CIcon icon={cilBalanceScale} className="me-2" />
-                                    Case Information
+                                    Información del Caso
                                 </h6>
                             </CCardHeader>
                             <CCardBody style={cardStyles.body}>
@@ -147,15 +147,15 @@ const InfoAssignment = ({ visible, onClose, assignment }) => {
                                     <CCol md={4}>
                                         <div className="d-flex flex-column gap-2">
                                             <div className="d-flex justify-content-between">
-                                                <span>Status:</span>
+                                                <span>Estado:</span>
                                                 {getStatusBadge(assignment.status)}
                                             </div>
                                             <div className="d-flex justify-content-between">
-                                                <span>Priority:</span>
+                                                <span>Prioridad:</span>
                                                 {getPriorityBadge(assignment.priority)}
                                             </div>
                                             <div className="d-flex justify-content-between">
-                                                <span>Case Number:</span>
+                                                <span>Número de Caso:</span>
                                                 <strong>{assignment.case_number}</strong>
                                             </div>
                                         </div>
@@ -165,59 +165,59 @@ const InfoAssignment = ({ visible, onClose, assignment }) => {
                         </CCard>
                     </CCol>
                     <CCol md={6}>
-                        <CCard className="h-100" style={cardStyles.card}>
+                        <CCard className="tour-assignment-info-court-card h-100" style={cardStyles.card}>
                             <CCardHeader style={cardStyles.header}>
                                 <h6 className="mb-0">
                                     <CIcon icon={cilBalanceScale} className="me-2" />
-                                    Court Information
+                                    Información del Tribunal
                                 </h6>
                             </CCardHeader>
                             <CCardBody style={cardStyles.body}>
                                 <CListGroup flush>
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
-                                        <span>Court:</span>
-                                        <strong>{assignment.court || 'Not specified'}</strong>
+                                        <span>Tribunal:</span>
+                                        <strong>{assignment.court || 'No especificado'}</strong>
                                     </CListGroupItem>
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
-                                        <span>Location:</span>
-                                        <strong>{assignment.location || 'Not specified'}</strong>
+                                        <span>Ubicación:</span>
+                                        <strong>{assignment.location || 'No especificado'}</strong>
                                     </CListGroupItem>
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
-                                        <span>Judge:</span>
-                                        <strong>{assignment.judge_name || 'Not assigned'}</strong>
+                                        <span>Juez:</span>
+                                        <strong>{assignment.judge_name || 'Sin asignar'}</strong>
                                     </CListGroupItem>
                                 </CListGroup>
                             </CCardBody>
                         </CCard>
                     </CCol>
                     <CCol md={6}>
-                        <CCard className="h-100" style={cardStyles.card}>
+                        <CCard className="tour-assignment-info-participants-card h-100" style={cardStyles.card}>
                             <CCardHeader style={cardStyles.header}>
                                 <h6 className="mb-0">
                                     <CIcon icon={cilUser} className="me-2" />
-                                    Participants
+                                    Participantes
                                 </h6>
                             </CCardHeader>
                             <CCardBody style={cardStyles.body}>
                                 <CListGroup flush>
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
-                                        <span>Total Participants:</span>
+                                        <span>Total de Participantes:</span>
                                         <CBadge color="primary">{getParticipantsCount(assignment)}</CBadge>
                                     </CListGroupItem>
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
-                                        <span>Officials:</span>
+                                        <span>Oficiales:</span>
                                         <CBadge color="info">{assignment.officials?.length || 0}</CBadge>
                                     </CListGroupItem>
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
-                                        <span>Court Funcionaries:</span>
+                                        <span>Funcionarios Judiciales:</span>
                                         <CBadge color="primary">{assignment.funcionaries?.length || 0}</CBadge>
                                     </CListGroupItem>
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
-                                        <span>Witnesses:</span>
+                                        <span>Testigos:</span>
                                         <CBadge color="warning">{assignment.witnesses?.length || 0}</CBadge>
                                     </CListGroupItem>
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
-                                        <span>Jury Members:</span>
+                                        <span>Miembros del Jurado:</span>
                                         <CBadge color="success">{assignment.jury?.length || 0}</CBadge>
                                     </CListGroupItem>
                                 </CListGroup>
@@ -225,44 +225,44 @@ const InfoAssignment = ({ visible, onClose, assignment }) => {
                         </CCard>
                     </CCol>
                     <CCol md={6}>
-                        <CCard className="h-100" style={cardStyles.card}>
+                        <CCard className="tour-assignment-info-hearing-card h-100" style={cardStyles.card}>
                             <CCardHeader style={cardStyles.header}>
                                 <h6 className="mb-0">
                                     <CIcon icon={cilCalendar} className="me-2" />
-                                    Hearing Information
+                                    Información de Audiencia
                                 </h6>
                             </CCardHeader>
                             <CCardBody style={cardStyles.body}>
                                 <CListGroup flush>
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
-                                        <span>Date:</span>
+                                        <span>Fecha:</span>
                                         <strong>{formatDate(assignment.hearing_date)}</strong>
                                     </CListGroupItem>
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
-                                        <span>Time:</span>
-                                        <strong>{formatTime(assignment.hearing_time) || 'Not specified'}</strong>
+                                        <span>Hora:</span>
+                                        <strong>{formatTime(assignment.hearing_time) || 'No especificada'}</strong>
                                     </CListGroupItem>
                                 </CListGroup>
                             </CCardBody>
                         </CCard>
                     </CCol>
                     <CCol md={6}>
-                        <CCard className="h-100" style={cardStyles.card}>
+                        <CCard className="tour-assignment-info-trial-card h-100" style={cardStyles.card}>
                             <CCardHeader style={cardStyles.header}>
                                 <h6 className="mb-0">
                                     <CIcon icon={cilClock} className="me-2" />
-                                    Trial Information
+                                    Información del Juicio
                                 </h6>
                             </CCardHeader>
                             <CCardBody style={cardStyles.body}>
                                 <CListGroup flush>
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
-                                        <span>Date:</span>
+                                        <span>Fecha:</span>
                                         <strong>{formatDate(assignment.trial_date)}</strong>
                                     </CListGroupItem>
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
-                                        <span>Time:</span>
-                                        <strong>{formatTime(assignment.trial_time) || 'Not specified'}</strong>
+                                        <span>Hora:</span>
+                                        <strong>{formatTime(assignment.trial_time) || 'No especificada'}</strong>
                                     </CListGroupItem>
                                 </CListGroup>
                             </CCardBody>
@@ -272,7 +272,7 @@ const InfoAssignment = ({ visible, onClose, assignment }) => {
                         <CCol md={12}>
                             <CCard style={cardStyles.card}>
                                 <CCardHeader style={cardStyles.header}>
-                                    <h6 className="mb-0">Case Officials (Police/Investigators)</h6>
+                                    <h6 className="mb-0">Oficiales del Caso (Policía/Investigadores)</h6>
                                 </CCardHeader>
                                 <CCardBody style={cardStyles.body}>
                                     <CListGroup flush>
@@ -284,7 +284,7 @@ const InfoAssignment = ({ visible, onClose, assignment }) => {
                                                         <br />
                                                         <small className="text-muted">{official.role}</small>
                                                     </span>
-                                                    <CBadge color="info">Official</CBadge>
+                                                    <CBadge color="info">Oficial</CBadge>
                                                 </div>
                                             </CListGroupItem>
                                         ))}
@@ -297,7 +297,7 @@ const InfoAssignment = ({ visible, onClose, assignment }) => {
                         <CCol md={12}>
                             <CCard style={cardStyles.card}>
                                 <CCardHeader style={cardStyles.header}>
-                                    <h6 className="mb-0">Court Functionaries</h6>
+                                    <h6 className="mb-0">Funcionarios Judiciales</h6>
                                 </CCardHeader>
                                 <CCardBody style={cardStyles.body}>
                                     <CListGroup flush>
@@ -309,7 +309,7 @@ const InfoAssignment = ({ visible, onClose, assignment }) => {
                                                         <br />
                                                         <small className="text-muted">{f.role}</small>
                                                     </span>
-                                                    <CBadge color="primary">Court Staff</CBadge>
+                                                    <CBadge color="primary">Personal Judicial</CBadge>
                                                 </div>
                                             </CListGroupItem>
                                         ))}
@@ -322,7 +322,7 @@ const InfoAssignment = ({ visible, onClose, assignment }) => {
                         <CCol md={12}>
                             <CCard style={cardStyles.card}>
                                 <CCardHeader style={cardStyles.header}>
-                                    <h6 className="mb-0">Witnesses</h6>
+                                    <h6 className="mb-0">Testigos</h6>
                                 </CCardHeader>
                                 <CCardBody style={cardStyles.body}>
                                     <CListGroup flush>
@@ -334,7 +334,7 @@ const InfoAssignment = ({ visible, onClose, assignment }) => {
                                                         <br />
                                                         <small className="text-muted">{witness.role}</small>
                                                     </span>
-                                                    <CBadge color="warning">Witness</CBadge>
+                                                    <CBadge color="warning">Testigo</CBadge>
                                                 </div>
                                             </CListGroupItem>
                                         ))}
@@ -347,7 +347,7 @@ const InfoAssignment = ({ visible, onClose, assignment }) => {
                         <CCol md={12}>
                             <CCard style={cardStyles.card}>
                                 <CCardHeader style={cardStyles.header}>
-                                    <h6 className="mb-0">Jury Members</h6>
+                                    <h6 className="mb-0">Miembros del Jurado</h6>
                                 </CCardHeader>
                                 <CCardBody style={cardStyles.body}>
                                     <CListGroup flush>
@@ -359,7 +359,7 @@ const InfoAssignment = ({ visible, onClose, assignment }) => {
                                                         <br />
                                                         <small className="text-muted">{juryMember.role}</small>
                                                     </span>
-                                                    <CBadge color="success">Juror</CBadge>
+                                                    <CBadge color="success">Jurado</CBadge>
                                                 </div>
                                             </CListGroupItem>
                                         ))}
@@ -374,13 +374,13 @@ const InfoAssignment = ({ visible, onClose, assignment }) => {
                 <CButton
                     color="primary"
                     onClick={() => downloadPDF(assignment.id)}
-                    className="me-auto"
+                    className="tour-assignment-info-pdf-btn me-auto"
                 >
                     <CIcon icon={cilCloudDownload} className="me-2" />
-                    Download PDF Report
+                    Descargar Informe PDF
                 </CButton>
                 <CButton color="secondary" onClick={onClose}>
-                    Close
+                    Cerrar
                 </CButton>
             </CModalFooter>
         </CModal>

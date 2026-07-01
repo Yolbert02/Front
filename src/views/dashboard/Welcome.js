@@ -139,7 +139,7 @@ const Welcome = () => {
         <div className="fade-in px-2 pb-5">
             <CRow className="mb-4 pt-3">
                 <CCol xs={12}>
-                    <div style={premiumStyles.hero} className="p-5 text-white shadow-lg">
+                    <div style={premiumStyles.hero} className="p-5 text-white shadow-lg welcome-card-tour">
                         <div className="position-absolute" style={{
                             width: '400px', height: '400px', background: 'radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 70%)',
                             top: '-100px', left: '-100px', zIndex: 0
@@ -149,14 +149,14 @@ const Welcome = () => {
                             <CCol md={8}>
                                 <div className="d-flex align-items-center mb-3">
                                     <CBadge color="primary" className="p-2 px-3 rounded-pill me-2" style={{ background: 'rgba(99,102,241,0.2)', border: '1px solid rgba(99,102,241,0.5)' }}>
-                                        <CIcon icon={cilShieldAlt} className="me-1" /> System Active
+                                        <CIcon icon={cilShieldAlt} className="me-1" /> Sistema Activo
                                     </CBadge>
                                 </div>
                                 <h1 className="display-4 fw-bold mb-3" style={{ letterSpacing: '-1.5px' }}>
-                                    Judicial Command <span style={{ color: '#818cf8' }}>Intelligence</span>
+                                    Mando Judicial <span style={{ color: '#818cf8' }}>Inteligente</span>
                                 </h1>
                                 <p className="lead mb-4 fs-5" style={{ maxWidth: '600px', color: '#fff' }}>
-                                    Orchestrate public safety with real-time data integration. Monitor assignments, analyze crime patterns, and optimize response times.
+                                    Orqueste la seguridad pública con integración de datos en tiempo real. Monitoree asignaciones, analice patrones y optimice los tiempos de respuesta.
                                 </p>
                                 <div className="d-flex gap-3 mt-4">
                                     <CButton
@@ -166,7 +166,7 @@ const Welcome = () => {
                                         style={{ background: 'linear-gradient(90deg, #6366f1 0%, #4f46e5 100%)' }}
                                         onClick={() => navigate('/complaints')}
                                     >
-                                        File Report
+                                        Presentar Denuncia
                                     </CButton>
                                     <CButton
                                         variant="outline"
@@ -175,7 +175,7 @@ const Welcome = () => {
                                         className="px-4 rounded-pill border-opacity-25"
                                         onClick={() => navigate('/zones')}
                                     >
-                                        <CIcon icon={cilLocationPin} className="me-2" /> Live Map
+                                        <CIcon icon={cilLocationPin} className="me-2" /> Mapa en Vivo
                                     </CButton>
                                 </div>
                             </CCol>
@@ -190,10 +190,10 @@ const Welcome = () => {
             {/* --- QUICK STATS GRID --- */}
             <CRow className="mb-5 g-4">
                 {[
-                    { label: 'Total Cases', value: stats.total, icon: cilNotes, color: '#6366f1' },
-                    { label: 'Resolved', value: stats.resolved, icon: cilCheckCircle, color: '#10b981' },
-                    { label: 'Investigation', value: stats.investigating, icon: cilWarning, color: '#f59e0b' },
-                    { label: 'High Priority', value: stats.pending, icon: cilChartLine, color: '#ef4444' }
+                    { label: 'Casos Totales', value: stats.total, icon: cilNotes, color: '#6366f1' },
+                    { label: 'Resueltos', value: stats.resolved, icon: cilCheckCircle, color: '#10b981' },
+                    { label: 'En Investigación', value: stats.investigating, icon: cilWarning, color: '#f59e0b' },
+                    { label: 'Prioridad Alta', value: stats.pending, icon: cilChartLine, color: '#ef4444' }
                 ].map((item, idx) => {
                     const progressValue = stats.total > 0
                         ? (idx === 0 ? 100 : Math.round((item.value / stats.total) * 100))
@@ -231,10 +231,10 @@ const Welcome = () => {
                 <CCol lg={8}>
                     <div className="d-flex justify-content-between align-items-end mb-4 px-2">
                         <div>
-                            <h3 className="fw-bold mb-1">Top Performing Officers</h3>
-                            <p className="text-muted mb-0 small">Real-time meritocracy based on case resolution velocity.</p>
+                            <h3 className="fw-bold mb-1">Oficiales con Mejor Desempeño</h3>
+                            <p className="text-muted mb-0 small">Meritocracia en tiempo real basada en la velocidad de resolución.</p>
                         </div>
-                        <CButton variant="ghost" color="primary" onClick={() => navigate('/Officers')}>View All <CIcon icon={cilArrowRight} /></CButton>
+                        <CButton variant="ghost" color="primary" onClick={() => navigate('/Officers')}>Ver Todo <CIcon icon={cilArrowRight} /></CButton>
                     </div>
 
                     <div className="pe-2">
@@ -258,11 +258,11 @@ const Welcome = () => {
                                         </div>
                                         <div className="text-center px-3 border-start" style={{ borderColor: 'var(--cui-border-color-translucent)' }}>
                                             <div className="fw-bold" style={{ color: 'var(--cui-body-color)' }}>{officer.assignedCount}</div>
-                                            <small className="text-muted smaller">Cases</small>
+                                            <small className="text-muted smaller">Casos</small>
                                         </div>
                                         <div className="text-center px-3 border-start" style={{ borderColor: 'var(--cui-border-color-translucent)' }}>
                                             <div className="fw-bold text-success">{officer.resolvedCount}</div>
-                                            <small className="text-muted smaller">Solved</small>
+                                            <small className="text-muted smaller">Resueltos</small>
                                         </div>
                                         <div className="text-center px-3 border-start d-none d-sm-block" style={{ width: '100px', borderColor: 'var(--cui-border-color-translucent)' }}>
                                             <div className="fw-bold text-primary">{officer.efficiency}%</div>
@@ -286,12 +286,12 @@ const Welcome = () => {
                 <CCol lg={4}>
                     <CCard className="border-0 shadow-lg mb-4" style={{ borderRadius: '24px', background: '#0f172a' }}>
                         <CCardHeader className="bg-transparent border-0 pt-4 px-4">
-                            <h5 className="fw-bold text-white mb-0">Case Distribution</h5>
+                            <h5 className="fw-bold text-white mb-0">Distribución de Casos</h5>
                         </CCardHeader>
                         <CCardBody className="p-4 pt-2">
                             <CChartDoughnut
                                 data={{
-                                    labels: ['Received', 'Internal', 'Resolved', 'Others', 'Rejected'],
+                                    labels: ['Recibidos', 'Internos', 'Resueltos', 'Otros', 'Rechazados'],
                                     datasets: [
                                         {
                                             backgroundColor: ['#6366f1', '#f59e0b', '#10b981', '#ef4444', '#94a3b8'],
@@ -309,7 +309,7 @@ const Welcome = () => {
                                 }}
                             />
                             <div className="mt-4">
-                                {['Received', 'Internal', 'Resolved'].map((label, i) => (
+                                {['Recibidos', 'Internos', 'Resueltos'].map((label, i) => (
                                     <div key={label} className="d-flex justify-content-between align-items-center mb-2">
                                         <div className="d-flex align-items-center">
                                             <div className="rounded-circle me-2" style={{ width: '10px', height: '10px', background: ['#6366f1', '#f59e0b', '#10b981'][i] }}></div>
@@ -326,10 +326,10 @@ const Welcome = () => {
                     <div className="p-4 rounded-4" style={{ background: 'linear-gradient(135deg, #10b98115 0%, #10b98105 100%)', border: '1px dashed #10b98144' }}>
                         <div className="d-flex align-items-center mb-2 text-success">
                             <CIcon icon={cilCheckCircle} size="lg" className="me-2" />
-                            <span className="fw-bold small">Audit Log Secure</span>
+                            <span className="fw-bold small">Registro Seguro</span>
                         </div>
                         <p className="text-muted smaller mb-0">
-                            Your session is being monitored per <strong>NIST SP 800-53</strong> protocol. All judicial modifications are non-repudiable.
+                            Su sesión está siendo monitoreada según el protocolo <strong>NIST SP 800-53</strong>. Todas las modificaciones son no repudiables.
                         </p>
                     </div>
                 </CCol>

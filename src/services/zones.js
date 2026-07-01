@@ -1,9 +1,8 @@
-const KEY = 'mock_zones_v1'
+import { apiService } from './api';
 
-const initialZones = [
-    {
-        id: 1,
-        name: 'Pueblo Nuevo',
+// Polygon coordinates for each zone (local metadata, keyed by zone name)
+const ZONE_POLYGONS = {
+    'Pueblo Nuevo': {
         color: '#4caf50',
         coordinates: [
             [7.795, -72.240],
@@ -14,9 +13,7 @@ const initialZones = [
             [7.785, -72.240],
         ],
     },
-    {
-        id: 2,
-        name: 'Barrio Obrero',
+    'Barrio Obrero': {
         color: '#2196f3',
         coordinates: [
             [7.775, -72.225],
@@ -25,9 +22,7 @@ const initialZones = [
             [7.760, -72.225],
         ],
     },
-    {
-        id: 3,
-        name: 'Centro',
+    'Centro': {
         color: '#f44336',
         coordinates: [
             [7.775, -72.235],
@@ -36,9 +31,7 @@ const initialZones = [
             [7.760, -72.235],
         ],
     },
-    {
-        id: 4,
-        name: 'Santa Teresa',
+    'Santa Teresa': {
         color: '#9c27b0',
         coordinates: [
             [7.785, -72.240],
@@ -49,9 +42,7 @@ const initialZones = [
             [7.780, -72.255],
         ],
     },
-    {
-        id: 5,
-        name: 'La Concordia',
+    'La Concordia': {
         color: '#ff9800',
         coordinates: [
             [7.760, -72.235],
@@ -60,80 +51,87 @@ const initialZones = [
             [7.730, -72.250],
         ],
     },
-]
+};
 
-function load() {
-    try {
-        const raw = localStorage.getItem(KEY)
-        if (!raw) {
-            save(initialZones)
-            return initialZones
-        }
-        const parsed = JSON.parse(raw)
-        return parsed && parsed.length > 0 ? parsed : initialZones
-    } catch (e) {
-        console.error('Error loading zones:', e)
-        return initialZones
-    }
-}
-
-function save(items) {
-    try {
-        localStorage.setItem(KEY, JSON.stringify(items))
-    } catch (e) {
-        console.warn('Error saving zones:', e)
-    }
-}
-
-function nextId(items) {
-    const maxId = items.reduce((max, item) => Math.max(max, item.id || 0), 0)
-    return maxId + 1
+function mergeZoneData(backendZone) {
+    const polygonData = ZONE_POLYGONS[backendZone.name_zone] || {};
+    return {
+        id: backendZone.Id_zone,
+        name: backendZone.name_zone,
+        color: polygonData.color || '#333333',
+        coordinates: polygonData.coordinates || [],
+        latitude: backendZone.latitude ? Number(backendZone.latitude) : null,
+        longitude: backendZone.longitude ? Number(backendZone.longitude) : null,
+    };
 }
 
 export async function listZones() {
-    const data = load()
-    return Promise.resolve(data)
+    try {
+        const response = await apiService.get('/api/zones');
+        const mapped = response.map(mergeZoneData);
+        const seen = new Set();
+        const unique = [];
+        for (const zone of mapped) {
+            if (zone && zone.name) {
+                const normalized = zone.name.trim().toLowerCase();
+                if (!seen.has(normalized)) {
+                    seen.add(normalized);
+                    unique.push(zone);
+                }
+            }
+        }
+        return unique;
+    } catch (error) {
+        console.error('Error listing zones:', error);
+        return [];
+    }
 }
 
 export async function getZone(id) {
-    const items = load()
-    return Promise.resolve(items.find(z => z.id === id) || null)
+    try {
+        const response = await apiService.get(`/api/zones/${id}`);
+        return mergeZoneData(response);
+    } catch (error) {
+        console.error('Error getting zone:', error);
+        return null;
+    }
 }
 
 export async function createZone(payload) {
-    const items = load()
-    const id = nextId(items)
-
-    const zone = {
-        id,
-        name: payload.name || 'New Zone',
-        color: payload.color || '#333333',
-        coordinates: payload.coordinates || [],
-        description: payload.description || '',
-        createdAt: new Date().toISOString()
+    try {
+        const response = await apiService.post('/api/zones', {
+            name_zone: payload.name || payload.name_zone,
+            Id_city: payload.Id_city || 1,
+            latitude: payload.latitude,
+            longitude: payload.longitude,
+        });
+        return mergeZoneData(response);
+    } catch (error) {
+        console.error('Error creating zone:', error);
+        throw error;
     }
-
-    items.push(zone)
-    save(items)
-    return Promise.resolve(zone)
 }
 
 export async function updateZone(id, payload) {
-    const items = load()
-    const idx = items.findIndex(z => z.id === id)
-    if (idx === -1) return Promise.reject(new Error('Zone not found'))
-
-    items[idx] = {
-        ...items[idx],
-        ...payload
+    try {
+        const response = await apiService.put(`/api/zones/${id}`, {
+            name_zone: payload.name || payload.name_zone,
+            latitude: payload.latitude,
+            longitude: payload.longitude,
+        });
+        return mergeZoneData(response);
+    } catch (error) {
+        console.error('Error updating zone:', error);
+        throw error;
     }
-    save(items)
-    return Promise.resolve(items[idx])
 }
 
 export async function deleteZone(id) {
-    const items = load()
-    const filtered = items.filter(z => z.id !== id)
-    save(filtered)
-    return Promise.resolve({ success: true })
+    try {
+        await apiService.delete(`/api/zones/${id}`);
+        return { success: true };
+    } catch (error) {
+        console.error('Error deleting zone:', error);
+        throw error;
+    }
 }

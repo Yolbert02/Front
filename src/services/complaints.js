@@ -6,8 +6,6 @@ export async function listComplaints() {
         return response.map(c => ({
             ...c,
             id: c.Id_complaint,
-            complainant_name: c.user ? `${c.user.first_name} ${c.user.last_name}` : 'Unknown',
-            complainant_email: c.user?.email || '',
             zone: c.zone?.name_zone || 'Unknown',
             zoneId: c.Id_zone,
             location: c.address_detail || 'No address',
@@ -45,7 +43,6 @@ export async function getComplaint(id) {
         return {
             ...c,
             id: c.Id_complaint,
-            complainant_name: c.user ? `${c.user.first_name} ${c.user.last_name}` : 'Unknown',
             zone: c.zone?.name_zone || 'Unknown',
             location: c.address_detail || 'No address',
             latitude: c.latitude ? Number(c.latitude) : null,
@@ -83,7 +80,7 @@ export async function createComplaint(payload) {
             Id_zone: payload.Id_zone || payload.zone_id,
             latitude: payload.latitude,
             longitude: payload.longitude,
-            address_detail: payload.location || payload.address_detail,
+            address_detail: payload.location || payload.address_detail || payload.address,
             incident_date: payload.incidentDate,
             complainant_phone: payload.complainant_phone,
             complainant_email: payload.complainant_email,
@@ -110,12 +107,12 @@ export async function updateComplaint(id, payload) {
             Id_zone: payload.Id_zone || payload.zoneId || payload.zone_id,
             latitude: payload.latitude,
             longitude: payload.longitude,
-            address_detail: payload.location || payload.address_detail,
+            address_detail: payload.location || payload.address_detail || payload.address,
             incident_date: payload.incidentDate,
             complainant_phone: payload.complainant_phone,
             complainant_email: payload.complainant_email,
             complainant_name: payload.complainant_name,
-            assigned_officer_id: payload.assignedOfficerId || payload.assigned_officer_id
+            assigned_officer_id: payload.assignedOfficerId !== undefined ? payload.assignedOfficerId : payload.assigned_officer_id
         };
 
         // Remove undefined fields

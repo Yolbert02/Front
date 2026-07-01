@@ -4,7 +4,7 @@ const assignmentSchema = z.object({
     case_number: z.string().max(50).optional().nullable().or(z.literal('')),
     case_title: z.string().min(3, "Title must be at least 3 characters long").max(200),
     case_description: z.string().min(5, "Description must be at least 5 characters long").max(2000),
-    judge_id: z.string().uuid().nullable().optional(),
+    judge_id: z.preprocess(val => val === '' ? null : val, z.string().uuid().nullable().optional()),
     judge_name: z.string().max(150).optional().nullable().or(z.literal('')),
     court: z.string().max(150).optional().nullable().or(z.literal('')),
     hearing_date: z.preprocess((arg) => {

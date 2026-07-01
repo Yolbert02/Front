@@ -187,7 +187,18 @@ const InfoGlobalZone = ({ visible, onClose, zones = [], complaints = [] }) => {
 
     const formatLabel = (str) => {
         if (!str) return ''
-        return str.split('_')
+        const labels = {
+            'received': 'Recibida',
+            'under_investigation': 'En Investigación',
+            'resolved': 'Resuelta',
+            'dismissed': 'Desestimada',
+            'rejected': 'Rechazada',
+            'low': 'Baja',
+            'medium': 'Media',
+            'high': 'Alta',
+            'critical': 'Crítica'
+        }
+        return labels[str.toLowerCase()] || str.split('_')
             .map(word => word.charAt(0).toUpperCase() + word.slice(1))
             .join(' ')
     }
@@ -217,7 +228,7 @@ const InfoGlobalZone = ({ visible, onClose, zones = [], complaints = [] }) => {
                 appAlert: {
                     visible: true,
                     color: 'success',
-                    message: 'Your XLS downloaded successfully',
+                    message: 'Su XLS se descargó correctamente',
                 },
             })
         } catch (error) {
@@ -227,7 +238,7 @@ const InfoGlobalZone = ({ visible, onClose, zones = [], complaints = [] }) => {
                 appAlert: {
                     visible: true,
                     color: 'danger',
-                    message: 'Error downloading Excel report',
+                    message: 'Error al descargar el informe Excel',
                 },
             })
         }
@@ -238,7 +249,7 @@ const InfoGlobalZone = ({ visible, onClose, zones = [], complaints = [] }) => {
             <CModalHeader style={modalStyles.header}>
                 <CModalTitle>
                     <CIcon icon={cilGlobeAlt} className="me-2" />
-                    Global Zone Statistics - Step {step} of 3
+                    Estadísticas Globales de Zonas - Paso {step} de 3
                 </CModalTitle>
             </CModalHeader>
             <CModalBody style={modalStyles.bodyScrollable}>
@@ -249,7 +260,7 @@ const InfoGlobalZone = ({ visible, onClose, zones = [], complaints = [] }) => {
                             <CCardHeader style={cardStyles.header}>
                                 <h6 className="mb-0">
                                     <CIcon icon={cilChart} className="me-2" />
-                                    Global Overview
+                                    Resumen Global
                                 </h6>
                             </CCardHeader>
                             <CCardBody style={cardStyles.body}>
@@ -257,19 +268,19 @@ const InfoGlobalZone = ({ visible, onClose, zones = [], complaints = [] }) => {
                                     <CCol md={3} className="mb-4">
                                         <div className="p-3 border rounded" style={containerStyles.secondaryBg}>
                                             <h2 className="text-primary">{stats.totalComplaints}</h2>
-                                            <p className="text-muted mb-0">Total Complaints</p>
+                                            <p className="text-muted mb-0">Total de Denuncias</p>
                                         </div>
                                     </CCol>
                                     <CCol md={3} className="mb-4">
                                         <div className="p-3 border rounded" style={containerStyles.secondaryBg}>
                                             <h2 className="text-warning">{stats.byZone.length}</h2>
-                                            <p className="text-muted mb-0">Active Zones</p>
+                                            <p className="text-muted mb-0">Zonas Activas</p>
                                         </div>
                                     </CCol>
                                     <CCol md={3} className="mb-4">
                                         <div className="p-3 border rounded" style={containerStyles.secondaryBg}>
                                             <h2 className="text-success">{stats.averageComplaintsPerZone}</h2>
-                                            <p className="text-muted mb-0">Avg. per Zone</p>
+                                            <p className="text-muted mb-0">Promedio por Zona</p>
                                         </div>
                                     </CCol>
                                     <CCol md={3} className="mb-4">
@@ -277,7 +288,7 @@ const InfoGlobalZone = ({ visible, onClose, zones = [], complaints = [] }) => {
                                             <h2 className="text-danger">
                                                 {stats.mostProblematicZone?.total || 0}
                                             </h2>
-                                            <p className="text-muted mb-0">Highest Zone</p>
+                                            <p className="text-muted mb-0">Zona con más denuncias</p>
                                             <small className="text-muted">
                                                 {stats.mostProblematicZone?.name || 'N/A'}
                                             </small>
@@ -288,7 +299,7 @@ const InfoGlobalZone = ({ visible, onClose, zones = [], complaints = [] }) => {
                                 {/* Top 5 Zones */}
                                 <h6 className="mb-3 mt-4">
                                     <CIcon icon={cilStar} className="me-2" />
-                                    Top 5 Zones by Complaints
+                                    Top 5 Zonas con más Denuncias
                                 </h6>
                                 {stats.zonesWithMostComplaints.map((zone, index) => (
                                     <div key={zone.id} className="mb-3">
@@ -306,7 +317,7 @@ const InfoGlobalZone = ({ visible, onClose, zones = [], complaints = [] }) => {
                                                     }}
                                                 />
                                             </div>
-                                            <span className="badge bg-secondary">{zone.total} complaints</span>
+                                            <span className="badge bg-secondary">{zone.total} denuncias</span>
                                         </div>
                                         <CProgress
                                             value={(zone.total / stats.totalComplaints) * 100}
@@ -314,7 +325,7 @@ const InfoGlobalZone = ({ visible, onClose, zones = [], complaints = [] }) => {
                                             size="sm"
                                         />
                                         <small className="text-muted">
-                                            {formatPercentage(zone.total, stats.totalComplaints)} of total complaints
+                                            {formatPercentage(zone.total, stats.totalComplaints)} del total de denuncias
                                         </small>
                                     </div>
                                 ))}
@@ -330,13 +341,13 @@ const InfoGlobalZone = ({ visible, onClose, zones = [], complaints = [] }) => {
                             <CCardHeader style={cardStyles.header}>
                                 <h6 className="mb-0">
                                     <CIcon icon={cilList} className="me-2" />
-                                    Global Status Distribution
+                                    Distribución Global por Estado
                                 </h6>
                             </CCardHeader>
                             <CCardBody style={cardStyles.body}>
                                 <div className="text-center mb-4">
                                     <h4 className="text-primary">{stats.totalComplaints}</h4>
-                                    <p className="text-muted mb-0">Total Complaints Analyzed</p>
+                                    <p className="text-muted mb-0">Total de Denuncias Analizadas</p>
                                 </div>
 
                                 <CListGroup flush>
@@ -356,7 +367,7 @@ const InfoGlobalZone = ({ visible, onClose, zones = [], complaints = [] }) => {
                                                     <div>
                                                         <strong>{formatLabel(status)}</strong>
                                                         <div className="small text-muted">
-                                                            {count} complaints
+                                                            {count} denuncias
                                                         </div>
                                                     </div>
                                                 </div>
@@ -393,13 +404,13 @@ const InfoGlobalZone = ({ visible, onClose, zones = [], complaints = [] }) => {
                             <CCardHeader style={cardStyles.header}>
                                 <h6 className="mb-0">
                                     <CIcon icon={cilWarning} className="me-2" />
-                                    Global Priority Distribution
+                                    Distribución Global por Prioridad
                                 </h6>
                             </CCardHeader>
                             <CCardBody style={cardStyles.body}>
                                 <div className="text-center mb-4">
                                     <h4 className="text-primary">{stats.totalComplaints}</h4>
-                                    <p className="text-muted mb-0">Total Complaints Analyzed</p>
+                                    <p className="text-muted mb-0">Total de Denuncias Analizadas</p>
                                 </div>
 
                                 <CRow className="g-4">
@@ -419,7 +430,7 @@ const InfoGlobalZone = ({ visible, onClose, zones = [], complaints = [] }) => {
                                                     <div>
                                                         <h5 className="mb-1">{formatLabel(priority)}</h5>
                                                         <div className="small text-muted">
-                                                            Priority Level
+                                                            Nivel de Prioridad
                                                         </div>
                                                     </div>
                                                     <span className="badge bg-primary fs-6">{count}</span>
@@ -434,7 +445,7 @@ const InfoGlobalZone = ({ visible, onClose, zones = [], complaints = [] }) => {
 
                                                 <div className="d-flex justify-content-between align-items-center">
                                                     <div className="small">
-                                                        <strong>Percentage:</strong>
+                                                        <strong>Porcentaje:</strong>
                                                     </div>
                                                     <div className="fw-bold text-primary">
                                                         {formatPercentage(count, stats.totalComplaints)}
@@ -443,7 +454,7 @@ const InfoGlobalZone = ({ visible, onClose, zones = [], complaints = [] }) => {
 
                                                 <div className="mt-2 text-center">
                                                     <small className="text-muted">
-                                                        {count} out of {stats.totalComplaints} complaints
+                                                        {count} de {stats.totalComplaints} denuncias
                                                     </small>
                                                 </div>
                                             </div>
@@ -461,7 +472,7 @@ const InfoGlobalZone = ({ visible, onClose, zones = [], complaints = [] }) => {
                         {step > 1 && (
                             <CButton type="button" color="secondary" onClick={handleBack}>
                                 <CIcon icon={cilArrowLeft} className="me-2" />
-                                Back
+                                Atrás
                             </CButton>
                         )}
                     </div>
@@ -474,16 +485,16 @@ const InfoGlobalZone = ({ visible, onClose, zones = [], complaints = [] }) => {
                             className="d-flex align-items-center"
                         >
                             <CIcon icon={cilCloudDownload} className="me-2" />
-                            Download XLS Report
+                            Descargar Informe XLS
                         </CButton>
                         {step < 3 ? (
                             <CButton type="button" color="primary" onClick={handleNext}>
-                                Next
+                                Siguiente
                                 <CIcon icon={cilArrowRight} className="ms-2" />
                             </CButton>
                         ) : (
                             <CButton type="button" color="secondary" onClick={onClose}>
-                                Close
+                                Cerrar
                             </CButton>
                         )}
                     </div>

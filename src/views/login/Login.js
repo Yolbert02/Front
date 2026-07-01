@@ -21,7 +21,7 @@ import { login, checkAuth, forgotPassword } from 'src/services/auth'
 import { authStyles, containerStyles } from 'src/styles/darkModeStyles'
 
 const Login = () => {
-  const [email, setEmail] = useState('')
+  const [dni, setDni] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -40,9 +40,9 @@ const Login = () => {
     setRecoveryMessage(null)
     try {
       const result = await forgotPassword(recoveryEmail)
-      setRecoveryMessage({ type: 'success', text: 'Reset email sent successfully!' })
+      setRecoveryMessage({ type: 'success', text: '¡Correo de restablecimiento enviado con éxito!' })
     } catch (err) {
-      setRecoveryMessage({ type: 'danger', text: err.message || 'Error sending email' })
+      setRecoveryMessage({ type: 'danger', text: err.message || 'Error al enviar el correo' })
     } finally {
       setSendingEmail(false)
     }
@@ -70,20 +70,20 @@ const Login = () => {
     setError('')
     setLoading(true)
 
-    if (!email.trim() || !password.trim()) {
-      setError('Please complete all fields.')
+    if (!dni.trim() || !password.trim()) {
+      setError('Por favor complete todos los campos.')
       setLoading(false)
       return
     }
 
     try {
-      const result = await login(email, password)
+      const result = await login(dni, password)
 
       if (result.success) {
         navigate('/dashboard', { replace: true })
       }
     } catch (err) {
-      setError(err.message || 'Error logging')
+      setError(err.message || 'Error al iniciar sesión')
     } finally {
       setLoading(false)
     }
@@ -108,8 +108,8 @@ const Login = () => {
                           e.target.style.display = 'none'
                         }}
                       />
-                      <h2 className="text-primary">Welcome</h2>
-                      <p className="text-body-secondary">Login</p>
+                      <h2 className="text-primary">Bienvenido</h2>
+                      <p className="text-body-secondary">Iniciar sesión</p>
                     </div>
 
                     {error && (
@@ -120,13 +120,13 @@ const Login = () => {
 
                     <CInputGroup className="mb-3">
                       <CInputGroupText>
-                        <CIcon icon={cilEnvelopeClosed} />
+                        <CIcon icon={cilUser} />
                       </CInputGroupText>
                       <CFormInput
-                        placeholder="example@gmail.com"
-                        autoComplete="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="Cédula de Identidad o Correo"
+                        autoComplete="username"
+                        value={dni}
+                        onChange={(e) => setDni(e.target.value)}
                         disabled={loading}
                         required
                       />
@@ -138,7 +138,7 @@ const Login = () => {
                       </CInputGroupText>
                       <CFormInput
                         type="password"
-                        placeholder="Password"
+                        placeholder="Contraseña"
                         autoComplete="current-password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
@@ -158,10 +158,10 @@ const Login = () => {
                           {loading ? (
                             <>
                               <CSpinner component="span" size="sm" className="me-2" />
-                              Entering...
+                              Entrando...
                             </>
                           ) : (
-                            'Log in'
+                            'Iniciar sesión'
                           )}
                         </CButton>
                       </CCol>
@@ -172,7 +172,7 @@ const Login = () => {
                           onClick={() => setShowDemoInfo(!showDemoInfo)}
                           disabled={loading}
                         >
-                          ¿Forgot password?
+                          ¿Olvidó su contraseña?
                         </CButton>
                       </CCol>
                     </CRow>
@@ -181,11 +181,11 @@ const Login = () => {
                       <div className="mt-3 p-3 rounded" style={containerStyles.lightBg}>
                         <h6 className="mb-2">
                           <CIcon icon={cilShieldAlt} className="me-2" />
-                          Recover Password
+                          Recuperar Contraseña
                         </h6>
                         <div className="d-grid gap-2">
                           <CFormInput
-                            placeholder="Email"
+                            placeholder="Correo electrónico"
                             type="email"
                             autoComplete="email"
                             value={recoveryEmail}
@@ -197,7 +197,7 @@ const Login = () => {
                             disabled={sendingEmail || !recoveryEmail}
                             onClick={handleForgotPassword}
                           >
-                            {sendingEmail ? <CSpinner size="sm" /> : 'Send recovery code'}
+                            {sendingEmail ? <CSpinner size="sm" /> : 'Enviar código de recuperación'}
                           </CButton>
                           {recoveryMessage && (
                             <div className={`mt-2 small text-${recoveryMessage.type === 'success' ? 'success' : 'danger'}`}>

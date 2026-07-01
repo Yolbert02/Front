@@ -12,19 +12,103 @@ import {
     CRow,
     CCol,
     CFormTextarea,
-    CCard,
-    CCardBody,
     CBadge,
-    CProgress,
     CSpinner,
     CAlert
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import { cilPaperclip, cilImage, cilFile, cilVideo, cilTrash, cilLocationPin } from '@coreui/icons'
+import { cilPaperclip, cilTrash, cilLocationPin } from '@coreui/icons'
 import { listOfficers } from 'src/services/officers'
 import { listZones } from 'src/services/zones'
 import { listUsers } from 'src/services/users'
-import { containerStyles, textStyles, colorbutton, upgradebutton } from 'src/styles/darkModeStyles'
+import { colorbutton } from 'src/styles/darkModeStyles'
+import { CRIME_TYPES } from 'src/constants/crimes'
+
+// Leaflet imports
+import { MapContainer, TileLayer, Marker, useMapEvents, Polygon } from 'react-leaflet'
+import 'leaflet/dist/leaflet.css'
+import L from 'leaflet'
+
+// Fix for default marker icon in Leaflet + Webpack/Vite
+import markerIcon from 'leaflet/dist/images/marker-icon.png'
+import markerShadow from 'leaflet/dist/images/marker-shadow.png'
+
+let DefaultIcon = L.icon({
+    iconUrl: markerIcon,
+    shadowUrl: markerShadow,
+    iconSize: [25, 41],
+    iconAnchor: [12, 41]
+});
+L.Marker.prototype.options.icon = DefaultIcon;
+
+function pointInPolygon(point, vs) {
+    var x = point[0], y = point[1];
+    var inside = false;
+    for (var i = 0, j = vs.length - 1; i < vs.length; j = i++) {
+        var xi = vs[i][0], yi = vs[i][1];
+        var xj = vs[j][0], yj = vs[j][1];
+        var intersect = ((yi > y) != (yj > y))
+            && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+        if (intersect) inside = !inside;
+    }
+    return inside;
+}
+
+const LocationMarker = ({ position, setPosition, zones, setZone, setAddress }) => {
+    useMapEvents({
+        click(e) {
+            const { lat, lng } = e.latlng;
+            setPosition(e.latlng);
+            
+            // Find matching zone synchronously so UI updates instantly
+            let foundZoneName = '';
+            let foundZoneId = null;
+            for (const z of zones) {
+                if (z.coordinates && z.coordinates.length > 2) {
+                    if (pointInPolygon([lat, lng], z.coordinates)) {
+                        foundZoneId = z.id;
+                        foundZoneName = z.name || '';
+                        break;
+                    }
+                }
+            }
+            if (foundZoneId) {
+                setZone(foundZoneId.toString());
+            } else {
+                setZone('');
+            }
+
+            // Set address IMMEDIATELY with zone + coordinates (user sees it right away)
+            const quickAddress = foundZoneName 
+                ? `${foundZoneName}, San Cristóbal, Táchira (${lat.toFixed(5)}, ${lng.toFixed(5)})`
+                : `San Cristóbal, Táchira (${lat.toFixed(5)}, ${lng.toFixed(5)})`;
+            setAddress(quickAddress);
+
+            // Then try to enhance with real street name from Nominatim
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
+            
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=es`, {
+                signal: controller.signal
+            })
+            .then(res => res.json())
+            .then(data => {
+                clearTimeout(timeoutId);
+                if (data && data.display_name) {
+                    setAddress(data.display_name);
+                }
+            })
+            .catch(() => {
+                clearTimeout(timeoutId);
+                // Keep the quick address already set - no action needed
+            });
+        },
+    });
+
+    return position === null ? null : (
+        <Marker position={position}></Marker>
+    );
+};
 
 const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
     const [title, setTitle] = useState('')
@@ -32,9 +116,7 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
     const [complainant_name, setComplainantName] = useState('')
     const [complainant_phone_prefix, setComplainantPhonePrefix] = useState('0414')
     const [complainant_phone_number, setComplainantPhoneNumber] = useState('')
-    const [complainant_phone, setComplainantPhone] = useState('')
     const [complainant_email, setComplainantEmail] = useState('')
-    const [location, setLocation] = useState('')
     const [assignedOfficerId, setAssignedOfficerId] = useState('')
     const [status, setStatus] = useState('received')
     const [priority, setPriority] = useState('medium')
@@ -42,33 +124,30 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
     const [evidence, setEvidence] = useState([])
     const [officers, setOfficers] = useState([])
     const [zones, setZones] = useState([])
-    const [uploadProgress, setUploadProgress] = useState({})
     const [saving, setSaving] = useState(false)
 
+    // Location states
     const [country, setCountry] = useState('Venezuela')
     const [state, setState] = useState('Táchira')
-    const [parish, setParish] = useState('')
     const [municipality, setMunicipality] = useState('San Cristóbal')
-    const [city, setCity] = useState('')
     const [zone, setZone] = useState('')
     const [address, setAddress] = useState('')
+    const [latlng, setLatlng] = useState(null) // {lat, lng}
 
     const [step, setStep] = useState(1)
     const [users, setUsers] = useState([])
     const [filteredUsers, setFilteredUsers] = useState([])
     const [selectedUserId, setSelectedUserId] = useState('')
-    const [suggestions, setSuggestions] = useState([])
     const [showSuggestions, setShowSuggestions] = useState(false)
-    const [verifyingAddress, setVerifyingAddress] = useState(false)
-    const [abortController, setAbortController] = useState(null)
+    const [errors, setErrors] = useState({})
 
     const userStr = sessionStorage.getItem('user')
     const currentUserSession = userStr ? JSON.parse(userStr) : null
     const userRole = currentUserSession ? currentUserSession.role : 'civil'
-    const isAdminOrOfficer = [
-        'administrador', 'oficial',
-        'administrator', 'officer'
-    ].includes(userRole?.toLowerCase())
+    const isAdminOrOfficer = ['administrador', 'oficial', 'administrator', 'officer'].includes(userRole?.toLowerCase())
+
+    // Default center for San Cristóbal, Táchira
+    const defaultCenter = [7.7667, -72.2250];
 
     useEffect(() => {
         if (visible) {
@@ -79,15 +158,11 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
                 loadUsers()
             }
 
-            const userStr = sessionStorage.getItem('user')
-            const currentUser = userStr ? JSON.parse(userStr) : null
-
             if (initial) {
                 setTitle(initial.title || '')
                 setDescription(initial.description || '')
                 setComplainantName(initial.complainant_name || '')
                 
-                // Parse initial phone
                 const initialPhone = (initial.complainant_phone || '').replace(/\D/g, '')
                 const prefixMatch = initialPhone.match(/^(0414|0424|0412|0416|0426)/)
                 if (prefixMatch) {
@@ -99,7 +174,6 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
                 }
 
                 setComplainantEmail(initial.complainant_email || '')
-                setLocation(initial.location || '')
                 setAssignedOfficerId(initial.assignedOfficerId || '')
                 setStatus(initial.status || 'received')
                 setPriority(initial.priority || 'medium')
@@ -108,20 +182,21 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
 
                 setCountry(initial.country || 'Venezuela')
                 setState(initial.state || 'Táchira')
-                setParish(initial.parish || '')
                 setMunicipality(initial.municipality || 'San Cristóbal')
-                setCity(initial.city || '')
-                setZone(initial.zoneId || initial.Id_zone || '')
-                setAddress(initial.address || initial.location || initial.address_detail || '')
+                setZone(initial.Id_zone || '')
+                setAddress(initial.address || '')
+                
+                if (initial.latitude && initial.longitude) {
+                    setLatlng({ lat: initial.latitude, lng: initial.longitude })
+                } else {
+                    setLatlng(null)
+                }
             } else {
                 setTitle('')
                 setDescription('')
-                
-                // Si el usuario está logueado, auto-completar sus datos
-                if (currentUser) {
-                    setComplainantName(`${currentUser.first_name || ''} ${currentUser.last_name || ''}`.trim())
-                    
-                    const userPhone = (currentUser.phone || '').replace(/\D/g, '')
+                if (currentUserSession) {
+                    setComplainantName(`${currentUserSession.first_name || ''} ${currentUserSession.last_name || ''}`.trim())
+                    const userPhone = (currentUserSession.phone || '').replace(/\D/g, '')
                     const userPhoneMatch = userPhone.match(/^(0414|0424|0412|0416|0426)/)
                     if (userPhoneMatch) {
                         setComplainantPhonePrefix(userPhoneMatch[0])
@@ -130,159 +205,35 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
                         setComplainantPhonePrefix('0414')
                         setComplainantPhoneNumber(userPhone.substring(0, 7))
                     }
-                    
-                    setComplainantEmail(currentUser.email || '')
+                    setComplainantEmail(currentUserSession.email || '')
                 } else {
                     setComplainantName('')
                     setComplainantPhonePrefix('0414')
                     setComplainantPhoneNumber('')
                     setComplainantEmail('')
                 }
-                
-                setLocation('')
                 setAssignedOfficerId('')
                 setStatus('received')
                 setPriority('medium')
                 setIncidentDate(new Date().toISOString().split('T')[0])
                 setEvidence([])
-
                 setCountry('Venezuela')
                 setState('Táchira')
-                setParish('')
                 setMunicipality('San Cristóbal')
-                setCity('')
                 setZone('')
                 setAddress('')
+                setLatlng(null)
             }
-            setUploadProgress({})
             setErrors({})
         }
     }, [visible, initial])
 
-    const [errors, setErrors] = useState({})
-
-    const validateStep = (currentStep) => {
-        const newErrors = {}
-        const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
-        
-        // Verificar si el usuario está autenticado
-        const userStr = sessionStorage.getItem('user')
-        if (!userStr) {
-            newErrors.auth = 'You must be logged in to create or edit a complaint'
-            setErrors(newErrors)
-            return false
-        }
-
-        if (currentStep === 1) {
-            if (!title.trim()) newErrors.title = 'Title is required'
-            if (!description.trim()) newErrors.description = 'Description is required'
-            if (!incidentDate) newErrors.incidentDate = 'Date is required'
-        }
-        
-        if (currentStep === 2) {
-            if (!complainant_name || !complainant_name.trim()) {
-                newErrors.complainant_name = 'Complainant name is required'
-            }
-
-            const hasEmail = complainant_email && complainant_email.trim()
-            const hasPhone = complainant_phone_number && complainant_phone_number.trim()
-
-            if (!hasEmail && !hasPhone) {
-                newErrors.contact = 'At least one contact method (email or phone) is required'
-            }
-
-            if (hasEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(complainant_email.trim())) {
-                newErrors.complainant_email = 'Invalid email format'
-            }
-
-            if (hasPhone && !/^\d{7}$/.test(complainant_phone_number.trim())) {
-                newErrors.complainant_phone = 'Phone number must be exactly 7 digits'
-            }
-        }
-        
-        if (currentStep === 3) {
-            if (!zone) newErrors.zone = 'Zone is required'
-            if (!address.trim()) newErrors.address = 'Street address is required'
-        }
-
-        setErrors(newErrors)
-        return Object.keys(newErrors).length === 0
-    }
-
-    const handleNext = async (e) => {
-        if (e) e.preventDefault()
-        
-        if (!validateStep(step)) return
-
-        if (step === 3) {
-            setVerifyingAddress(true)
-            setErrors({})
-            
-            const controller = new AbortController()
-            setAbortController(controller)
-            
-            // Build search query using only real geographic info (not internal zone names)
-            const cityOrMunicipality = city.trim() || municipality.trim()
-            const fullAddress = [address.trim(), cityOrMunicipality, state.trim(), country.trim()]
-                .filter(Boolean).join(', ')
-            
-            try {
-                // Nominatim search to verify address exists
-                const response = await fetch(
-                    `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(fullAddress.trim())}`,
-                    { signal: controller.signal }
-                )
-                if (response.ok) {
-                    const data = await response.json()
-                    if (data && data.length > 0) {
-                        setStep(step + 1)
-                    } else {
-                        setErrors({ 
-                            address: 'This address could not be found on the map. Please verify the street name and patrol zone.' 
-                        })
-                    }
-                } else {
-                    setStep(step + 1)
-                }
-            } catch (error) {
-                if (error.name === 'AbortError') {
-                    console.log('Verification aborted by user')
-                } else {
-                    console.error('Address verification error:', error)
-                    setStep(step + 1)
-                }
-            } finally {
-                setVerifyingAddress(false)
-                setAbortController(null)
-            }
-        } else {
-            setStep(step + 1)
-        }
-    }
-
-    const handleBack = (e) => {
-        if (e) e.preventDefault()
-        if (verifyingAddress && abortController) {
-            abortController.abort()
-        }
-        setStep(step - 1)
-    }
-
-    const handleClose = () => {
-        if (verifyingAddress && abortController) {
-            abortController.abort()
-        }
-        onClose()
-    }
-
     const loadOfficers = async () => {
         try {
             const allOfficers = await listOfficers()
-            const activeOfficers = allOfficers.filter(officer => officer.status?.toLowerCase() === 'active')
-            setOfficers(activeOfficers)
+            setOfficers(allOfficers.filter(o => o.status?.toLowerCase() === 'active'))
         } catch (error) {
             console.error('Error loading officers:', error)
-            setOfficers([])
         }
     }
 
@@ -292,7 +243,6 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
             setZones(allZones || [])
         } catch (error) {
             console.error('Error loading zones:', error)
-            setZones([])
         }
     }
 
@@ -303,8 +253,6 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
             setFilteredUsers(allUsers || [])
         } catch (error) {
             console.error('Error loading users:', error)
-            setUsers([])
-            setFilteredUsers([])
         }
     }
 
@@ -314,8 +262,6 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
             setComplainantName(`${user.first_name || ''} ${user.last_name || ''}`.trim())
             setComplainantEmail(user.email || '')
             setSelectedUserId(userId)
-            
-            // Parse phone
             const phone = (user.phone || '').replace(/\D/g, '')
             const prefixMatch = phone.match(/^(0414|0424|0412|0416|0426)/)
             if (prefixMatch) {
@@ -332,166 +278,96 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
     const handleNameChange = (value) => {
         const cleanValue = value.replace(/[0-9]/g, '')
         setComplainantName(cleanValue)
-        
         if (isAdminOrOfficer && cleanValue.length > 1) {
             const filtered = users.filter(u => 
                 `${u.first_name} ${u.last_name}`.toLowerCase().includes(cleanValue.toLowerCase()) ||
                 (u.email && u.email.toLowerCase().includes(cleanValue.toLowerCase()))
             )
-            setSuggestions(filtered)
+            setFilteredUsers(filtered)
             setShowSuggestions(true)
         } else {
-            setSuggestions([])
             setShowSuggestions(false)
         }
-        
-        // Clear selected user if they manually type something else
         setSelectedUserId('')
-    }
-
-    const simulateUpload = (fileId) => {
-        return new Promise((resolve) => {
-            let progress = 0
-            const interval = setInterval(() => {
-                progress += Math.random() * 15
-                if (progress >= 100) {
-                    progress = 100
-                    clearInterval(interval)
-                    resolve()
-                }
-                setUploadProgress(prev => ({
-                    ...prev,
-                    [fileId]: Math.min(progress, 100)
-                }))
-            }, 200)
-        })
     }
 
     const handleFileUpload = async (event) => {
         const files = Array.from(event.target.files)
-
         for (const file of files) {
-            const fileId = Date.now() + Math.random()
-
-            // Read file as Base64/DataURL
             const reader = new FileReader()
             reader.readAsDataURL(file)
-
             reader.onload = async (e) => {
-                const base64Data = e.target.result
-
                 const newEvidence = {
-                    id: fileId,
+                    id: Date.now() + Math.random(),
                     name: file.name,
                     type: file.type,
                     size: file.size,
-                    url: base64Data, // Now using real Base64 data
+                    url: e.target.result,
                     uploadedAt: new Date().toISOString(),
-                    status: 'uploading'
+                    status: 'completed'
                 }
-
                 setEvidence(prev => [...prev, newEvidence])
-
-                await simulateUpload(fileId)
-
-                setEvidence(prev =>
-                    prev.map(item =>
-                        item.id === fileId
-                            ? { ...item, status: 'completed' }
-                            : item
-                    )
-                )
             }
         }
         event.target.value = ''
     }
 
-    const removeEvidence = (evidenceId) => {
-        setEvidence(prev => prev.filter(item => item.id !== evidenceId))
-        setUploadProgress(prev => {
-            const newProgress = { ...prev }
-            delete newProgress[evidenceId]
-            return newProgress
-        })
+    const validateStep = (currentStep) => {
+        const newErrors = {}
+        if (currentStep === 1) {
+            if (!title.trim()) newErrors.title = 'El título es obligatorio'
+            if (!description.trim()) newErrors.description = 'La descripción es obligatoria'
+        }
+        if (currentStep === 2) {
+            if (!complainant_name.trim()) newErrors.complainant_name = 'El nombre es obligatorio'
+            if (!complainant_email.trim() && !complainant_phone_number.trim()) {
+                newErrors.contact = 'Se requiere correo o teléfono'
+            }
+        }
+        if (currentStep === 3 && !initial) {
+            if (!zone) newErrors.zone = 'La zona es obligatoria'
+            if (!address.trim()) newErrors.address = 'La dirección es obligatoria'
+            if (!latlng) newErrors.location = 'Por favor, marque la ubicación en el mapa'
+        }
+        setErrors(newErrors)
+        return Object.keys(newErrors).length === 0
     }
 
-    const getFileIcon = (fileType) => {
-        if (fileType.includes('image')) return cilImage
-        if (fileType.includes('video')) return cilVideo
-        return cilFile
+    const handleNext = (e) => {
+        if (e) {
+            e.preventDefault()
+            e.stopPropagation()
+        }
+        if (validateStep(step)) setStep(step + 1)
     }
 
-    const formatFileSize = (bytes) => {
-        if (bytes === 0) return '0 Bytes'
-        const k = 1024
-        const sizes = ['Bytes', 'KB', 'MB', 'GB']
-        const i = Math.floor(Math.log(bytes) / Math.log(k))
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
-    }
+    const handleBack = () => setStep(step - 1)
 
     const handleSubmit = async (e) => {
         e.preventDefault()
         e.stopPropagation()
-
-        if (!validateStep(step)) {
-            return
-        }
-
+        if (step !== 4) return
+        if (!validateStep(step)) return
         setSaving(true)
-
         try {
             const zoneName = zones.find(z => z.id === parseInt(zone))?.name || ''
-            const fullAddress = `${address}, ${zoneName}, ${city}, ${municipality}${parish ? ', ' + parish : ''}, ${state}, ${country}`
-
-            let latitude = null
-            let longitude = null
-
-            if (fullAddress.trim()) {
-                try {
-                    const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullAddress.trim())}`)
-                    if (response.ok) {
-                        const data = await response.json()
-                        if (data && data.length > 0) {
-                            latitude = parseFloat(data[0].lat)
-                            longitude = parseFloat(data[0].lon)
-                        }
-                    }
-                } catch (error) {
-                    console.error("Geocoding failed:", error)
-                }
-            }
-
-            const selectedOfficer = officers.find(o => o.id === parseInt(assignedOfficerId))
-            const assignedOfficerName = selectedOfficer ? `${selectedOfficer.name} ${selectedOfficer.lastName}` : ''
-
             const payload = {
                 title: title.trim(),
                 description: description.trim(),
                 complainant_name: complainant_name.trim(),
                 complainant_phone: `${complainant_phone_prefix}${complainant_phone_number.trim()}`,
                 complainant_email: complainant_email.trim(),
-                location: address.trim(), // Use ONLY the street address for address_detail
-                full_address: fullAddress, // Keep the full string for other uses if needed
-                country: country.trim(),
-                state: state.trim(),
-                parish: parish.trim(),
-                municipality: municipality.trim(),
-                city: city.trim(),
-                Id_zone: parseInt(zone) || null,
-                zone: zones.find(z => z.id === parseInt(zone))?.name || '',
+                Id_zone: parseInt(zone),
+                zone: zoneName,
                 address: address.trim(),
-                assignedOfficerId: assignedOfficerId ? parseInt(assignedOfficerId) : null,
-                assignedOfficerName,
+                assignedOfficerId: assignedOfficerId || null,
                 status: status.toLowerCase(),
                 priority: priority.toLowerCase(),
                 incidentDate,
-                Id_user: isAdminOrOfficer && selectedUserId ? parseInt(selectedUserId) : null,
-                latitude,
-                longitude,
+                latitude: latlng ? latlng.lat : null,
+                longitude: latlng ? latlng.lng : null,
                 evidence: evidence.filter(item => item.status === 'completed')
             }
-
-            console.log('Sending payload:', payload)
             await onSave(payload)
             onClose()
         } catch (error) {
@@ -502,449 +378,283 @@ const ComplaintForm = ({ visible, onClose, onSave, initial = null }) => {
     }
 
     return (
-        <CModal size="lg" visible={visible} onClose={handleClose}>
+        <CModal size="lg" visible={visible} onClose={onClose} backdrop="static" keyboard={false}>
             <CModalHeader>
-                <CModalTitle>
-                    {initial ? 'Edit Complaint' : 'New Complaint'} - Step {step} of 4
-                </CModalTitle>
+                <CModalTitle>{initial ? 'Editar Denuncia' : 'Nueva Denuncia'} - Paso {step} de 4</CModalTitle>
             </CModalHeader>
             <CForm onSubmit={handleSubmit}>
-                <CModalBody style={{ maxHeight: '70vh', overflowY: 'auto' }}>
-                    {errors.auth && (
+                <CModalBody style={{ maxHeight: '80vh', overflowY: 'auto' }}>
+                    {Object.keys(errors).length > 0 && (
                         <CAlert color="danger" className="mb-3">
-                            {errors.auth}
-                        </CAlert>
-                    )}
-                    
-                    {Object.keys(errors).length > 0 && !errors.auth && (
-                        <CAlert color="danger" className="mb-3 py-2">
                             <ul className="mb-0 small">
-                                {Object.values(errors).map((err, index) => (
-                                    <li key={index}>{err}</li>
-                                ))}
+                                {Object.values(errors).map((err, i) => <li key={i}>{err}</li>)}
                             </ul>
                         </CAlert>
                     )}
+
                     {step === 1 && (
                         <>
-                            <h6 className="mb-3 text-primary">Complaint Information</h6>
-                            <CRow className="g-3">
-                                <CCol md={12}>
-                                    <CFormInput
-                                        label="Complaint Title *"
-                                        placeholder="Brief description of the incident"
-                                        value={title}
-                                        onChange={(e) => setTitle(e.target.value)}
-                                        invalid={!!errors.title}
-                                        feedback={errors.title}
-                                        required
-                                    />
-                                </CCol>
-                            </CRow>
+                            <h6 className="mb-3 text-primary">Información de la Denuncia</h6>
+                            <CFormSelect 
+                                className="tour-complaint-form-crime"
+                                label="Delito *" 
+                                value={title} 
+                                onChange={(e) => setTitle(e.target.value)} 
+                                required
+                            >
+                                <option value="">Seleccione un delito...</option>
+                                {CRIME_TYPES.map(crime => (
+                                    <option key={crime.id} value={crime.title}>
+                                        {crime.title}
+                                    </option>
+                                ))}
+                            </CFormSelect>
+                            
+                            {title && CRIME_TYPES.find(c => c.title === title) && (
+                                <div className="mt-2 p-2 bg-light rounded text-muted small">
+                                    <strong>Descripción del delito: </strong>
+                                    {CRIME_TYPES.find(c => c.title === title).description}
+                                </div>
+                            )}
 
-                            <div className="mt-3">
-                                <CFormTextarea
-                                    label="Detailed Description *"
-                                    placeholder="Provide all relevant details of the incident..."
-                                    rows="4"
-                                    value={description}
-                                    onChange={(e) => setDescription(e.target.value)}
-                                    invalid={!!errors.description}
-                                    feedback={errors.description}
-                                    required
-                                />
-                            </div>
-
-                            <CRow className="g-3 mt-2">
-                                <CCol md={6}>
-                                    <CFormInput
-                                        label="Incident Date *"
-                                        type="date"
-                                        value={incidentDate}
-                                        readOnly
-                                        required
-                                    />
-                                </CCol>
-                            </CRow>
+                            <CFormTextarea 
+                                className="tour-complaint-form-description mt-3" 
+                                label="Descripción de lo sucedido *" 
+                                rows="4" 
+                                value={description} 
+                                onChange={(e) => setDescription(e.target.value)} 
+                                required 
+                                placeholder="Escriba aquí los detalles del incidente..."
+                            />
+                            <CFormInput 
+                                className="tour-complaint-form-date mt-3"
+                                label="Fecha *" 
+                                type="date" 
+                                value={incidentDate} 
+                                onChange={(e) => setIncidentDate(e.target.value)} 
+                                required 
+                            />
                         </>
                     )}
 
                     {step === 2 && (
                         <>
-                            <h6 className="mb-3 mt-4 text-primary">Complainant Information</h6>
-
-
-                            
-
-
-                            <CRow className="g-3">
-                                <CCol md={6} style={{ position: 'relative' }}>
-                                    <CFormInput
-                                        label={isAdminOrOfficer ? 'Nombre del Denunciante * (escribe para buscar)' : 'Complainant Name *'}
-                                        placeholder={isAdminOrOfficer ? 'Escribe el nombre...' : 'Full name'}
-                                        value={complainant_name}
-                                        onChange={(e) => handleNameChange(e.target.value)}
-                                        onFocus={() => {
-                                            if (isAdminOrOfficer && complainant_name.length > 0) setShowSuggestions(true)
-                                        }}
-                                        onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                                        invalid={!!errors.complainant_name}
-                                        feedback={errors.complainant_name}
-                                        required
-                                        readOnly={!isAdminOrOfficer}
-                                        autoComplete="off"
-                                    />
-                                    {isAdminOrOfficer && showSuggestions && filteredUsers.length > 0 && (
-                                        <div
-                                            className="position-absolute w-100 shadow border rounded bg-white"
-                                            style={{ zIndex: 1050, top: '100%', left: 0, maxHeight: '220px', overflowY: 'auto' }}
-                                        >
-                                            {filteredUsers.map(u => (
-                                                <div
-                                                    key={u.id}
-                                                    className="p-2 border-bottom d-flex align-items-center gap-2"
-                                                    style={{
-                                                        cursor: 'pointer',
-                                                        backgroundColor: String(selectedUserId) === String(u.id) ? '#dbeafe' : '#fff'
-                                                    }}
-                                                    onMouseDown={() => handleUserSelect(u.id)}
-                                                    onMouseOver={(e) => {
-                                                        if (String(selectedUserId) !== String(u.id))
-                                                            e.currentTarget.style.backgroundColor = '#f0f4f8'
-                                                    }}
-                                                    onMouseOut={(e) => {
-                                                        if (String(selectedUserId) !== String(u.id))
-                                                            e.currentTarget.style.backgroundColor = String(selectedUserId) === String(u.id) ? '#dbeafe' : '#fff'
-                                                    }}
-                                                >
-                                                    <div
-                                                        className="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center flex-shrink-0"
-                                                        style={{ width: '28px', height: '28px', fontSize: '11px', fontWeight: 'bold' }}
-                                                    >
-                                                        {(u.first_name?.[0] || '?').toUpperCase()}
-                                                    </div>
-                                                    <div>
-                                                        <div className="fw-bold small text-dark">{u.first_name} {u.last_name}</div>
-                                                        <div className="text-muted" style={{ fontSize: '11px' }}>{u.email || 'Sin correo'}</div>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </CCol>
-                                <CCol md={6}>
-                                    <div className="mb-3">
-                                        <label className="form-label">Phone Number *</label>
-                                        <div className="input-group">
-                                            <CFormSelect
-                                                style={{ maxWidth: '100px' }}
-                                                value={complainant_phone_prefix}
-                                                onChange={(e) => setComplainantPhonePrefix(e.target.value)}
-                                                disabled={!isAdminOrOfficer}
-                                            >
-                                                <option value="0414">0414</option>
-                                                <option value="0424">0424</option>
-                                                <option value="0412">0412</option>
-                                                <option value="0416">0416</option>
-                                                <option value="0426">0426</option>
-                                            </CFormSelect>
-                                            <CFormInput
-                                                placeholder="1234567"
-                                                value={complainant_phone_number}
-                                                onChange={(e) => setComplainantPhoneNumber(e.target.value.replace(/\D/g, '').substring(0, 7))}
-                                                invalid={!!errors.complainant_phone}
-                                                required
-                                                readOnly={!isAdminOrOfficer}
-                                            />
-                                        </div>
-                                        {errors.complainant_phone && <div className="text-danger small mt-1">{errors.complainant_phone}</div>}
+                            <h6 className="mb-3 text-primary">Información del Denunciante</h6>
+                            <div style={{ position: 'relative' }}>
+                                <CFormInput
+                                    className="tour-complaint-form-name"
+                                    label="Nombre Completo *"
+                                    value={complainant_name}
+                                    onChange={(e) => handleNameChange(e.target.value)}
+                                    onFocus={() => isAdminOrOfficer && complainant_name.length > 1 && setShowSuggestions(true)}
+                                    onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                                    autoComplete="off"
+                                />
+                                {showSuggestions && filteredUsers.length > 0 && (
+                                    <div className="position-absolute w-100 shadow border rounded bg-white" style={{ zIndex: 1050 }}>
+                                        {filteredUsers.map(u => (
+                                            <div key={u.id} className="p-2 border-bottom" style={{ cursor: 'pointer' }} onMouseDown={() => handleUserSelect(u.id)}>
+                                                {u.first_name} {u.last_name} ({u.email})
+                                            </div>
+                                        ))}
                                     </div>
+                                )}
+                            </div>
+                            <CRow className="mt-3">
+                                <CCol md={4}>
+                                    <CFormSelect value={complainant_phone_prefix} onChange={(e) => setComplainantPhonePrefix(e.target.value)}>
+                                        <option value="0414">0414</option>
+                                        <option value="0424">0424</option>
+                                        <option value="0412">0412</option>
+                                        <option value="0416">0416</option>
+                                        <option value="0426">0426</option>
+                                    </CFormSelect>
+                                </CCol>
+                                <CCol md={8}>
+                                    <CFormInput 
+                                        className="tour-complaint-form-phone"
+                                        placeholder="Teléfono" 
+                                        value={complainant_phone_number} 
+                                        onChange={(e) => setComplainantPhoneNumber(e.target.value.replace(/\D/g, '').substring(0, 7))} 
+                                    />
                                 </CCol>
                             </CRow>
-
-                            <div className="mt-3">
-                                <CFormInput
-                                    label="Email Address"
-                                    type="email"
-                                    placeholder="email@example.com"
-                                    value={complainant_email}
-                                    onChange={(e) => setComplainantEmail(e.target.value)}
-                                    invalid={!!errors.complainant_email}
-                                    feedback={errors.complainant_email}
-                                    readOnly={!isAdminOrOfficer}
-                                />
-                            </div>
+                            <CFormInput 
+                                className="tour-complaint-form-email mt-3"
+                                label="Correo" 
+                                type="email" 
+                                value={complainant_email} 
+                                onChange={(e) => setComplainantEmail(e.target.value)} 
+                            />
                         </>
                     )}
 
                     {step === 3 && (
                         <>
-                            <h6 className="mb-3 mt-4 text-primary">
+                            <h6 className="mb-3 text-primary">
                                 <CIcon icon={cilLocationPin} className="me-2" />
-                                Incident Location Details *
+                                Ubicación y Mapa
+                                {initial && <CBadge color="info" className="ms-2" style={{ fontSize: '0.7rem' }}>Solo lectura</CBadge>}
                             </h6>
+                            {initial && (
+                                <CAlert color="info" className="mb-3 small">
+                                    La ubicación no se puede modificar al editar una denuncia. Presione <strong>Siguiente</strong> para continuar.
+                                </CAlert>
+                            )}
                             <CRow className="g-3">
                                 <CCol md={6}>
-                                    <CFormInput
-                                        label="Country"
-                                        value={country}
-                                        onChange={(e) => setCountry(e.target.value)}
-                                        disabled
-                                    />
-                                    <small className="text-muted">Currently fixed to Venezuela</small>
-                                </CCol>
-                                <CCol md={6}>
-                                    <CFormInput
-                                        label="State"
-                                        value={state}
-                                        onChange={(e) => setState(e.target.value)}
-                                        disabled
-                                    />
-                                    <small className="text-muted">Currently fixed to Táchira</small>
-                                </CCol>
-                            </CRow>
-
-                            <CRow className="g-3 mt-2">
-                                <CCol md={6}>
-                                    <CFormInput
-                                        label="Municipality"
-                                        value={municipality}
-                                        onChange={(e) => setMunicipality(e.target.value)}
-                                        disabled
-                                    />
-                                    <small className="text-muted">Currently fixed to San Cristóbal</small>
-                                </CCol>
-                                <CCol md={6}>
-                                    <CFormInput
-                                        label="Parish"
-                                        placeholder="e.g., San Juan Bautista, Pedro María Morantes"
-                                        value={parish}
-                                        onChange={(e) => setParish(e.target.value)}
-                                    />
-                                    <small className="text-muted">Enter the parish (parroquia)</small>
-                                </CCol>
-                            </CRow>
-
-                            <CRow className="g-3 mt-2">
-                                <CCol md={6}>
-                                    <CFormInput
-                                        label="City"
-                                        placeholder="e.g., San Cristóbal, Táriba"
-                                        value={city}
-                                        onChange={(e) => setCity(e.target.value)}
-                                    />
-                                    <small className="text-muted">Enter the city name</small>
-                                </CCol>
-                            </CRow>
-
-                            <CRow className="g-3 mt-2">
-                                <CCol md={6}>
-                                    <CFormSelect
-                                        label="Zone/Neighborhood *"
-                                        value={zone}
-                                        onChange={(e) => setZone(e.target.value)}
-                                        invalid={!!errors.zone}
-                                        feedback={errors.zone}
-                                        required
+                                    <CFormSelect 
+                                        className="tour-complaint-form-zone"
+                                        label="Zona *" 
+                                        value={zone} 
+                                        onChange={(e) => setZone(e.target.value)} 
+                                        required 
+                                        disabled={!!initial}
                                     >
-                                        <option value="">Select a zone</option>
-                                        {zones && zones.map(z => (
-                                            <option key={z.id} value={z.id}>{z.name}</option>
-                                        ))}
+                                        <option value="">Seleccione zona</option>
+                                        {zones.map(z => <option key={z.id} value={z.id}>{z.name}</option>)}
                                     </CFormSelect>
-                                    <small className="text-muted">Select the specific patrol zone</small>
                                 </CCol>
                                 <CCol md={6}>
-                                    <CFormInput
-                                        label="Street Address *"
-                                        placeholder="e.g., Carrera 10 #20-30, Plaza Bolívar"
-                                        value={address}
-                                        onChange={(e) => setAddress(e.target.value)}
-                                        invalid={!!errors.address}
-                                        feedback={errors.address}
-                                        required
+                                    <CFormInput 
+                                        className="tour-complaint-form-address"
+                                        label="Dirección Escrita *" 
+                                        value={address} 
+                                        onChange={(e) => setAddress(e.target.value)} 
+                                        placeholder="Ej: Carrera 10 con Calle 4" 
+                                        required 
+                                        disabled={!!initial} 
                                     />
-                                    <small className="text-muted">Specific street address or landmark</small>
                                 </CCol>
                             </CRow>
-
-                            <div className="mt-3 p-3 rounded" style={containerStyles.previewBox}>
-                                <small style={textStyles.previewMuted}>
-                                    <strong style={textStyles.previewLabel}>Full Address Preview:</strong><br />
-                                    {address && address.trim() ? (
-                                        <span style={textStyles.previewText}>
-                                            {address}{zone && zones.find(z => z.id === parseInt(zone)) ? `, ${zones.find(z => z.id === parseInt(zone)).name}` : ''}, {city}, {municipality}{parish && parish.trim() ? `, ${parish}` : ''}, {state}, {country}
-                                        </span>
-                                    ) : (
-                                        <span className="fst-italic" style={textStyles.previewPlaceholder}>Enter address details to see preview</span>
-                                    )}
-                                </small>
+                            
+                            <div className="tour-complaint-form-map mt-3 border rounded shadow-sm overflow-hidden">
+                                <div className="bg-light p-2 small border-bottom">
+                                    <strong>{initial ? 'Ubicación registrada:' : 'Mapa Interactivo:'}</strong> {initial ? 'Esta es la ubicación original de la denuncia.' : 'Haga clic en el mapa para marcar el punto exacto de la denuncia.'}
+                                </div>
+                                <div style={{ height: '350px', width: '100%' }}>
+                                    <MapContainer 
+                                        center={latlng || defaultCenter} 
+                                        zoom={14} 
+                                        style={{ height: '100%', width: '100%' }}
+                                    >
+                                        <TileLayer
+                                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                        />
+                                        {zones.map(z => (
+                                            z.coordinates && z.coordinates.length > 2 && (
+                                                <Polygon 
+                                                    key={z.id} 
+                                                    positions={z.coordinates} 
+                                                    pathOptions={{ color: z.color || 'blue', weight: 2, fillOpacity: 0.2 }} 
+                                                />
+                                            )
+                                        ))}
+                                        {initial ? (
+                                            latlng && <Marker position={latlng} />
+                                        ) : (
+                                            <LocationMarker 
+                                                position={latlng} 
+                                                setPosition={setLatlng} 
+                                                zones={zones} 
+                                                setZone={setZone} 
+                                                setAddress={setAddress} 
+                                            />
+                                        )}
+                                    </MapContainer>
+                                </div>
+                                {latlng && (
+                                    <div className="p-2 bg-success bg-opacity-10 text-success small">
+                                        <CIcon icon={cilLocationPin} className="me-1" />
+                                        Coordenadas fijadas: {latlng.lat.toFixed(6)}, {latlng.lng.toFixed(6)}
+                                    </div>
+                                )}
                             </div>
                         </>
                     )}
 
                     {step === 4 && (
                         <>
-                            <h6 className="mb-3 mt-4 text-primary">Assignment and Status</h6>
+                            <h6 className="mb-3 text-primary">Asignación y Evidencia</h6>
                             {userRole !== 'civil' && (
                                 <CRow className="g-3">
                                     <CCol md={6}>
-                                        <CFormSelect
-                                            label="Assigned Officer"
-                                            value={assignedOfficerId}
+                                        <CFormSelect 
+                                            className="tour-complaint-form-officer"
+                                            label="Oficial" 
+                                            value={assignedOfficerId} 
                                             onChange={(e) => setAssignedOfficerId(e.target.value)}
-                                            disabled={userRole !== 'administrator'}
                                         >
-                                            <option value="">Select an officer</option>
-                                            {officers.map(officer => (
-                                                <option key={officer.id} value={officer.id}>
-                                                    {officer.name} {officer.lastName} - {officer.unit}
-                                                </option>
-                                            ))}
+                                            <option value="">Sin asignar</option>
+                                            {officers.map(o => <option key={o.id} value={o.id}>{o.name} {o.lastName}</option>)}
                                         </CFormSelect>
                                     </CCol>
                                     <CCol md={3}>
-                                        <CFormSelect
-                                            label="Priority"
-                                            value={priority}
+                                        <CFormSelect 
+                                            className="tour-complaint-form-priority"
+                                            label="Prioridad" 
+                                            value={priority} 
                                             onChange={(e) => setPriority(e.target.value)}
-                                            disabled={userRole !== 'administrator'}
                                         >
-                                            <option value="low">Low</option>
-                                            <option value="medium">Medium</option>
-                                            <option value="high">High</option>
-                                            <option value="urgent">Urgent</option>
+                                            <option value="low">Baja</option>
+                                            <option value="medium">Media</option>
+                                            <option value="high">Alta</option>
+                                            <option value="urgent">Urgente</option>
                                         </CFormSelect>
                                     </CCol>
                                     <CCol md={3}>
-                                        <CFormSelect
-                                            label="Status"
-                                            value={status}
+                                        <CFormSelect 
+                                            className="tour-complaint-form-status"
+                                            label="Estado" 
+                                            value={status} 
                                             onChange={(e) => setStatus(e.target.value)}
-                                            disabled={userRole === 'civil'}
                                         >
-                                            <option value="received">Received</option>
-                                            <option value="under_investigation">Under Investigation</option>
-                                            <option value="resolved">Resolved</option>
-                                            <option value="closed">Closed</option>
-                                            <option value="rejected">Rejected</option>
+                                            <option value="received">Recibida</option>
+                                            <option value="under_investigation">Investigación</option>
+                                            <option value="resolved">Resuelta</option>
+                                            <option value="closed">Cerrada</option>
+                                            <option value="rejected">Rechazada</option>
                                         </CFormSelect>
                                     </CCol>
                                 </CRow>
                             )}
-                            <h6 className="mb-3 mt-4 text-primary">Multimedia Evidence</h6>
-                            <CCard>
-                                <CCardBody>
-                                    <div className="mb-3">
-                                        <CFormInput
-                                            type="file"
-                                            multiple
-                                            accept="image/*,video/*,.pdf,.doc,.docx,.txt"
-                                            onChange={handleFileUpload}
-                                        />
-                                        <small className="text-muted">
-                                            Supported formats: Images, Videos, PDF, Word documents, Text files
-                                        </small>
+                            <div className="mt-4">
+                                <label className="form-label d-flex align-items-center">
+                                    <CIcon icon={cilPaperclip} className="me-2" /> Adjuntar Evidencia
+                                </label>
+                                <CFormInput 
+                                    className="tour-complaint-form-file"
+                                    type="file" 
+                                    multiple 
+                                    onChange={handleFileUpload} 
+                                />
+                                {evidence.length > 0 && (
+                                    <div className="mt-3">
+                                        {evidence.map(f => (
+                                            <div key={f.id} className="d-flex justify-content-between align-items-center mb-1 p-2 border rounded bg-light">
+                                                <span className="small text-truncate">{f.name}</span>
+                                                <CButton size="sm" color="danger" variant="outline" onClick={() => setEvidence(prev => prev.filter(e => e.id !== f.id))}>
+                                                    <CIcon icon={cilTrash} />
+                                                </CButton>
+                                            </div>
+                                        ))}
                                     </div>
-
-                                    {evidence.length > 0 && (
-                                        <div>
-                                            <h6>Uploaded Files:</h6>
-                                            {evidence.map(file => (
-                                                <div key={file.id} className="d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
-                                                    <div className="d-flex align-items-center flex-grow-1">
-                                                        <CIcon
-                                                            icon={getFileIcon(file.type)}
-                                                            className="me-2 text-primary"
-                                                        />
-                                                        <div className="flex-grow-1">
-                                                            <div className="d-flex justify-content-between align-items-center">
-                                                                <span className={file.status === 'uploading' ? 'text-muted' : ''}>
-                                                                    {file.name}
-                                                                </span>
-                                                                <small className="text-muted ms-2">
-                                                                    {formatFileSize(file.size)}
-                                                                </small>
-                                                            </div>
-                                                            {file.status === 'uploading' && uploadProgress[file.id] !== undefined && (
-                                                                <div className="mt-1">
-                                                                    <CProgress
-                                                                        value={uploadProgress[file.id]}
-                                                                        size="sm"
-                                                                        className="mb-1"
-                                                                    />
-                                                                    <small className="text-muted">
-                                                                        Uploading... {Math.round(uploadProgress[file.id])}%
-                                                                    </small>
-                                                                </div>
-                                                            )}
-                                                            {file.status === 'completed' && (
-                                                                <CBadge color="success" className="mt-1">Uploaded</CBadge>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                    <CButton
-                                                        size="sm"
-                                                        color="danger"
-                                                        variant="outline"
-                                                        onClick={() => removeEvidence(file.id)}
-                                                        className="ms-2"
-                                                    >
-                                                        <CIcon icon={cilTrash} />
-                                                    </CButton>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-
-                                    {evidence.length === 0 && (
-                                        <div className="text-center text-muted py-3">
-                                            <CIcon icon={cilPaperclip} size="xl" />
-                                            <div>No files uploaded yet</div>
-                                            <small>Upload images, videos, or documents as evidence</small>
-                                        </div>
-                                    )}
-                                </CCardBody>
-                            </CCard>
+                                )}
+                            </div>
                         </>
                     )}
-
-                    <div className="mt-3">
-                        <small className="text-muted">* Required fields</small>
-                    </div>
                 </CModalBody>
                 <CModalFooter>
-                    {step > 1 && (
-                        <CButton type="button" color="secondary" onClick={handleBack}>
-                            Back
-                        </CButton>
-                    )}
+                    {step > 1 && <CButton type="button" color="secondary" onClick={handleBack}>Atrás</CButton>}
                     {step < 4 ? (
-                        <CButton type="button" color="primary colorbutton" style={colorbutton} onClick={handleNext} disabled={saving || verifyingAddress}>
-                            {verifyingAddress ? (
-                                <>
-                                    <CSpinner size="sm" className="me-2" />
-                                    Verifying...
-                                </>
-                            ) : (
-                                'Next'
-                            )}
-                        </CButton>
+                        <CButton type="button" color="primary" onClick={handleNext}>Siguiente</CButton>
                     ) : (
                         <CButton type="submit" color="success" disabled={saving}>
-                            {saving ? (
-                                <>
-                                    <CSpinner size="sm" className="me-2" />
-                                    Saving...
-                                </>
-                            ) : (
-                                <>{initial ? 'Update' : 'Create'} Complaint</>
-                            )}
+                            {saving ? <CSpinner size="sm" /> : (initial ? 'Actualizar' : 'Crear')}
                         </CButton>
                     )}
-                    <CButton type="button" color="light" onClick={onClose} className="ms-auto">
-                        Cancel
-                    </CButton>
+                    <CButton type="button" color="light" onClick={onClose} className="ms-auto">Cancelar</CButton>
                 </CModalFooter>
             </CForm>
         </CModal>

@@ -19,7 +19,9 @@ import {
     CDropdown,
     CDropdownToggle,
     CDropdownMenu,
-    CDropdownItem
+    CDropdownItem,
+    CDropdownDivider,
+    CDropdownHeader
 } from '@coreui/react'
 import SearchInput from 'src/components/SearchInput'
 import CIcon from '@coreui/icons-react'
@@ -55,16 +57,13 @@ const Complaints = () => {
     })
 
     useEffect(() => {
-        console.log('Complaints component mounted')
         fetchData()
     }, [])
 
     async function fetchData() {
-        console.log('Fetching complaints...')
         setLoading(true)
         try {
             const res = await listComplaints()
-            console.log('Complaints loaded:', res)
             setData(res || [])
         } catch (error) {
             console.error('Error fetching complaints:', error)
@@ -93,10 +92,8 @@ const Complaints = () => {
 
     const getCurrentPageData = () => {
         if (!Array.isArray(filteredComplaints) || filteredComplaints.length === 0) return []
-
         const startIndex = (currentPage - 1) * itemsPerPage
         const endIndex = startIndex + itemsPerPage
-
         return filteredComplaints.slice(startIndex, endIndex)
     }
 
@@ -108,7 +105,6 @@ const Complaints = () => {
     }
 
     async function handleSave(payload) {
-        console.log('Saving complaint:', payload)
         try {
             if (editing && editing.id) {
                 await updateComplaint(editing.id, payload)
@@ -117,7 +113,7 @@ const Complaints = () => {
                     appAlert: {
                         visible: true,
                         color: 'success',
-                        message: 'Complaint updated successfully',
+                        message: 'Denuncia actualizada correctamente',
                     },
                 })
             } else {
@@ -127,7 +123,7 @@ const Complaints = () => {
                     appAlert: {
                         visible: true,
                         color: 'success',
-                        message: 'Complaint created successfully',
+                        message: 'Denuncia creada correctamente',
                     },
                 })
             }
@@ -141,7 +137,7 @@ const Complaints = () => {
                 appAlert: {
                     visible: true,
                     color: 'danger',
-                    message: 'Error saving complaint: ' + error.message,
+                    message: 'Error al guardar la denuncia: ' + error.message,
                 },
             })
         }
@@ -159,13 +155,12 @@ const Complaints = () => {
         try {
             await deleteComplaint(id)
             await fetchData()
-            console.log('Complaint deleted successfully')
             dispatch({
                 type: 'set',
                 appAlert: {
                     visible: true,
                     color: 'warning',
-                    message: 'Complaint deleted successfully',
+                    message: 'Denuncia eliminada correctamente',
                 },
             })
         } catch (error) {
@@ -175,7 +170,7 @@ const Complaints = () => {
                 appAlert: {
                     visible: true,
                     color: 'danger',
-                    message: 'Error deleting complaint: ' + error.message,
+                    message: 'Error al eliminar la denuncia: ' + error.message,
                 },
             })
         }
@@ -191,11 +186,11 @@ const Complaints = () => {
     const getStatusOptions = (currentStatus) => {
         const s = currentStatus?.toLowerCase()
         const statuses = [
-            { value: 'received', label: 'Received' },
-            { value: 'under_investigation', label: 'Investigation' },
-            { value: 'resolved', label: 'Resolved' },
-            { value: 'closed', label: 'Closed' },
-            { value: 'rejected', label: 'Rejected' }
+            { value: 'received', label: 'Recibida' },
+            { value: 'under_investigation', label: 'Investigación' },
+            { value: 'resolved', label: 'Resuelta' },
+            { value: 'closed', label: 'Cerrada' },
+            { value: 'rejected', label: 'Rechazada' }
         ]
         return statuses.filter(status => status.value !== s)
     }
@@ -210,7 +205,7 @@ const Complaints = () => {
                 appAlert: {
                     visible: true,
                     color: 'success',
-                    message: `Status updated to ${newStatus}`,
+                    message: `Estado actualizado a ${newStatus}`,
                 },
             })
         } catch (error) {
@@ -220,7 +215,7 @@ const Complaints = () => {
                 appAlert: {
                     visible: true,
                     color: 'danger',
-                    message: 'Error changing status: ' + error.message,
+                    message: 'Error al cambiar el estado: ' + error.message,
                 },
             })
         }
@@ -229,11 +224,11 @@ const Complaints = () => {
     const getStatusBadge = (status) => {
         const s = status?.toLowerCase()
         const statusConfig = {
-            'received': { color: 'info', text: 'Received', icon: cilFile },
-            'under_investigation': { color: 'warning', text: 'Investigation', icon: cilSearch },
-            'resolved': { color: 'success', text: 'Resolved', icon: cilCheckCircle },
-            'closed': { color: 'secondary', text: 'Closed', icon: cilBan },
-            'rejected': { color: 'danger', text: 'Rejected', icon: cilBan }
+            'received': { color: 'info', text: 'Recibida', icon: cilFile },
+            'under_investigation': { color: 'warning', text: 'Investigación', icon: cilSearch },
+            'resolved': { color: 'success', text: 'Resuelta', icon: cilCheckCircle },
+            'closed': { color: 'secondary', text: 'Cerrada', icon: cilBan },
+            'rejected': { color: 'danger', text: 'Rechazada', icon: cilBan }
         }
 
         const config = statusConfig[s] || { color: 'secondary', text: status }
@@ -252,10 +247,10 @@ const Complaints = () => {
     const getPriorityBadge = (priority) => {
         const p = priority?.toLowerCase()
         const priorityConfig = {
-            'low': { color: 'success', text: 'Low' },
-            'medium': { color: 'warning', text: 'Medium' },
-            'high': { color: 'danger', text: 'High' },
-            'urgent': { color: 'danger', text: 'URGENT', icon: cilWarning }
+            'low': { color: 'success', text: 'Baja' },
+            'medium': { color: 'warning', text: 'Media' },
+            'high': { color: 'danger', text: 'Alta' },
+            'urgent': { color: 'danger', text: 'URGENTE', icon: cilWarning }
         }
 
         const config = priorityConfig[p] || { color: 'secondary', text: priority }
@@ -283,16 +278,15 @@ const Complaints = () => {
                     <CCard className="shadow-sm border-0 mb-4" style={{ borderRadius: '12px', overflow: 'hidden' }}>
                         <div style={{ height: '5px', background: 'linear-gradient(90deg, #1a237e 0%, #0d47a1 100%)' }}></div>
 
-
                         <CCardHeader className="border-bottom-0 pt-4 pb-3 px-4">
                             <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
                                 <div>
-                                    <h4 className="mb-1 fw-bold" style={{ letterSpacing: '-0.5px' }}>
+                                    <h4 className="mb-1 fw-bold tour-complaints-title" style={{ letterSpacing: '-0.5px' }}>
                                         <CIcon icon={cilFolderOpen} className="me-2 text-primary" style={{ color: '#1a237e' }} />
-                                        Complaints Management
+                                        Gestión de Denuncias
                                     </h4>
                                     <p className="text-muted mb-0 small">
-                                        Track investigations, incidents, and case resolution
+                                        Seguimiento de investigaciones, incidentes y resolución de casos
                                     </p>
                                 </div>
                                 <div>
@@ -303,11 +297,11 @@ const Complaints = () => {
                                             setEditing(null);
                                             setShowForm(true)
                                         }}
-                                        className="d-flex align-items-center px-4 py-2 shadow-sm"
+                                        className="d-flex align-items-center px-4 py-2 shadow-sm tour-complaints-new-btn"
                                         shape="rounded-pill"
                                     >
                                         <CIcon icon={cilPlus} className="me-2 fw-bold" />
-                                        NEW COMPLAINT
+                                        NUEVA DENUNCIA
                                     </CButton>
                                 </div>
                             </div>
@@ -317,13 +311,13 @@ const Complaints = () => {
                             {loading ? (
                                 <div className="text-center py-5">
                                     <CSpinner color="primary" variant="grow" />
-                                    <div className="mt-3 text-muted">Loading cases...</div>
+                                    <div className="mt-3 text-muted">Cargando casos...</div>
                                 </div>
                             ) : (
                                 <>
                                     <div className="mb-4 p-3 rounded-3 border d-flex justify-content-between align-items-center gap-3 bg-light-subtle dark:bg-dark-subtle">
                                         <div className="text-muted fw-semibold small">
-                                            Total Cases: <span className="fs-6">{filteredComplaints.length}</span>
+                                            Total de Casos: <span className="fs-6">{filteredComplaints.length}</span>
                                         </div>
 
                                         <div style={{ maxWidth: '400px', width: '100%' }}>
@@ -336,21 +330,21 @@ const Complaints = () => {
 
                                     {currentPageData.length > 0 ? (
                                         <>
-                                            <div className="table-responsive border rounded-3">
+                                            <div className="table-responsive border rounded-3 tour-complaints-table">
                                                 <CTable hover align="middle" className="mb-0">
                                                     <CTableHead>
                                                         <CTableRow>
-                                                            <CTableHeaderCell className="text-uppercase text-secondary small ps-4 py-3" style={{ fontWeight: 600 }}>Type</CTableHeaderCell>
-                                                            <CTableHeaderCell className="text-uppercase text-secondary small py-3" style={{ fontWeight: 600 }}>Incident</CTableHeaderCell>
-                                                            <CTableHeaderCell className="text-uppercase text-secondary small py-3" style={{ fontWeight: 600 }}>Complainant</CTableHeaderCell>
-                                                            <CTableHeaderCell className="text-uppercase text-secondary small py-3" style={{ fontWeight: 600 }}>Assigned To</CTableHeaderCell>
-                                                            <CTableHeaderCell className="text-uppercase text-secondary small py-3" style={{ fontWeight: 600 }}>Priority</CTableHeaderCell>
-                                                            <CTableHeaderCell className="text-uppercase text-secondary small py-3" style={{ fontWeight: 600 }}>Status</CTableHeaderCell>
-                                                            <CTableHeaderCell className="text-uppercase text-secondary small text-end pe-4 py-3" style={{ fontWeight: 600, width: '150px' }}>Actions</CTableHeaderCell>
+                                                            <CTableHeaderCell className="text-uppercase text-secondary small ps-4 py-3" style={{ fontWeight: 600 }}>Tipo</CTableHeaderCell>
+                                                            <CTableHeaderCell className="text-uppercase text-secondary small py-3" style={{ fontWeight: 600 }}>Incidente</CTableHeaderCell>
+                                                            <CTableHeaderCell className="text-uppercase text-secondary small py-3" style={{ fontWeight: 600 }}>Denunciante</CTableHeaderCell>
+                                                            <CTableHeaderCell className="text-uppercase text-secondary small py-3" style={{ fontWeight: 600 }}>Asignado a</CTableHeaderCell>
+                                                            <CTableHeaderCell className="text-uppercase text-secondary small py-3" style={{ fontWeight: 600 }}>Prioridad</CTableHeaderCell>
+                                                            <CTableHeaderCell className="text-uppercase text-secondary small py-3" style={{ fontWeight: 600 }}>Estado</CTableHeaderCell>
+                                                            <CTableHeaderCell className="text-uppercase text-secondary small text-end pe-4 py-3" style={{ fontWeight: 600, width: '150px' }}>Acciones</CTableHeaderCell>
                                                         </CTableRow>
                                                     </CTableHead>
                                                     <CTableBody>
-                                                        {currentPageData.map(complaint => (
+                                                        {currentPageData.map((complaint, index) => (
                                                             <CTableRow key={complaint.id}>
                                                                 <CTableDataCell className="ps-4">
                                                                     <CIcon icon={cilFile} className="text-primary" />
@@ -377,7 +371,7 @@ const Complaints = () => {
                                                                             {complaint.assignedOfficerName}
                                                                         </div>
                                                                     ) : (
-                                                                        <span className="badge bg-opacity-10 bg-secondary text-secondary border">Unassigned</span>
+                                                                        <span className="badge bg-opacity-10 bg-secondary text-secondary border">Sin asignar</span>
                                                                     )}
                                                                 </CTableDataCell>
                                                                 <CTableDataCell>
@@ -387,12 +381,12 @@ const Complaints = () => {
                                                                     {getStatusBadge(complaint.status)}
                                                                 </CTableDataCell>
                                                                 <CTableDataCell className="text-end pe-4">
-                                                                    <div className="d-flex justify-content-end gap-2">
+                                                                    <div className={`d-flex justify-content-end gap-2 ${index === 0 ? 'tour-complaints-actions-first' : ''}`}>
                                                                         <CButton
                                                                             size="sm"
                                                                             className="text-info shadow-sm"
                                                                             onClick={() => handleShowInfo(complaint)}
-                                                                            title="View Details"
+                                                                            title="Ver Detalles"
                                                                             shape="rounded-pill"
                                                                         >
                                                                             <CIcon icon={cilInfo} />
@@ -401,55 +395,53 @@ const Complaints = () => {
                                                                             size="sm"
                                                                             className="text-success shadow-sm"
                                                                             onClick={() => downloadComplaintPDF(complaint.id)}
-                                                                            title="Download PDF"
+                                                                            title="Descargar PDF"
                                                                             shape="rounded-pill"
                                                                         >
                                                                             <CIcon icon={cilCloudDownload} />
                                                                         </CButton>
                                                                         {(userRole === 'administrator' || userRole === 'oficial') && (
-                                                                            <>
-                                                                                <CDropdown variant="btn-group">
-                                                                                    <CDropdownToggle
-                                                                                        size="sm"
-                                                                                        shape="rounded-pill"
-                                                                                        className="text-primary shadow-sm"
-                                                                                        split={false}
+                                                                            <CDropdown variant="btn-group">
+                                                                                <CDropdownToggle
+                                                                                    size="sm"
+                                                                                    shape="rounded-pill"
+                                                                                    className="text-primary shadow-sm"
+                                                                                    split={false}
+                                                                                >
+                                                                                    <CIcon icon={cilPencil} />
+                                                                                </CDropdownToggle>
+                                                                                <CDropdownMenu>
+                                                                                    <CDropdownItem
+                                                                                        onClick={() => { setEditing(complaint); setShowForm(true) }}
+                                                                                        style={{ cursor: 'pointer' }}
                                                                                     >
-                                                                                        <CIcon icon={cilPencil} />
-                                                                                    </CDropdownToggle>
-                                                                                    <CDropdownMenu>
+                                                                                        Editar Detalles
+                                                                                    </CDropdownItem>
+                                                                                    <CDropdownDivider />
+                                                                                    <CDropdownHeader style={{ cursor: 'default' }}>Gestión de Estado</CDropdownHeader>
+                                                                                    {getStatusOptions(complaint.status).map(status => (
                                                                                         <CDropdownItem
-                                                                                            onClick={() => { setEditing(complaint); setShowForm(true) }}
+                                                                                            key={status.value}
+                                                                                            onClick={() => handleStatusChange(complaint.id, status.value)}
+                                                                                            className={status.value === 'rejected' ? 'text-danger' : ''}
                                                                                             style={{ cursor: 'pointer' }}
                                                                                         >
-                                                                                            Edit Details
+                                                                                            Marcar como {status.label}
                                                                                         </CDropdownItem>
-                                                                                        <CDropdownItem divider />
-                                                                                        <CDropdownItem header style={{ cursor: 'default' }}>Status Management</CDropdownItem>
-                                                                                        {getStatusOptions(complaint.status).map(status => (
-                                                                                            <CDropdownItem
-                                                                                                key={status.value}
-                                                                                                onClick={() => handleStatusChange(complaint.id, status.value)}
-                                                                                                className={status.value === 'Rejected' ? 'text-danger' : ''}
-                                                                                                style={{ cursor: 'pointer' }}
-                                                                                            >
-                                                                                                Mark as {status.label}
-                                                                                            </CDropdownItem>
-                                                                                        ))}
-                                                                                    </CDropdownMenu>
-                                                                                </CDropdown>
-                                                                                {userRole === 'administrator' && (
-                                                                                    <CButton
-                                                                                        size="sm"
-                                                                                        className="text-danger shadow-sm"
-                                                                                        onClick={() => showDeleteConfirmation(complaint.id, complaint.title)}
-                                                                                        title="Delete Case"
-                                                                                        shape="rounded-pill"
-                                                                                    >
-                                                                                        <CIcon icon={cilTrash} />
-                                                                                    </CButton>
-                                                                                )}
-                                                                            </>
+                                                                                    ))}
+                                                                                </CDropdownMenu>
+                                                                            </CDropdown>
+                                                                        )}
+                                                                        {(userRole === 'administrator') && (
+                                                                            <CButton
+                                                                                size="sm"
+                                                                                className="text-danger shadow-sm"
+                                                                                onClick={() => showDeleteConfirmation(complaint.id, complaint.title)}
+                                                                                title="Eliminar"
+                                                                                shape="rounded-pill"
+                                                                            >
+                                                                                <CIcon icon={cilTrash} />
+                                                                            </CButton>
                                                                         )}
                                                                     </div>
                                                                 </CTableDataCell>
@@ -474,11 +466,11 @@ const Complaints = () => {
                                         <div className="text-center py-5 rounded-3 border border-dashed">
                                             <div className="text-muted">
                                                 <CIcon icon={cilFolderOpen} size="3xl" className="mb-3 text-secondary opacity-25" />
-                                                <h5>{searchTerm ? 'No cases found' : 'No complaints filed'}</h5>
+                                                <h5>{searchTerm ? 'No se encontraron casos' : 'No hay denuncias registradas'}</h5>
                                                 <p className="text-secondary">
                                                     {searchTerm
-                                                        ? 'Try different search keywords.'
-                                                        : 'Create a new complaint to start tracking.'
+                                                        ? 'Intente con otras palabras clave.'
+                                                        : 'Cree una nueva denuncia para comenzar el seguimiento.'
                                                     }
                                                 </p>
                                                 {searchTerm && (
@@ -487,7 +479,7 @@ const Complaints = () => {
                                                         variant="ghost"
                                                         onClick={() => handleSearch('')}
                                                     >
-                                                        Clear Search
+                                                        Limpiar Búsqueda
                                                     </CButton>
                                                 )}
                                             </div>
@@ -523,9 +515,9 @@ const Complaints = () => {
                 visible={deleteModal.visible}
                 onClose={() => setDeleteModal({ visible: false, complaintId: null, complaintTitle: '' })}
                 onConfirm={confirmDelete}
-                title="Delete Complaint"
-                message={`Are you sure you want to delete the complaint "${deleteModal.complaintTitle}"? This action cannot be undone.`}
-                confirmText="Confirm Delete"
+                title="Eliminar Denuncia"
+                message={`¿Está seguro de que desea eliminar la denuncia "${deleteModal.complaintTitle}"? Esta acción no se puede deshacer.`}
+                confirmText="Confirmar Eliminación"
                 type="danger"
             />
         </CContainer>

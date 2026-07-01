@@ -7,7 +7,7 @@ import {
     CCardFooter, CTooltip,
     CTable, CTableHead, CTableRow, CTableHeaderCell,
     CTableBody, CTableDataCell,
-    CDropdown, CDropdownToggle, CDropdownMenu, CDropdownItem
+    CDropdown, CDropdownToggle, CDropdownMenu, CDropdownItem, CDropdownDivider, CDropdownHeader
 } from '@coreui/react'
 import SearchInput from 'src/components/SearchInput'
 import CIcon from '@coreui/icons-react'
@@ -54,17 +54,17 @@ const Assignments = () => {
     })
 
     const statusConfig = {
-        'scheduled': { color: 'primary', text: 'Scheduled', icon: cilCalendar },
-        'in_progress': { color: 'warning', text: 'In Progress', icon: cilClock },
-        'completed': { color: 'success', text: 'Completed', icon: cilCheckCircle },
-        'cancelled': { color: 'danger', text: 'Cancelled', icon: cilBan },
-        'postponed': { color: 'info', text: 'Postponed', icon: cilClock }
+        'scheduled': { color: 'primary', text: 'Programada', icon: cilCalendar },
+        'in_progress': { color: 'warning', text: 'En Progreso', icon: cilClock },
+        'completed': { color: 'success', text: 'Completada', icon: cilCheckCircle },
+        'cancelled': { color: 'danger', text: 'Cancelada', icon: cilBan },
+        'postponed': { color: 'info', text: 'Pospuesta', icon: cilClock }
     }
 
     const priorityConfig = {
-        'high': { color: 'danger', text: 'High' },
-        'medium': { color: 'warning', text: 'Medium' },
-        'low': { color: 'success', text: 'Low' }
+        'high': { color: 'danger', text: 'Alta' },
+        'medium': { color: 'warning', text: 'Media' },
+        'low': { color: 'success', text: 'Baja' }
     }
 
     useEffect(() => {
@@ -138,7 +138,7 @@ const Assignments = () => {
                     appAlert: {
                         visible: true,
                         color: 'success',
-                        message: 'Assignment updated successfully',
+                        message: 'Asignación actualizada correctamente',
                     },
                 })
             } else {
@@ -148,7 +148,7 @@ const Assignments = () => {
                     appAlert: {
                         visible: true,
                         color: 'success',
-                        message: 'Assignment created successfully',
+                        message: 'Asignación creada correctamente',
                     },
                 })
             }
@@ -162,7 +162,7 @@ const Assignments = () => {
                 appAlert: {
                     visible: true,
                     color: 'danger',
-                    message: 'Error saving assignment: ' + error.message,
+                    message: 'Error al guardar la asignación: ' + error.message,
                 },
             })
         }
@@ -186,7 +186,7 @@ const Assignments = () => {
                 appAlert: {
                     visible: true,
                     color: 'warning',
-                    message: 'Assignment deleted successfully',
+                    message: 'Asignación eliminada correctamente',
                 },
             })
         } catch (error) {
@@ -196,7 +196,7 @@ const Assignments = () => {
                 appAlert: {
                     visible: true,
                     color: 'danger',
-                    message: 'Error deleting assignment: ' + error.message,
+                    message: 'Error al eliminar la asignación: ' + error.message,
                 },
             })
         }
@@ -232,11 +232,11 @@ const Assignments = () => {
     const getStatusOptions = (currentStatus) => {
         const s = currentStatus?.toLowerCase()
         const statuses = [
-            { value: 'scheduled', label: 'Scheduled' },
-            { value: 'in_progress', label: 'In Progress' },
-            { value: 'completed', label: 'Completed' },
-            { value: 'postponed', label: 'Postponed' },
-            { value: 'cancelled', label: 'Cancelled' }
+            { value: 'scheduled', label: 'Programada' },
+            { value: 'in_progress', label: 'En Progreso' },
+            { value: 'completed', label: 'Completada' },
+            { value: 'postponed', label: 'Pospuesta' },
+            { value: 'cancelled', label: 'Cancelada' }
         ]
         return statuses.filter(status => status.value !== s)
     }
@@ -251,7 +251,7 @@ const Assignments = () => {
                 appAlert: {
                     visible: true,
                     color: 'success',
-                    message: `Status updated to ${newStatus}`,
+                    message: `Estado actualizado a ${newStatus}`,
                 },
             })
         } catch (error) {
@@ -261,7 +261,7 @@ const Assignments = () => {
                 appAlert: {
                     visible: true,
                     color: 'danger',
-                    message: 'Error changing status: ' + error.message,
+                    message: 'Error al cambiar el estado: ' + error.message,
                 },
             })
         }
@@ -299,7 +299,7 @@ const Assignments = () => {
     }
 
     const formatDate = (dateString) => {
-        return dateString ? new Date(dateString).toLocaleDateString('en-US') : 'Not set'
+        return dateString ? new Date(dateString).toLocaleDateString('es-ES') : 'No establecida'
     }
 
     const getParticipantsCount = (assignment) => {
@@ -311,7 +311,7 @@ const Assignments = () => {
     }
 
     const truncateDescription = (description, maxLength = 100) => {
-        if (!description) return 'No description provided'
+        if (!description) return 'Sin descripción'
         return description.length > maxLength
             ? `${description.substring(0, maxLength)}...`
             : description
@@ -345,7 +345,7 @@ const Assignments = () => {
                     <div>
                         <div className="fw-semibold small">{getParticipantsCount(assignment)} Total</div>
                         <div className="small text-muted" style={{ fontSize: '0.7rem' }}>
-                            {officials} Off. / {assignment.funcionaries?.length || 0} Fun. / {witnesses} Wit. / {jury} Jur.
+                            {officials} Ofi. / {assignment.funcionaries?.length || 0} Fun. / {witnesses} Tes. / {jury} Jur.
                         </div>
                     </div>
                 </div>
@@ -372,7 +372,7 @@ const Assignments = () => {
                         <div>
                             <CCardTitle className="fw-bold mb-1">
                                 <CIcon icon={cilBalanceScale} className="text-primary me-2" />
-                                <span>Case Details</span>
+                                <span>Detalles del Caso</span>
                             </CCardTitle>
                             <CCardText className="text-muted small mb-2">
                                 {truncateDescription(assignment.case_title, 60)}
@@ -384,10 +384,10 @@ const Assignments = () => {
                     <div className="mb-3">
                         <div className="d-flex align-items-center mb-2">
                             <CIcon icon={cilBalanceScale} className="me-2 text-secondary" size="sm" />
-                            <span className="small fw-semibold">Judge:</span>
+                            <span className="small fw-semibold">Juez:</span>
                         </div>
                         <CCardText className="mb-0 ps-4 small">
-                            {assignment.judge_name || 'Unassigned'}
+                            {assignment.judge_name || 'Sin asignar'}
                         </CCardText>
                     </div>
 
@@ -395,7 +395,7 @@ const Assignments = () => {
                         <div className="col-6">
                             <div className="d-flex align-items-center mb-1">
                                 <CIcon icon={cilCalendar} className="me-2 text-primary" size="sm" />
-                                <span className="small fw-semibold">Hearing</span>
+                                <span className="small fw-semibold">Audiencia</span>
                             </div>
                             <div className="ps-4">
                                 <div className="small fw-semibold">{formatDate(assignment.hearing_date)}</div>
@@ -407,7 +407,7 @@ const Assignments = () => {
                         <div className="col-6">
                             <div className="d-flex align-items-center mb-1">
                                 <CIcon icon={cilCalendar} className="me-2 text-info" size="sm" />
-                                <span className="small fw-semibold">Trial</span>
+                                <span className="small fw-semibold">Juicio</span>
                             </div>
                             <div className="ps-4">
                                 <div className="small fw-semibold">{formatDate(assignment.trial_date)}</div>
@@ -421,34 +421,34 @@ const Assignments = () => {
                     <div className="mb-4">
                         <div className="d-flex align-items-center mb-2">
                             <CIcon icon={cilPeople} className="me-2 text-info" size="sm" />
-                            <span className="small fw-semibold">Participants</span>
+                            <span className="small fw-semibold">Participantes</span>
                         </div>
                         <div className="ps-4">
                             <div className="small fw-semibold">{participantsCount} Total</div>
                             <div className="small text-muted" style={{ fontSize: '0.7rem' }}>
-                                Off: {assignment.officials?.length || 0} |
+                                Ofi: {assignment.officials?.length || 0} |
                                 Fun: {assignment.funcionaries?.length || 0} |
-                                Wit: {assignment.witnesses?.length || 0} |
+                                Tes: {assignment.witnesses?.length || 0} |
                                 Jur: {assignment.jury?.length || 0}
                             </div>
                         </div>
                     </div>
 
                     <div className="d-flex justify-content-between align-items-center mb-3">
-                        <span className="small fw-semibold">Priority:</span>
+                        <span className="small fw-semibold">Prioridad:</span>
                         {getPriorityBadge(assignment.priority)}
                     </div>
                 </CCardBody>
 
                 <CCardFooter className="border-top-0 bg-transparent pt-0 pb-4 px-4">
                     <div className="d-flex justify-content-between gap-2">
-                        <CTooltip content="View Details">
+                        <CTooltip content="Ver Detalles">
                             <CButton
                                 size="sm"
                                 variant="outline"
-                                className="text-info shadow-sm"
+                                className="tour-assignments-actions-first text-info shadow-sm"
                                 onClick={() => handleShowInfo(assignment)}
-                                title="View Details"
+                                title="Ver Detalles"
                                 shape="rounded-pill"
                             >
                                 <CIcon icon={cilInfo} />
@@ -473,10 +473,10 @@ const Assignments = () => {
                                             onClick={() => handleEdit(assignment)}
                                             style={{ cursor: 'pointer' }}
                                         >
-                                            Edit Details
+                                            Editar Detalles
                                         </CDropdownItem>
-                                        <CDropdownItem divider />
-                                        <CDropdownItem header style={{ cursor: 'default' }}>Status Management</CDropdownItem>
+                                        <CDropdownDivider />
+                                        <CDropdownHeader style={{ cursor: 'default' }}>Gestión de Estado</CDropdownHeader>
                                         {getStatusOptions(assignment.status).map(status => (
                                             <CDropdownItem
                                                 key={status.value}
@@ -484,19 +484,19 @@ const Assignments = () => {
                                                 className={status.value === 'Cancelled' ? 'text-danger' : ''}
                                                 style={{ cursor: 'pointer' }}
                                             >
-                                                Mark as {status.label}
+                                                Marcar como {status.label}
                                             </CDropdownItem>
                                         ))}
                                     </CDropdownMenu>
                                 </CDropdown>
 
-                                <CTooltip content="Delete Assignment">
+                                <CTooltip content="Eliminar Asignación">
                                     <CButton
                                         size="sm"
                                         variant="outline"
                                         className="text-danger shadow-sm"
                                         onClick={() => showDeleteConfirmation(assignment.id, assignment.case_title)}
-                                        title="Delete Assignment"
+                                        title="Eliminar Asignación"
                                         shape="rounded-pill"
                                     >
                                         <CIcon icon={cilTrash} />
@@ -520,12 +520,12 @@ const Assignments = () => {
                         <CCardHeader className="border-bottom-0 pt-4 pb-3 px-4">
                             <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
                                 <div>
-                                    <h4 className="mb-1 fw-bold" style={{ letterSpacing: '-0.5px' }}>
+                                    <h4 className="mb-1 fw-bold tour-assignments-title" style={{ letterSpacing: '-0.5px' }}>
                                         <CIcon icon={cilBalanceScale} className="me-2 text-primary" style={{ color: '#1a237e' }} />
-                                        Assignment Management
+                                        Gestión de Asignaciones
                                     </h4>
                                     <p className="text-muted mb-0 small">
-                                        Manage court cases, hearings, and assignments
+                                        Gestionar casos judiciales, audiencias y asignaciones
                                     </p>
                                 </div>
                                 <div className="d-flex align-items-center gap-2">
@@ -535,7 +535,7 @@ const Assignments = () => {
                                             variant={viewMode === 'cards' ? 'outline' : 'ghost'}
                                             size="sm"
                                             onClick={() => setViewMode('cards')}
-                                            title="Card View"
+                                            title="Vista de Tarjetas"
                                         >
                                             <CIcon icon={cilApps} />
                                         </CButton>
@@ -544,7 +544,7 @@ const Assignments = () => {
                                             variant={viewMode === 'list' ? 'outline' : 'ghost'}
                                             size="sm"
                                             onClick={() => setViewMode('list')}
-                                            title="List View"
+                                            title="Vista de Lista"
                                         >
                                             <CIcon icon={cilListRich} />
                                         </CButton>
@@ -554,11 +554,11 @@ const Assignments = () => {
                                             color="primary colorbutton"
                                             style={colorbutton}
                                             onClick={handleNewAssignment}
-                                            className="d-flex align-items-center px-4 py-2 shadow-sm"
+                                            className="tour-assignments-new-btn d-flex align-items-center px-4 py-2 shadow-sm"
                                             shape="rounded-pill"
                                         >
                                             <CIcon icon={cilPlus} className="me-2 fw-bold" />
-                                            NEW ASSIGNMENT
+                                            NUEVA ASIGNACIÓN
                                         </CButton>
                                     )}
                                 </div>
@@ -569,13 +569,13 @@ const Assignments = () => {
                             {loading ? (
                                 <div className="text-center py-5">
                                     <CSpinner color="primary" variant="grow" />
-                                    <div className="mt-3 text-muted">Loading assignments...</div>
+                                    <div className="mt-3 text-muted">Cargando asignaciones...</div>
                                 </div>
                             ) : (
                                 <>
                                     <div className="mb-4 p-3 rounded-3 border d-flex justify-content-between align-items-center gap-3 bg-light-subtle dark:bg-dark-subtle">
                                         <div className="text-muted fw-semibold small">
-                                            Total Records: <span className="fs-6">{filteredAssignments.length}</span>
+                                            Total de Registros: <span className="fs-6">{filteredAssignments.length}</span>
                                         </div>
 
                                         <div style={{ maxWidth: '400px', width: '100%' }}>
@@ -602,14 +602,14 @@ const Assignments = () => {
                                                         <CTable hover align="middle" className="mb-0">
                                                             <CTableHead>
                                                                 <CTableRow>
-                                                                    <CTableHeaderCell className="text-uppercase text-secondary small ps-4 py-3" style={{ fontWeight: 600 }}>Case Details</CTableHeaderCell>
-                                                                    <CTableHeaderCell className="text-uppercase text-secondary small py-3" style={{ fontWeight: 600 }}>Judge</CTableHeaderCell>
-                                                                    <CTableHeaderCell className="text-uppercase text-secondary small py-3" style={{ fontWeight: 600 }}>Hearing</CTableHeaderCell>
-                                                                    <CTableHeaderCell className="text-uppercase text-secondary small py-3" style={{ fontWeight: 600 }}>Trial</CTableHeaderCell>
-                                                                    <CTableHeaderCell className="text-uppercase text-secondary small py-3" style={{ fontWeight: 600 }}>Participants</CTableHeaderCell>
-                                                                    <CTableHeaderCell className="text-uppercase text-secondary small py-3" style={{ fontWeight: 600 }}>Priority</CTableHeaderCell>
-                                                                    <CTableHeaderCell className="text-uppercase text-secondary small py-3" style={{ fontWeight: 600 }}>Status</CTableHeaderCell>
-                                                                    <CTableHeaderCell className="text-uppercase text-secondary small text-end pe-4 py-3" style={{ fontWeight: 600, width: '150px' }}>Actions</CTableHeaderCell>
+                                                                    <CTableHeaderCell className="text-uppercase text-secondary small ps-4 py-3" style={{ fontWeight: 600 }}>Detalles del Caso</CTableHeaderCell>
+                                                                    <CTableHeaderCell className="text-uppercase text-secondary small py-3" style={{ fontWeight: 600 }}>Juez</CTableHeaderCell>
+                                                                    <CTableHeaderCell className="text-uppercase text-secondary small py-3" style={{ fontWeight: 600 }}>Audiencia</CTableHeaderCell>
+                                                                    <CTableHeaderCell className="text-uppercase text-secondary small py-3" style={{ fontWeight: 600 }}>Juicio</CTableHeaderCell>
+                                                                    <CTableHeaderCell className="text-uppercase text-secondary small py-3" style={{ fontWeight: 600 }}>Participantes</CTableHeaderCell>
+                                                                    <CTableHeaderCell className="text-uppercase text-secondary small py-3" style={{ fontWeight: 600 }}>Prioridad</CTableHeaderCell>
+                                                                    <CTableHeaderCell className="text-uppercase text-secondary small py-3" style={{ fontWeight: 600 }}>Estado</CTableHeaderCell>
+                                                                    <CTableHeaderCell className="text-uppercase text-secondary small text-end pe-4 py-3" style={{ fontWeight: 600, width: '150px' }}>Acciones</CTableHeaderCell>
                                                                 </CTableRow>
                                                             </CTableHead>
                                                             <CTableBody>
@@ -619,7 +619,7 @@ const Assignments = () => {
                                                                             <div className="d-flex flex-column">
                                                                                 <div className="d-flex align-items-center mb-1">
                                                                                     <CIcon icon={cilBalanceScale} size="sm" className="text-primary me-2" />
-                                                                                    <span className="fw-bold">Trial Case</span>
+                                                                                    <span className="fw-bold">Caso de Juicio</span>
                                                                                 </div>
                                                                                 <span className="small text-muted text-truncate" style={{ maxWidth: '150px' }}>{assignment.case_title}</span>
                                                                             </div>
@@ -627,7 +627,7 @@ const Assignments = () => {
                                                                         <CTableDataCell>
                                                                             <div className="d-flex align-items-center">
                                                                                 <CIcon icon={cilBalanceScale} size="sm" className="me-2 text-secondary" />
-                                                                                {assignment.judge_name || 'Unassigned'}
+                                                                                {assignment.judge_name || 'Sin asignar'}
                                                                             </div>
                                                                         </CTableDataCell>
                                                                         <DateCell date={assignment.hearing_date} time={assignment.hearing_time} />
@@ -645,7 +645,7 @@ const Assignments = () => {
                                                                                     size="sm"
                                                                                     className="text-info shadow-sm"
                                                                                     onClick={() => handleShowInfo(assignment)}
-                                                                                    title="View Details"
+                                                                                    title="Ver Detalles"
                                                                                     shape="rounded-pill"
                                                                                 >
                                                                                     <CIcon icon={cilInfo} />
@@ -654,7 +654,7 @@ const Assignments = () => {
                                                                                     size="sm"
                                                                                     className="text-success shadow-sm"
                                                                                     onClick={() => downloadAssignmentPDF(assignment.id)}
-                                                                                    title="Download PDF"
+                                                                                    title="Descargar PDF"
                                                                                     shape="rounded-pill"
                                                                                 >
                                                                                     <CIcon icon={cilCloudDownload} />
@@ -675,10 +675,10 @@ const Assignments = () => {
                                                                                                     onClick={() => handleEdit(assignment)}
                                                                                                     style={{ cursor: 'pointer' }}
                                                                                                 >
-                                                                                                    Edit Details
+                                                                                                    Editar Detalles
                                                                                                 </CDropdownItem>
-                                                                                                <CDropdownItem divider />
-                                                                                                <CDropdownItem header style={{ cursor: 'default' }}>Status Management</CDropdownItem>
+                                                                                                <CDropdownDivider />
+                                                                                                <CDropdownHeader style={{ cursor: 'default' }}>Gestión de Estado</CDropdownHeader>
                                                                                                 {getStatusOptions(assignment.status).map(status => (
                                                                                                     <CDropdownItem
                                                                                                         key={status.value}
@@ -686,7 +686,7 @@ const Assignments = () => {
                                                                                                         className={status.value === 'Cancelled' ? 'text-danger' : ''}
                                                                                                         style={{ cursor: 'pointer' }}
                                                                                                     >
-                                                                                                        Mark as {status.label}
+                                                                                                        Marcar como {status.label}
                                                                                                     </CDropdownItem>
                                                                                                 ))}
                                                                                             </CDropdownMenu>
@@ -695,7 +695,7 @@ const Assignments = () => {
                                                                                             size="sm"
                                                                                             className="text-danger shadow-sm"
                                                                                             onClick={() => showDeleteConfirmation(assignment.id, assignment.case_title)}
-                                                                                            title="Delete Assignment"
+                                                                                            title="Eliminar Asignación"
                                                                                             shape="rounded-pill"
                                                                                         >
                                                                                             <CIcon icon={cilTrash} />
@@ -727,11 +727,11 @@ const Assignments = () => {
                                         <div className="text-center py-5 rounded-3 border border-dashed">
                                             <div className="text-muted">
                                                 <CIcon icon={cilBalanceScale} size="3xl" className="mb-3 text-secondary opacity-25" />
-                                                <h5>{searchTerm ? 'No matches found' : 'No records available'}</h5>
+                                                <h5>{searchTerm ? 'No se encontraron coincidencias' : 'No hay registros disponibles'}</h5>
                                                 <p className="text-secondary">
                                                     {searchTerm
-                                                        ? 'Try verifying the case number or title.'
-                                                        : 'Create a new court assignment to get started.'
+                                                        ? 'Intente verificar el número de caso o el título.'
+                                                        : 'Cree una nueva asignación judicial para comenzar.'
                                                     }
                                                 </p>
                                                 {searchTerm && (
@@ -740,7 +740,7 @@ const Assignments = () => {
                                                         variant="ghost"
                                                         onClick={() => handleSearch('')}
                                                     >
-                                                        Clear Search
+                                                        Limpiar Búsqueda
                                                     </CButton>
                                                 )}
                                             </div>
@@ -773,9 +773,9 @@ const Assignments = () => {
                 visible={deleteModal.visible}
                 onClose={() => setDeleteModal({ visible: false, assignmentId: null, assignmentTitle: '' })}
                 onConfirm={confirmDelete}
-                title="Delete Assignment"
-                message={`Are you sure you want to delete the assignment "${deleteModal.assignmentTitle}"? This action cannot be undone.`}
-                confirmText="Confirm Delete"
+                title="Eliminar Asignación"
+                message={`¿Está seguro de que desea eliminar la asignación "${deleteModal.assignmentTitle}"? Esta acción no se puede deshacer.`}
+                confirmText="Confirmar Eliminación"
                 type="danger"
             />
         </CContainer>

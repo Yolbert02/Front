@@ -69,10 +69,10 @@ const InfoOfficer = ({ visible, onClose, officer }) => {
 
     const getStatusBadge = (status) => {
         const statusConfig = {
-            'Active': { color: 'success', text: 'Active' },
-            'Inactive': { color: 'danger', text: 'Inactive' },
-            'Training': { color: 'warning', text: 'Training' },
-            'Suspended': { color: 'secondary', text: 'Suspended' }
+            'active': { color: 'success', text: 'Activo' },
+            'inactive': { color: 'danger', text: 'Inactivo' },
+            'training': { color: 'warning', text: 'En Formación' },
+            'suspended': { color: 'secondary', text: 'Suspendido' }
         }
 
         const config = statusConfig[status] || { color: 'secondary', text: status }
@@ -81,11 +81,11 @@ const InfoOfficer = ({ visible, onClose, officer }) => {
 
     const getComplaintStatusBadge = (status) => {
         const statusConfig = {
-            'Received': { color: 'primary', text: 'Received' },
-            'Under Investigation': { color: 'warning', text: 'Under Investigation' },
-            'Resolved': { color: 'success', text: 'Resolved' },
-            'Closed': { color: 'secondary', text: 'Closed' },
-            'Rejected': { color: 'danger', text: 'Rejected' }
+            'received': { color: 'primary', text: 'Recibida' },
+            'under_investigation': { color: 'warning', text: 'Bajo Investigación' },
+            'resolved': { color: 'success', text: 'Resuelta' },
+            'closed': { color: 'secondary', text: 'Cerrada' },
+            'rejected': { color: 'danger', text: 'Rechazada' }
         }
 
         const config = statusConfig[status] || { color: 'secondary', text: status }
@@ -94,10 +94,10 @@ const InfoOfficer = ({ visible, onClose, officer }) => {
 
     const getComplaintPriorityBadge = (priority) => {
         const priorityConfig = {
-            'Low': { color: 'success', text: 'Low' },
-            'Medium': { color: 'warning', text: 'Medium' },
-            'High': { color: 'danger', text: 'High' },
-            'Urgent': { color: 'danger', text: 'Urgent' }
+            'low': { color: 'success', text: 'Baja' },
+            'medium': { color: 'warning', text: 'Media' },
+            'high': { color: 'danger', text: 'Alta' },
+            'urgent': { color: 'danger', text: 'Urgente' }
         }
 
         const config = priorityConfig[priority] || { color: 'secondary', text: priority }
@@ -105,15 +105,15 @@ const InfoOfficer = ({ visible, onClose, officer }) => {
     }
 
     const formatDate = (dateString) => {
-        if (!dateString) return 'Not available'
+        if (!dateString) return 'No disponible'
         try {
-            return new Date(dateString).toLocaleDateString('en-US', {
+            return new Date(dateString).toLocaleDateString('es-ES', {
                 year: 'numeric',
                 month: 'short',
                 day: 'numeric'
             })
         } catch (e) {
-            return 'Invalid date'
+            return 'Fecha inválida'
         }
     }
 
@@ -122,17 +122,17 @@ const InfoOfficer = ({ visible, onClose, officer }) => {
             <CModalHeader style={modalStyles.header}>
                 <CModalTitle>
                     <CIcon icon={cilUser} className="me-2" />
-                    Officer Information - {officer.name} {officer.lastName}
+                    Información del Oficial - {officer.name} {officer.secondName ? officer.secondName + ' ' : ''}{officer.lastName} {officer.secondLastName || ''}
                 </CModalTitle>
             </CModalHeader>
             <CModalBody style={modalStyles.bodyScrollable}>
                 <CRow className="g-3">
                     <CCol md={12}>
-                        <CCard className="mb-4" style={cardStyles.card}>
+                        <CCard className="mb-4 tour-officer-info-profile" style={cardStyles.card}>
                             <CCardHeader style={cardStyles.header}>
                                 <h6 className="mb-0">
                                     <CIcon icon={cilUser} className="me-2" />
-                                    Officer Profile
+                                    Perfil del Oficial
                                 </h6>
                             </CCardHeader>
                             <CCardBody style={cardStyles.body}>
@@ -150,19 +150,37 @@ const InfoOfficer = ({ visible, onClose, officer }) => {
                                     <CCol md={9}>
                                         <CRow className="g-3">
                                             <CCol md={6}>
-                                                <strong>Full Name:</strong>
+                                                <strong>Primer Nombre:</strong>
                                                 <div className="text-muted">
-                                                    {officer.name} {officer.lastName}
+                                                    {officer.name}
                                                 </div>
                                             </CCol>
                                             <CCol md={6}>
-                                                <strong>Rank:</strong>
+                                                <strong>Segundo Nombre:</strong>
                                                 <div className="text-muted">
-                                                    {officer.rank || 'Not specified'}
+                                                    {officer.secondName || 'No especificado'}
                                                 </div>
                                             </CCol>
                                             <CCol md={6}>
-                                                <strong>Unit:</strong>
+                                                <strong>Primer Apellido:</strong>
+                                                <div className="text-muted">
+                                                    {officer.lastName}
+                                                </div>
+                                            </CCol>
+                                            <CCol md={6}>
+                                                <strong>Segundo Apellido:</strong>
+                                                <div className="text-muted">
+                                                    {officer.secondLastName || 'No especificado'}
+                                                </div>
+                                            </CCol>
+                                            <CCol md={6}>
+                                                <strong>Rango:</strong>
+                                                <div className="text-muted">
+                                                    {officer.rank || 'No especificado'}
+                                                </div>
+                                            </CCol>
+                                            <CCol md={6}>
+                                                <strong>Unidad:</strong>
                                                 <div className="text-muted">{officer.unit}</div>
                                             </CCol>
                                         </CRow>
@@ -172,11 +190,11 @@ const InfoOfficer = ({ visible, onClose, officer }) => {
                         </CCard>
                     </CCol>
                     <CCol md={6}>
-                        <CCard className="h-100" style={cardStyles.card}>
+                        <CCard className="h-100 tour-officer-info-contact" style={cardStyles.card}>
                             <CCardHeader style={cardStyles.header}>
                                 <h6 className="mb-0">
                                     <CIcon icon={cilAddressBook} className="me-2" />
-                                    Contact Information
+                                    Información de Contacto
                                 </h6>
                             </CCardHeader>
                             <CCardBody style={cardStyles.body}>
@@ -184,58 +202,58 @@ const InfoOfficer = ({ visible, onClose, officer }) => {
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
                                         <span className="d-flex align-items-center">
                                             <CIcon icon={cilAddressBook} className="me-2 text-primary" />
-                                            ID Number:
+                                            Cédula de Identidad:
                                         </span>
-                                        <strong>{officer.idNumber || 'Not specified'}</strong>
+                                        <strong>{officer.idNumber || 'No especificado'}</strong>
                                     </CListGroupItem>
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
                                         <span className="d-flex align-items-center">
                                             <CIcon icon={cilEnvelopeOpen} className="me-2 text-primary" />
-                                            Email:
+                                            Correo Electrónico:
                                         </span>
-                                        <strong>{officer.email || 'Not specified'}</strong>
+                                        <strong>{officer.email || 'No especificado'}</strong>
                                     </CListGroupItem>
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
                                         <span className="d-flex align-items-center">
                                             <CIcon icon={cilPhone} className="me-2 text-primary" />
-                                            Phone:
+                                            Teléfono:
                                         </span>
-                                        <strong>{officer.phone || 'Not specified'}</strong>
+                                        <strong>{officer.phone || 'No especificado'}</strong>
                                     </CListGroupItem>
                                 </CListGroup>
                             </CCardBody>
                         </CCard>
                     </CCol>
                     <CCol md={6}>
-                        <CCard className="h-100" style={cardStyles.card}>
+                        <CCard className="h-100 tour-officer-info-stats" style={cardStyles.card}>
                             <CCardHeader style={cardStyles.header}>
                                 <h6 className="mb-0">
                                     <CIcon icon={cilListRich} className="me-2" />
-                                    Assignment Statistics
+                                    Estadísticas de Asignación
                                 </h6>
                             </CCardHeader>
                             <CCardBody style={cardStyles.body}>
                                 <CListGroup flush>
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
-                                        <span>Total Complaints:</span>
+                                        <span>Total de Denuncias:</span>
                                         <CBadge color="primary">{complaints.length}</CBadge>
                                     </CListGroupItem>
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
-                                        <span>Under Investigation:</span>
+                                        <span>Bajo Investigación:</span>
                                         <CBadge color="warning">
-                                            {complaints.filter(c => c.status === 'Under Investigation').length}
+                                            {complaints.filter(c => c.status === 'under_investigation').length}
                                         </CBadge>
                                     </CListGroupItem>
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
-                                        <span>Resolved:</span>
+                                        <span>Resueltas:</span>
                                         <CBadge color="success">
-                                            {complaints.filter(c => c.status === 'Resolved').length}
+                                            {complaints.filter(c => c.status === 'resolved').length}
                                         </CBadge>
                                     </CListGroupItem>
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
-                                        <span>High Priority:</span>
+                                        <span>Prioridad Alta:</span>
                                         <CBadge color="danger">
-                                            {complaints.filter(c => c.priority === 'High' || c.priority === 'Urgent').length}
+                                            {complaints.filter(c => c.priority === 'high' || c.priority === 'urgent').length}
                                         </CBadge>
                                     </CListGroupItem>
                                 </CListGroup>
@@ -247,26 +265,26 @@ const InfoOfficer = ({ visible, onClose, officer }) => {
                             <CCardHeader style={cardStyles.header}>
                                 <h6 className="mb-0">
                                     <CIcon icon={cilWarning} className="me-2" />
-                                    Assigned Complaints ({complaints.length})
+                                    Denuncias Asignadas ({complaints.length})
                                 </h6>
                             </CCardHeader>
                             <CCardBody style={cardStyles.body}>
                                 {loadingComplaints ? (
                                     <div className="text-center py-4">
                                         <CSpinner color="primary" />
-                                        <div className="mt-2">Loading complaints...</div>
+                                        <div className="mt-2">Cargando denuncias...</div>
                                     </div>
                                 ) : complaints.length > 0 ? (
                                     <CTable hover responsive>
                                         <CTableHead>
                                             <CTableRow>
-                                                <CTableHeaderCell>Case</CTableHeaderCell>
-                                                <CTableHeaderCell>Title</CTableHeaderCell>
-                                                <CTableHeaderCell>Complainant</CTableHeaderCell>
-                                                <CTableHeaderCell>Location</CTableHeaderCell>
-                                                <CTableHeaderCell>Priority</CTableHeaderCell>
-                                                <CTableHeaderCell>Status</CTableHeaderCell>
-                                                <CTableHeaderCell>Incident Date</CTableHeaderCell>
+                                                <CTableHeaderCell>Caso</CTableHeaderCell>
+                                                <CTableHeaderCell>Título</CTableHeaderCell>
+                                                <CTableHeaderCell>Denunciante</CTableHeaderCell>
+                                                <CTableHeaderCell>Ubicación</CTableHeaderCell>
+                                                <CTableHeaderCell>Prioridad</CTableHeaderCell>
+                                                <CTableHeaderCell>Estado</CTableHeaderCell>
+                                                <CTableHeaderCell>Fecha del Incidente</CTableHeaderCell>
                                             </CTableRow>
                                         </CTableHead>
                                         <CTableBody>
@@ -302,8 +320,8 @@ const InfoOfficer = ({ visible, onClose, officer }) => {
                                 ) : (
                                     <div className="text-center py-4 text-muted">
                                         <CIcon icon={cilWarning} size="xl" className="mb-2" />
-                                        <div>No complaints assigned to this officer</div>
-                                        <small>This officer doesn't have any assigned complaints at the moment.</small>
+                                        <div>No hay denuncias asignadas a este oficial</div>
+                                        <small>Este oficial no tiene denuncias asignadas en este momento.</small>
                                     </div>
                                 )}
                             </CCardBody>
@@ -313,7 +331,7 @@ const InfoOfficer = ({ visible, onClose, officer }) => {
             </CModalBody>
             <CModalFooter style={modalStyles.footer}>
                 <CButton color="secondary" onClick={onClose}>
-                    Close
+                    Cerrar
                 </CButton>
             </CModalFooter>
         </CModal>

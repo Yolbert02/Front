@@ -14,8 +14,10 @@ import {
     CAlert,
     CSpinner,
     CBadge,
-    CImage
+    CImage,
+    CFormSelect
 } from '@coreui/react'
+import { colorbutton } from 'src/styles/darkModeStyles'
 import CIcon from '@coreui/icons-react'
 import { cilUser, cilCamera, cilSave, cilLockLocked, cilBell, cilShieldAlt } from '@coreui/icons'
 import { getProfile, updateProfile, updateProfilePicture, changePassword } from 'src/services/profile'
@@ -66,7 +68,7 @@ const Profile = () => {
             }
         } catch (error) {
             console.error('Error loading profile:', error)
-            setMessage({ type: 'danger', text: 'Error loading profile' })
+            setMessage({ type: 'danger', text: 'Error al cargar el perfil' })
         } finally {
             setLoading(false)
         }
@@ -77,12 +79,12 @@ const Profile = () => {
         if (!file) return
 
         if (!file.type.startsWith('image/')) {
-            setMessage({ type: 'danger', text: 'Please select an image file' })
+            setMessage({ type: 'danger', text: 'Por favor, seleccione un archivo de imagen' })
             return
         }
 
         if (file.size > 5 * 1024 * 1024) {
-            setMessage({ type: 'danger', text: 'Image size should be less than 5MB' })
+            setMessage({ type: 'danger', text: 'El tamaño de la imagen debe ser inferior a 5MB' })
             return
         }
 
@@ -93,12 +95,12 @@ const Profile = () => {
                 const imageData = e.target.result
                 const updatedProfile = await updateProfilePicture(imageData)
                 setProfile(updatedProfile)
-                setMessage({ type: 'success', text: 'Profile picture updated successfully' })
+                setMessage({ type: 'success', text: 'Foto de perfil actualizada con éxito' })
             }
             reader.readAsDataURL(file)
         } catch (error) {
             console.error('Error updating profile picture:', error)
-            setMessage({ type: 'danger', text: 'Error updating profile picture' })
+            setMessage({ type: 'danger', text: 'Error al actualizar la foto de perfil' })
         } finally {
             setSaving(false)
         }
@@ -109,16 +111,16 @@ const Profile = () => {
         
         const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
         if (formData.first_name && !nameRegex.test(formData.first_name.trim())) {
-            setMessage({ type: 'danger', text: 'First name cannot contain numbers' })
+            setMessage({ type: 'danger', text: 'El nombre no puede contener números' })
             return
         }
         if (formData.last_name && !nameRegex.test(formData.last_name.trim())) {
-            setMessage({ type: 'danger', text: 'Last name cannot contain numbers' })
+            setMessage({ type: 'danger', text: 'El apellido no puede contener números' })
             return
         }
 
         if (phoneNumber && !/^\d{7}$/.test(phoneNumber.trim())) {
-            setMessage({ type: 'danger', text: 'Phone number must be exactly 7 digits' })
+            setMessage({ type: 'danger', text: 'El número de teléfono debe tener exactamente 7 dígitos' })
             return
         }
 
@@ -132,10 +134,10 @@ const Profile = () => {
             }
             const updatedProfile = await updateProfile(dataToSave)
             setProfile(updatedProfile)
-            setMessage({ type: 'success', text: 'Profile updated successfully' })
+            setMessage({ type: 'success', text: 'Perfil actualizado con éxito' })
         } catch (error) {
             console.error('Error updating profile:', error)
-            setMessage({ type: 'danger', text: 'Error updating profile' })
+            setMessage({ type: 'danger', text: 'Error al actualizar el perfil' })
         } finally {
             setSaving(false)
         }
@@ -145,12 +147,12 @@ const Profile = () => {
         e.preventDefault()
 
         if (passwordData.newPassword !== passwordData.confirmPassword) {
-            setMessage({ type: 'danger', text: 'New passwords do not match' })
+            setMessage({ type: 'danger', text: 'Las nuevas contraseñas no coinciden' })
             return
         }
 
         if (passwordData.newPassword.length < 6) {
-            setMessage({ type: 'danger', text: 'Password must be at least 6 characters' })
+            setMessage({ type: 'danger', text: 'La contraseña debe tener al menos 6 caracteres' })
             return
         }
 
@@ -165,7 +167,7 @@ const Profile = () => {
             })
         } catch (error) {
             console.error('Error changing password:', error)
-            setMessage({ type: 'danger', text: 'Error changing password' })
+            setMessage({ type: 'danger', text: 'Error al cambiar la contraseña' })
         } finally {
             setSaving(false)
         }
@@ -173,9 +175,9 @@ const Profile = () => {
 
     const getRoleBadge = (role) => {
         const roleConfig = {
-            'administrador': { color: 'danger', text: 'Administrator' },
-            'oficial': { color: 'primary', text: 'Officer' },
-            'funcionario': { color: 'info', text: 'Official' },
+            'administrador': { color: 'danger', text: 'Administrador' },
+            'oficial': { color: 'primary', text: 'Oficial' },
+            'funcionario': { color: 'info', text: 'Funcionario' },
             'civil': { color: 'success', text: 'Civil' }
         }
 
@@ -188,7 +190,7 @@ const Profile = () => {
             <CContainer fluid>
                 <div className="text-center py-5">
                     <CSpinner color="primary" />
-                    <div className="mt-3">Loading profile...</div>
+                    <div className="mt-3">Cargando perfil...</div>
                 </div>
             </CContainer>
         )
@@ -198,7 +200,7 @@ const Profile = () => {
         <CContainer fluid>
             <CRow>
                 <CCol lg={4} md={12}>
-                    <CCard className="mb-4">
+                    <CCard className="mb-4 tour-profile-card">
                         <CCardBody className="text-center">
                             <div className="position-relative d-inline-block">
                                 <div className="position-relative">
@@ -234,7 +236,7 @@ const Profile = () => {
                                     htmlFor="profile-picture-upload"
                                     className="btn btn-primary btn-sm rounded-circle position-absolute"
                                     style={{ bottom: '20px', right: '20px', cursor: 'pointer' }}
-                                    title="Change profile picture"
+                                    title="Cambiar foto de perfil"
                                 >
                                     <CIcon icon={cilCamera} />
                                     <input
@@ -253,11 +255,11 @@ const Profile = () => {
                             {profile?.role && getRoleBadge(profile.role)}
 
                             <div className="mt-3 text-start">
-                                <p><strong>Document:</strong> {profile?.document}</p>
-                                <p><strong>Phone:</strong> {profile?.number_phone}</p>
-                                <p><strong>Department:</strong> {profile?.department || 'Not specified'}</p>
-                                <p><strong>Location:</strong> {profile?.location || 'Not specified'}</p>
-                                <p><strong>Member since:</strong> {profile?.join_date || '2024'}</p>
+                                <p><strong>Documento:</strong> {profile?.document}</p>
+                                <p><strong>Teléfono:</strong> {profile?.number_phone}</p>
+                                <p><strong>Departamento:</strong> {profile?.department || 'No especificado'}</p>
+                                <p><strong>Ubicación:</strong> {profile?.location || 'No especificado'}</p>
+                                <p><strong>Miembro desde:</strong> {profile?.join_date || '2024'}</p>
                             </div>
                         </CCardBody>
                     </CCard>
@@ -274,7 +276,7 @@ const Profile = () => {
                                     style={{ textDecoration: 'none', borderRadius: 0 }}
                                 >
                                     <CIcon icon={cilUser} className="me-2" />
-                                    Personal Information
+                                    Información Personal
                                 </CButton>
                                 <CButton
                                     color="link"
@@ -283,7 +285,7 @@ const Profile = () => {
                                     style={{ textDecoration: 'none', borderRadius: 0 }}
                                 >
                                     <CIcon icon={cilLockLocked} className="me-2" />
-                                    Security
+                                    Seguridad
                                 </CButton>
                             </div>
                         </CCardHeader>
@@ -296,12 +298,12 @@ const Profile = () => {
                             )}
                             {activeTab === 'personal' && (
                                 <CForm onSubmit={handleSaveProfile}>
-                                    <h5 className="mb-4">Personal Information</h5>
+                                    <h5 className="mb-4">Información Personal</h5>
 
                                     <CRow className="g-3">
                                         <CCol md={6}>
                                             <CFormInput
-                                                label="First Name *"
+                                                label="Nombre *"
                                                 value={formData.first_name || ''}
                                                 onChange={(e) => setFormData({ ...formData, first_name: e.target.value.replace(/[0-9]/g, '') })}
                                                 required
@@ -309,7 +311,7 @@ const Profile = () => {
                                         </CCol>
                                         <CCol md={6}>
                                             <CFormInput
-                                                label="Last Name *"
+                                                label="Apellido *"
                                                 value={formData.last_name || ''}
                                                 onChange={(e) => setFormData({ ...formData, last_name: e.target.value.replace(/[0-9]/g, '') })}
                                                 required
@@ -319,7 +321,7 @@ const Profile = () => {
                                     <CRow className="g-3 mt-2">
                                         <CCol md={6}>
                                             <CFormInput
-                                                label="Email *"
+                                                label="Correo Electrónico *"
                                                 type="email"
                                                 value={formData.gmail || ''}
                                                 onChange={(e) => setFormData({ ...formData, gmail: e.target.value })}
@@ -328,7 +330,7 @@ const Profile = () => {
                                         </CCol>
                                         <CCol md={6}>
                                             <div className="mb-3">
-                                                <label className="form-label">Phone Number</label>
+                                                <label className="form-label">Número de Teléfono</label>
                                                 <div className="input-group">
                                                     <CFormSelect
                                                         style={{ maxWidth: '100px' }}
@@ -352,45 +354,52 @@ const Profile = () => {
                                     </CRow>
                                     <div className="mt-3">
                                         <CFormInput
-                                            label="Department"
+                                            label="Departamento"
                                             value={formData.department || ''}
                                             onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                                            placeholder="Your department or unit"
+                                            placeholder="Su departamento o unidad"
                                         />
                                     </div>
                                     <div className="mt-3">
                                         <CFormInput
-                                            label="Location"
+                                            label="Ubicación"
                                             value={formData.location || ''}
                                             onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                                            placeholder="Your city and country"
+                                            placeholder="Su ciudad y país"
                                         />
                                     </div>
                                     <div className="mt-3">
                                         <CFormTextarea
-                                            label="Bio"
+                                            label="Biografía"
                                             rows="3"
                                             value={formData.bio || ''}
                                             onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                                            placeholder="Tell us about yourself..."
+                                            placeholder="Cuéntanos sobre ti..."
                                         />
                                     </div>
                                     <div className="mt-4">
-                                        <CButton type="submit" color="primary" disabled={saving}>
-                                            {saving ? <CSpinner size="sm" /> : <CIcon icon={cilSave} />}
-                                            {saving ? ' Saving...' : ' Save Changes'}
+                                        <CButton 
+                                            type="submit" 
+                                            color="primary colorbutton" 
+                                            style={colorbutton}
+                                            disabled={saving}
+                                            shape="rounded-pill"
+                                            className="px-4 py-2"
+                                        >
+                                            {saving ? <CSpinner size="sm" /> : <CIcon icon={cilSave} className="me-2" />}
+                                            {saving ? ' Guardando...' : ' Guardar Cambios'}
                                         </CButton>
                                     </div>
                                 </CForm>
                             )}
                             {activeTab === 'security' && (
                                 <CForm onSubmit={handleChangePassword}>
-                                    <h5 className="mb-4">Security Settings</h5>
+                                    <h5 className="mb-4">Ajustes de Seguridad</h5>
                                     <div className="mb-3">
                                         <CFormInput
                                             type="password"
-                                            label="Current Password"
-                                            placeholder="Enter your current password"
+                                            label="Contraseña Actual"
+                                            placeholder="Ingrese su contraseña actual"
                                             value={passwordData.currentPassword}
                                             onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
                                             required
@@ -399,8 +408,8 @@ const Profile = () => {
                                     <div className="mb-3">
                                         <CFormInput
                                             type="password"
-                                            label="New Password"
-                                            placeholder="Minimum 6 characters"
+                                            label="Nueva Contraseña"
+                                            placeholder="Mínimo 6 caracteres"
                                             value={passwordData.newPassword}
                                             onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
                                             required
@@ -409,8 +418,8 @@ const Profile = () => {
                                     <div className="mb-4">
                                         <CFormInput
                                             type="password"
-                                            label="Confirm New Password"
-                                            placeholder="Repeat your new password"
+                                            label="Confirmar Nueva Contraseña"
+                                            placeholder="Repita su nueva contraseña"
                                             value={passwordData.confirmPassword}
                                             onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
                                             required
@@ -423,7 +432,7 @@ const Profile = () => {
                                         padding: '10px 25px'
                                     }}>
                                         {saving ? <CSpinner size="sm" /> : <CIcon icon={cilSave} className="me-2" />}
-                                        {saving ? ' Updating...' : ' Change Password'}
+                                        {saving ? ' Actualizando...' : ' Cambiar Contraseña'}
                                     </CButton>
                                 </CForm>
                             )}

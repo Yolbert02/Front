@@ -9,6 +9,7 @@ import DocsIcons from './DocsIcons'
 import DocsLink from './DocsLink'
 import DocsExample from './DocsExample'
 import AppAlert from './AppAlert'
+import UserTour from './UserTour'
 
 export {
   AppAlert,
@@ -22,4 +23,6 @@ export {
   DocsIcons,
   DocsLink,
   DocsExample,
+  UserTour,
 }
+

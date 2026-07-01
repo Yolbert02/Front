@@ -5,13 +5,14 @@ const crypto = require('crypto');
 const { sendEmail } = require('../services/email.service');
 
 const login = async (req, res) => {
-    const email = req.body.email?.trim();
+    const identifier = req.body.dni?.trim();
     const password = req.body.password?.trim();
-    console.log(`Intento de login para: ${email}`);
+    const isEmail = identifier && identifier.includes('@');
+    console.log(`Intento de login para ${isEmail ? 'Email' : 'DNI'}: ${identifier}`);
 
     try {
         const user = await prisma.user.findUnique({
-            where: { email },
+            where: isEmail ? { email: identifier } : { dni: identifier },
             include: {
                 role: true,
                 officer: true
@@ -19,7 +20,7 @@ const login = async (req, res) => {
         });
 
         if (!user) {
-            console.log(`User not found: ${email}`);
+            console.log(`User not found with ${isEmail ? 'Email' : 'DNI'}: ${identifier}`);
             return res.status(401).json({ success: false, message: 'Invalid credentials' });
         }
 

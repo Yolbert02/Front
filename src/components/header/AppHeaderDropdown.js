@@ -171,11 +171,11 @@ const AppHeaderDropdown = () => {
 
         <CDropdownItem href="#">
           <CIcon icon={cilBell} className="me-2" />
-          Updates
+          Actualizaciones
         </CDropdownItem>
 
         <CDropdownHeader className="bg-body-secondary fw-semibold my-2">
-          Settings
+          Configuración
         </CDropdownHeader>
 
         <CDropdownItem
@@ -184,12 +184,12 @@ const AppHeaderDropdown = () => {
           style={{ cursor: 'pointer' }}
         >
           <CIcon icon={cilUser} className="me-2" />
-          My Profile
+          Mi Perfil
         </CDropdownItem>
 
         <CDropdownItem href="#">
           <CIcon icon={cilSettings} className="me-2" />
-          Settings
+          Ajustes
         </CDropdownItem>
 
         <CDropdownDivider />
@@ -200,7 +200,7 @@ const AppHeaderDropdown = () => {
           style={{ cursor: 'pointer' }}
         >
           <CIcon icon={cilAccountLogout} className="me-2" />
-          Log out
+          Cerrar Sesión
         </CDropdownItem>
       </CDropdownMenu>
     </CDropdown>

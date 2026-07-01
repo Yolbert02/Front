@@ -32,7 +32,7 @@ const AppSidebar = () => {
 
   return (
     <CSidebar
-      className="border-end border-dark"
+      className="border-end border-dark tour-sidebar-wrapper"
       colorScheme="dark"
       position="fixed"
       unfoldable={unfoldable}
@@ -69,10 +69,10 @@ const AppSidebar = () => {
                   }}
                 />
               </div>
-              <div className="text-center">
-                <h6 className="m-0 fw-bolder text-white text-uppercase" style={{ letterSpacing: '2px' }}>POLICE DEPT</h6>
-                <small className="text-white-50" style={{ fontSize: '0.7rem' }}>MANAGEMENT SYSTEM</small>
-              </div>
+               <div className="text-center">
+                 <h6 className="m-0 fw-bolder text-white text-uppercase" style={{ letterSpacing: '2px' }}>DEPT POLICÍA</h6>
+                 <small className="text-white-50" style={{ fontSize: '0.7rem' }}>SISTEMA DE GESTIÓN</small>
+               </div>
             </div>
           </div>
 

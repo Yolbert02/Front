@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {
     CModal,
     CModalHeader,
@@ -14,11 +14,14 @@ import {
     CSpinner
 } from '@coreui/react'
 import { colorbutton } from 'src/styles/darkModeStyles'
+import { checkDniExists, listUsers } from 'src/services/users'
 
 const OfficerForm = ({ visible, onClose, onSave, initial = null }) => {
     const [step, setStep] = useState(1)
-    const [name, setName] = useState('')
-    const [lastName, setLastName] = useState('')
+    const [primerNombre, setPrimerNombre] = useState('')
+    const [segundoNombre, setSegundoNombre] = useState('')
+    const [primerApellido, setPrimerApellido] = useState('')
+    const [segundoApellido, setSegundoApellido] = useState('')
     const [idPrefix, setIdPrefix] = useState('V')
     const [idNumberOnly, setIdNumberOnly] = useState('')
     const [idNumber, setIdNumber] = useState('')
@@ -31,14 +34,19 @@ const OfficerForm = ({ visible, onClose, onSave, initial = null }) => {
     const [status, setStatus] = useState('Active')
     const [errors, setErrors] = useState({})
     const [saving, setSaving] = useState(false)
+    const [dniStatus, setDniStatus] = useState(null) // null | 'checking' | 'exists' | 'available'
+    const [dniOwner, setDniOwner] = useState('')
+    const dniCheckTimeout = useRef(null)
 
     useEffect(() => {
         if (visible) {
             setStep(1)
             if (initial) {
                 console.log('Editing officer:', initial)
-                setName(initial.name || '')
-                setLastName(initial.lastName || '')
+                setPrimerNombre(initial.name || '')
+                setSegundoNombre(initial.secondName || '')
+                setPrimerApellido(initial.lastName || '')
+                setSegundoApellido(initial.secondLastName || '')
                 
                 const initialId = initial.idNumber || ''
                 const prefixMatch = initialId.match(/^([VE])-?/)
@@ -67,8 +75,10 @@ const OfficerForm = ({ visible, onClose, onSave, initial = null }) => {
                 }
             } else {
                 console.log('Creating new officer')
-                setName('')
-                setLastName('')
+                setPrimerNombre('')
+                setSegundoNombre('')
+                setPrimerApellido('')
+                setSegundoApellido('')
                 setIdPrefix('V')
                 setIdNumberOnly('')
                 setUnit('')
@@ -79,6 +89,8 @@ const OfficerForm = ({ visible, onClose, onSave, initial = null }) => {
                 setStatus('Active')
             }
             setErrors({})
+            setDniStatus(null)
+            setDniOwner('')
         }
     }, [visible, initial])
 
@@ -87,22 +99,32 @@ const OfficerForm = ({ visible, onClose, onSave, initial = null }) => {
         const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
 
         if (currentStep === 1) {
-            if (!name.trim()) {
-                newErrors.name = 'Name is required'
-            } else if (!nameRegex.test(name.trim())) {
-                newErrors.name = 'Name cannot contain numbers'
+            if (!primerNombre.trim()) {
+                newErrors.primerNombre = 'El primer nombre es obligatorio'
+            } else if (!nameRegex.test(primerNombre.trim())) {
+                newErrors.primerNombre = 'El primer nombre no puede contener números'
             }
 
-            if (!lastName.trim()) {
-                newErrors.lastName = 'Last name is required'
-            } else if (!nameRegex.test(lastName.trim())) {
-                newErrors.lastName = 'Last name cannot contain numbers'
+            if (segundoNombre.trim() && !nameRegex.test(segundoNombre.trim())) {
+                newErrors.segundoNombre = 'El segundo nombre no puede contener números'
+            }
+
+            if (!primerApellido.trim()) {
+                newErrors.primerApellido = 'El primer apellido es obligatorio'
+            } else if (!nameRegex.test(primerApellido.trim())) {
+                newErrors.primerApellido = 'El primer apellido no puede contener números'
+            }
+
+            if (segundoApellido.trim() && !nameRegex.test(segundoApellido.trim())) {
+                newErrors.segundoApellido = 'El segundo apellido no puede contener números'
             }
 
             if (!idNumberOnly.trim()) {
-                newErrors.idNumber = 'ID is required'
+                newErrors.idNumber = 'La cédula es obligatoria'
             } else if (idNumberOnly.length < 7 || idNumberOnly.length > 8) {
-                newErrors.idNumber = 'ID must be between 7 and 8 digits'
+                newErrors.idNumber = 'La cédula debe tener entre 7 y 8 dígitos'
+            } else if (dniStatus === 'exists' && !initial) {
+                newErrors.idNumber = 'Esta cédula ya está registrada en el sistema'
             }
         }
         
@@ -111,20 +133,20 @@ const OfficerForm = ({ visible, onClose, onSave, initial = null }) => {
             const hasPhone = phoneNumber && phoneNumber.trim()
 
             if (!hasEmail && !hasPhone) {
-                newErrors.contact = 'At least one contact method (email or phone) is required'
+                newErrors.contact = 'Se requiere al menos un método de contacto (correo o teléfono)'
             }
 
             if (hasEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-                newErrors.email = 'Invalid email format'
+                newErrors.email = 'Formato de correo inválido'
             }
 
             if (hasPhone && !/^\d{7}$/.test(phoneNumber.trim())) {
-                newErrors.phone = 'Phone number must be exactly 7 digits'
+                newErrors.phone = 'El número de teléfono debe tener exactamente 7 dígitos'
             }
         }
         
         if (currentStep === 3) {
-            if (!unit.trim()) newErrors.unit = 'Unit is required'
+            if (!unit.trim()) newErrors.unit = 'La unidad es obligatoria'
         }
 
         setErrors(newErrors)
@@ -156,8 +178,10 @@ const OfficerForm = ({ visible, onClose, onSave, initial = null }) => {
 
         try {
             const payload = {
-                name: name.trim(),
-                lastName: lastName.trim(),
+                first_name: primerNombre.trim(),
+                second_name: segundoNombre.trim() || null,
+                last_name: primerApellido.trim(),
+                second_last_name: segundoApellido.trim() || null,
                 idNumber: `${idPrefix}-${idNumberOnly.trim()}`,
                 unit: unit.trim(),
                 email: email.trim(),
@@ -176,22 +200,22 @@ const OfficerForm = ({ visible, onClose, onSave, initial = null }) => {
     }
 
     const rankOptions = [
-        'Pending Assignment',
-        'Cadet',
-        'Officer',
+        'Asignación Pendiente',
+        'Cadete',
+        'Oficial',
         'Detective',
-        'Sergeant',
-        'Lieutenant',
-        'Captain',
-        'Commander',
-        'Deputy Chief',
-        'Chief'
+        'Sargento',
+        'Teniente',
+        'Capitán',
+        'Comandante',
+        'Subjefe',
+        'Jefe'
     ]
 
     return (
-        <CModal size="lg" visible={visible} onClose={onClose}>
+        <CModal size="lg" visible={visible} onClose={onClose} backdrop="static" keyboard={false}>
             <CModalHeader>
-                <CModalTitle>{initial ? 'Edit Officer' : 'New Officer'}</CModalTitle>
+                <CModalTitle>{initial ? 'Editar Oficial' : 'Nuevo Oficial'}</CModalTitle>
             </CModalHeader>
             <CForm onSubmit={handleSubmit}>
                 <CModalBody>
@@ -206,33 +230,55 @@ const OfficerForm = ({ visible, onClose, onSave, initial = null }) => {
                     )}
                     {step === 1 && (
                         <>
-                            <h5 className="mb-3 text-primary">Personal Information</h5>
+                            <h5 className="mb-3 text-primary">Información Personal</h5>
                             <CRow className="g-3">
                                 <CCol md={6}>
                                     <CFormInput
-                                        label="Name *"
-                                        placeholder="John"
-                                        value={name}
-                                        onChange={(e) => setName(e.target.value.replace(/[0-9]/g, ''))}
-                                        invalid={!!errors.name}
-                                        feedback={errors.name}
+                                        className="tour-officer-form-firstname"
+                                        label="Primer Nombre *"
+                                        placeholder="Juan"
+                                        value={primerNombre}
+                                        onChange={(e) => setPrimerNombre(e.target.value.replace(/[0-9]/g, ''))}
+                                        invalid={!!errors.primerNombre}
+                                        feedback={errors.primerNombre}
                                         required
                                     />
                                 </CCol>
                                 <CCol md={6}>
                                     <CFormInput
-                                        label="Last Name *"
-                                        placeholder="Doe"
-                                        value={lastName}
-                                        onChange={(e) => setLastName(e.target.value.replace(/[0-9]/g, ''))}
-                                        invalid={!!errors.lastName}
-                                        feedback={errors.lastName}
+                                        label="Segundo Nombre"
+                                        placeholder="Carlos"
+                                        value={segundoNombre}
+                                        onChange={(e) => setSegundoNombre(e.target.value.replace(/[0-9]/g, ''))}
+                                        invalid={!!errors.segundoNombre}
+                                        feedback={errors.segundoNombre}
+                                    />
+                                </CCol>
+                                <CCol md={6}>
+                                    <CFormInput
+                                        className="tour-officer-form-lastname"
+                                        label="Primer Apellido *"
+                                        placeholder="Pérez"
+                                        value={primerApellido}
+                                        onChange={(e) => setPrimerApellido(e.target.value.replace(/[0-9]/g, ''))}
+                                        invalid={!!errors.primerApellido}
+                                        feedback={errors.primerApellido}
                                         required
+                                    />
+                                </CCol>
+                                <CCol md={6}>
+                                    <CFormInput
+                                        label="Segundo Apellido"
+                                        placeholder="Gómez"
+                                        value={segundoApellido}
+                                        onChange={(e) => setSegundoApellido(e.target.value.replace(/[0-9]/g, ''))}
+                                        invalid={!!errors.segundoApellido}
+                                        feedback={errors.segundoApellido}
                                     />
                                 </CCol>
                                 <CCol md={12}>
                                     <div className="mb-3">
-                                        <label className="form-label">ID Number *</label>
+                                        <label className="form-label">Cédula de Identidad *</label>
                                         <div className="input-group">
                                             <CFormSelect
                                                 style={{ maxWidth: '70px' }}
@@ -243,14 +289,69 @@ const OfficerForm = ({ visible, onClose, onSave, initial = null }) => {
                                                 <option value="E">E</option>
                                             </CFormSelect>
                                             <CFormInput
+                                                className="tour-officer-form-dni"
                                                 placeholder="12345678"
                                                 value={idNumberOnly}
-                                                onChange={(e) => setIdNumberOnly(e.target.value.replace(/\D/g, '').substring(0, 8))}
+                                                onChange={(e) => {
+                                                    const value = e.target.value.replace(/\D/g, '').substring(0, 8);
+                                                    setIdNumberOnly(value);
+                                                    if (dniCheckTimeout.current) clearTimeout(dniCheckTimeout.current);
+                                                    if (value.length >= 7 && value.length <= 8 && !initial) {
+                                                        setDniStatus('checking');
+                                                        dniCheckTimeout.current = setTimeout(async () => {
+                                                            const fullDni = `${idPrefix}-${value}`;
+                                                            const res = await checkDniExists(fullDni);
+                                                            setDniStatus(res.exists ? 'exists' : 'available');
+                                                            if (res.exists) {
+                                                                let ownerName = res.name || '';
+                                                                if (!ownerName) {
+                                                                    try {
+                                                                        const users = await listUsers();
+                                                                        const matchingUser = users.find(u => u.dni === fullDni);
+                                                                        if (matchingUser) {
+                                                                            ownerName = [
+                                                                                matchingUser.first_name,
+                                                                                matchingUser.second_name,
+                                                                                matchingUser.last_name,
+                                                                                matchingUser.second_last_name
+                                                                            ].filter(Boolean).join(' ');
+                                                                        }
+                                                                    } catch (err) {
+                                                                        console.error('Error fetching users for fallback:', err);
+                                                                    }
+                                                                }
+                                                                setDniOwner(ownerName || 'Oficial/Usuario');
+                                                                setErrors(prev => ({ ...prev, idNumber: `Esta cédula ya está registrada a nombre de: ${ownerName || 'Oficial/Usuario'}` }));
+                                                            } else {
+                                                                setDniOwner('');
+                                                                setErrors(prev => { const { idNumber, ...rest } = prev; return rest; });
+                                                            }
+                                                        }, 500);
+                                                    } else {
+                                                        setDniStatus(null);
+                                                        setDniOwner('');
+                                                    }
+                                                }}
                                                 invalid={!!errors.idNumber}
                                                 required
                                             />
+                                            {!initial && dniStatus === 'checking' && (
+                                                <span className="input-group-text bg-transparent border-0 px-2">
+                                                    <CSpinner size="sm" />
+                                                </span>
+                                            )}
                                         </div>
-                                        {errors.idNumber && <div className="text-danger small mt-1">{errors.idNumber}</div>}
+                                        {dniStatus === 'exists' && (
+                                            <div className="text-danger small mt-1">
+                                                ⚠️ Esta cédula ya está registrada (Pertenece a: <strong>{dniOwner || 'Desconocido'}</strong>)
+                                            </div>
+                                        )}
+                                        {dniStatus === 'available' && (
+                                            <div className="text-success small mt-1">
+                                                ✅ Cédula disponible
+                                            </div>
+                                        )}
+                                        {errors.idNumber && dniStatus !== 'exists' && <div className="text-danger small mt-1">{errors.idNumber}</div>}
                                     </div>
                                 </CCol>
                             </CRow>
@@ -259,13 +360,14 @@ const OfficerForm = ({ visible, onClose, onSave, initial = null }) => {
 
                     {step === 2 && (
                         <>
-                            <h5 className="mb-3 text-primary">Contact Information</h5>
+                            <h5 className="mb-3 text-primary">Información de Contacto</h5>
                             <CRow className="g-3">
                                 <CCol md={6}>
                                     <CFormInput
-                                        label="Email"
+                                        className="tour-officer-form-email"
+                                        label="Correo Electrónico"
                                         type="email"
-                                        placeholder="john.doe@example.com"
+                                        placeholder="juan.perez@ejemplo.com"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         invalid={!!errors.email}
@@ -274,7 +376,7 @@ const OfficerForm = ({ visible, onClose, onSave, initial = null }) => {
                                 </CCol>
                                 <CCol md={6}>
                                     <div className="mb-3">
-                                        <label className="form-label">Phone *</label>
+                                        <label className="form-label">Teléfono *</label>
                                         <div className="input-group">
                                             <CFormSelect
                                                 style={{ maxWidth: '100px' }}
@@ -288,6 +390,7 @@ const OfficerForm = ({ visible, onClose, onSave, initial = null }) => {
                                                 <option value="0426">0426</option>
                                             </CFormSelect>
                                             <CFormInput
+                                                className="tour-officer-form-phone"
                                                 placeholder="1234567"
                                                 value={phoneNumber}
                                                 onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, '').substring(0, 7))}
@@ -304,12 +407,13 @@ const OfficerForm = ({ visible, onClose, onSave, initial = null }) => {
 
                     {step === 3 && (
                         <>
-                            <h5 className="mb-3 text-primary">Service Details</h5>
+                            <h5 className="mb-3 text-primary">Detalles del Servicio</h5>
                             <CRow className="g-3">
                                 <CCol md={12}>
                                     <CFormInput
-                                        label="Unit *"
-                                        placeholder="CICPC - Homicides"
+                                        className="tour-officer-form-unit"
+                                        label="Unidad *"
+                                        placeholder="CICPC - Homicidios"
                                         value={unit}
                                         onChange={(e) => setUnit(e.target.value)}
                                         invalid={!!errors.unit}
@@ -319,11 +423,12 @@ const OfficerForm = ({ visible, onClose, onSave, initial = null }) => {
                                 </CCol>
                                 <CCol md={6}>
                                     <CFormSelect
-                                        label="Rank"
+                                        className="tour-officer-form-rank"
+                                        label="Rango"
                                         value={rank}
                                         onChange={(e) => setRank(e.target.value)}
                                     >
-                                        <option value="">Select rank</option>
+                                        <option value="">Seleccione el rango</option>
                                         {rankOptions.map(rank => (
                                             <option key={rank} value={rank}>{rank}</option>
                                         ))}
@@ -331,14 +436,15 @@ const OfficerForm = ({ visible, onClose, onSave, initial = null }) => {
                                 </CCol>
                                 <CCol md={6}>
                                     <CFormSelect
-                                        label="Status *"
+                                        className="tour-officer-form-status"
+                                        label="Estado *"
                                         value={status}
                                         onChange={(e) => setStatus(e.target.value)}
                                     >
-                                        <option value="active">Active</option>
-                                        <option value="inactive">Inactive</option>
-                                        <option value="training">Training</option>
-                                        <option value="suspended">Suspended</option>
+                                        <option value="active">Activo</option>
+                                        <option value="inactive">Inactivo</option>
+                                        <option value="training">En Formación</option>
+                                        <option value="suspended">Suspendido</option>
                                     </CFormSelect>
                                 </CCol>
                             </CRow>
@@ -346,33 +452,33 @@ const OfficerForm = ({ visible, onClose, onSave, initial = null }) => {
                     )}
 
                     <div className="mt-3">
-                        <small className="text-muted">* Required fields</small>
+                        <small className="text-muted">* Campos obligatorios</small>
                     </div>
                 </CModalBody>
                 <CModalFooter>
                     {step > 1 && (
                         <CButton type="button" color="secondary" onClick={handleBack}>
-                            Back
+                            Atrás
                         </CButton>
                     )}
                     {step < 3 ? (
                         <CButton type="button" color="primary colorbutton" style={colorbutton} onClick={handleNext} disabled={saving}>
-                            Next
+                            Siguiente
                         </CButton>
                     ) : (
                         <CButton type="submit" color="success" disabled={saving}>
                             {saving ? (
                                 <>
                                     <CSpinner size="sm" className="me-2" />
-                                    Saving...
+                                    Guardando...
                                 </>
                             ) : (
-                                <>{initial ? 'Update' : 'Create'} Officer</>
+                                <>{initial ? 'Actualizar' : 'Crear'} Oficial</>
                             )}
                         </CButton>
                     )}
                     <CButton type="button" color="light" onClick={onClose} className="ms-auto">
-                        Cancel
+                        Cancelar
                     </CButton>
                 </CModalFooter>
             </CForm>

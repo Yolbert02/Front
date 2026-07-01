@@ -26,35 +26,35 @@ import { CNavGroup, CNavItem, CNavTitle } from '@coreui/react'
 const _nav = [
   {
     component: CNavItem,
-    name: 'Dashboard',
+    name: 'Panel de Control',
     to: '/dashboard',
     icon: <CIcon icon={cilSpeedometer} customClassName="nav-icon" />,
     roles: ['administrator', 'oficial', 'functionary', 'civil']
   },
   {
     component: CNavItem,
-    name: 'Officers',
+    name: 'Oficiales',
     to: '/officers',
     icon: <CIcon icon={cilFindInPage} customClassName="nav-icon" />,
     roles: ['administrator', 'oficial', 'functionary']
   },
   {
     component: CNavItem,
-    name: 'Complaints',
+    name: 'Denuncias',
     to: '/complaints',
     icon: <CIcon icon={cilLibrary} customClassName="nav-icon" />,
     roles: ['administrator', 'oficial', 'functionary', 'civil']
   },
   {
     component: CNavItem,
-    name: 'Assignments',
+    name: 'Asignaciones',
     to: '/assignments',
     icon: <CIcon icon={cilInstitution} customClassName="nav-icon" />,
     roles: ['administrator', 'oficial', 'functionary', 'civil']
   },
   {
     component: CNavItem,
-    name: 'Zones',
+    name: 'Zonas',
     to: '/zones',
     icon: <CIcon icon={cilMap} customClassName="nav-icon" />,
     roles: ['administrator', 'oficial', 'functionary', 'civil']

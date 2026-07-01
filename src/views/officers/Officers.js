@@ -19,7 +19,9 @@ import {
     CDropdown,
     CDropdownToggle,
     CDropdownMenu,
-    CDropdownItem
+    CDropdownItem,
+    CDropdownDivider,
+    CDropdownHeader
 } from '@coreui/react'
 import SearchInput from 'src/components/SearchInput'
 import CIcon from '@coreui/icons-react'
@@ -111,7 +113,7 @@ const Officers = () => {
                     appAlert: {
                         visible: true,
                         color: 'success',
-                        message: 'Officer updated successfully',
+                        message: 'Oficial actualizado correctamente',
                     },
                 })
             } else {
@@ -121,7 +123,7 @@ const Officers = () => {
                     appAlert: {
                         visible: true,
                         color: 'success',
-                        message: 'Officer created successfully',
+                        message: 'Oficial creado correctamente',
                     },
                 })
             }
@@ -135,7 +137,7 @@ const Officers = () => {
                 appAlert: {
                     visible: true,
                     color: 'danger',
-                    message: 'Error saving officer: ' + error.message,
+                    message: 'Error al guardar el oficial: ' + error.message,
                 },
             })
         }
@@ -159,7 +161,7 @@ const Officers = () => {
                 appAlert: {
                     visible: true,
                     color: 'warning',
-                    message: 'Officer deleted successfully',
+                    message: 'Oficial eliminado correctamente',
                 },
             })
         } catch (error) {
@@ -169,7 +171,7 @@ const Officers = () => {
                 appAlert: {
                     visible: true,
                     color: 'danger',
-                    message: 'Error deleting officer: ' + error.message,
+                    message: 'Error al eliminar el oficial: ' + error.message,
                 },
             })
         }
@@ -185,10 +187,10 @@ const Officers = () => {
     const getStatusOptions = (currentStatus) => {
         const s = currentStatus?.toLowerCase()
         const statuses = [
-            { value: 'active', label: 'Active' },
-            { value: 'inactive', label: 'Inactive' },
-            { value: 'training', label: 'Training' },
-            { value: 'suspended', label: 'Suspended' }
+            { value: 'active', label: 'Activo' },
+            { value: 'inactive', label: 'Inactivo' },
+            { value: 'training', label: 'En Formación' },
+            { value: 'suspended', label: 'Suspendido' }
         ]
         return statuses.filter(status => status.value !== s)
     }
@@ -206,10 +208,10 @@ const Officers = () => {
     const getStatusBadge = (status) => {
         const s = status?.toLowerCase()
         const statusConfig = {
-            'active': { color: 'success', text: 'Active', icon: cilCheckCircle },
-            'inactive': { color: 'secondary', text: 'Inactive', icon: cilBan },
-            'training': { color: 'info', text: 'Training', icon: cilInfo },
-            'suspended': { color: 'danger', text: 'Suspended', icon: cilWarning }
+            'active': { color: 'success', text: 'Activo', icon: cilCheckCircle },
+            'inactive': { color: 'secondary', text: 'Inactivo', icon: cilBan },
+            'training': { color: 'info', text: 'En Formación', icon: cilInfo },
+            'suspended': { color: 'danger', text: 'Suspendido', icon: cilWarning }
         }
 
         const config = statusConfig[s] || { color: 'secondary', text: status }
@@ -242,12 +244,12 @@ const Officers = () => {
                         <CCardHeader className="border-bottom-0 pt-4 pb-3 px-4">
                             <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
                                 <div>
-                                    <h4 className="mb-1 fw-bold" style={{ letterSpacing: '-0.5px' }}>
+                                    <h4 className="mb-1 fw-bold tour-officers-title" style={{ letterSpacing: '-0.5px' }}>
                                         <CIcon icon={cilShieldAlt} className="me-2 text-primary" style={{ color: '#1a237e' }} />
-                                        Officers Management
+                                        Gestión de Oficiales
                                     </h4>
                                     <p className="text-muted mb-0 small">
-                                        Manage police force personnel and assignments
+                                        Gestionar el personal de la fuerza policial y sus asignaciones
                                     </p>
                                 </div>
                                 {userRole === 'administrator' && (
@@ -260,11 +262,11 @@ const Officers = () => {
                                                 setEditing(null);
                                                 setShowForm(true)
                                             }}
-                                            className="d-flex align-items-center px-4 py-2 shadow-sm"
+                                            className="d-flex align-items-center px-4 py-2 shadow-sm tour-officers-new-btn"
                                             shape="rounded-pill"
                                         >
                                             <CIcon icon={cilPlus} className="me-2 fw-bold" />
-                                            NEW OFFICER
+                                            NUEVO OFICIAL
                                         </CButton>
                                     </div>
                                 )}
@@ -275,17 +277,17 @@ const Officers = () => {
                             {loading ? (
                                 <div className="text-center py-5">
                                     <CSpinner color="primary" variant="grow" />
-                                    <div className="mt-3 text-muted">Loading personnel data...</div>
+                                    <div className="mt-3 text-muted">Cargando datos del personal...</div>
                                 </div>
                             ) : (
                                 <>
                                     {/* Filters & Search */}
                                     <div className="mb-4 p-3 rounded-3 border d-flex justify-content-between align-items-center gap-3 bg-light-subtle dark:bg-dark-subtle">
                                         <div className="text-muted fw-semibold small">
-                                            Total Officers: <span className="fs-6">{filteredOfficers.length}</span>
+                                            Total de Oficiales: <span className="fs-6">{filteredOfficers.length}</span>
                                         </div>
 
-                                        <div style={{ maxWidth: '350px', width: '100%' }}>
+                                        <div style={{ maxWidth: '350px', width: '100%' }} className="tour-officers-search">
                                             <SearchInput
                                                 value={searchTerm}
                                                 onChange={(e) => {
@@ -302,15 +304,15 @@ const Officers = () => {
                                                 <CTable hover align="middle" className="mb-0">
                                                     <CTableHead>
                                                         <CTableRow>
-                                                            <CTableHeaderCell className="text-uppercase text-secondary small ps-4 py-3" style={{ fontWeight: 600 }}>Personnel</CTableHeaderCell>
-                                                            <CTableHeaderCell className="text-uppercase text-secondary small py-3" style={{ fontWeight: 600 }}>Contact Info</CTableHeaderCell>
-                                                            <CTableHeaderCell className="text-uppercase text-secondary small py-3" style={{ fontWeight: 600 }}>Unit / Division</CTableHeaderCell>
-                                                            <CTableHeaderCell className="text-uppercase text-secondary small py-3" style={{ fontWeight: 600 }}>Status</CTableHeaderCell>
-                                                            <CTableHeaderCell className="text-uppercase text-secondary small text-end pe-4 py-3" style={{ fontWeight: 600, width: '150px' }}>Actions</CTableHeaderCell>
+                                                            <CTableHeaderCell className="text-uppercase text-secondary small ps-4 py-3" style={{ fontWeight: 600 }}>Personal</CTableHeaderCell>
+                                                            <CTableHeaderCell className="text-uppercase text-secondary small py-3" style={{ fontWeight: 600 }}>Información de Contacto</CTableHeaderCell>
+                                                            <CTableHeaderCell className="text-uppercase text-secondary small py-3" style={{ fontWeight: 600 }}>Unidad / División</CTableHeaderCell>
+                                                            <CTableHeaderCell className="text-uppercase text-secondary small py-3" style={{ fontWeight: 600 }}>Estado</CTableHeaderCell>
+                                                            <CTableHeaderCell className="text-uppercase text-secondary small text-end pe-4 py-3" style={{ fontWeight: 600, width: '150px' }}>Acciones</CTableHeaderCell>
                                                         </CTableRow>
                                                     </CTableHead>
                                                     <CTableBody>
-                                                        {currentPageData.map(officer => (
+                                                        {currentPageData.map((officer, index) => (
                                                             <CTableRow key={officer.id}>
                                                                 <CTableDataCell className="ps-4">
                                                                     <div className="d-flex align-items-center py-2">
@@ -343,12 +345,12 @@ const Officers = () => {
                                                                     {getStatusBadge(officer.status)}
                                                                 </CTableDataCell>
                                                                 <CTableDataCell className="text-end pe-4">
-                                                                    <div className="d-flex justify-content-end gap-2">
+                                                                    <div className={`d-flex justify-content-end gap-2 ${index === 0 ? 'tour-officers-actions-first' : ''}`}>
                                                                         <CButton
                                                                             size="sm"
                                                                             className="text-info shadow-sm"
                                                                             onClick={() => handleShowInfo(officer)}
-                                                                            title="View Profile"
+                                                                            title="Ver Perfil"
                                                                             shape="rounded-pill"
                                                                         >
                                                                             <CIcon icon={cilInfo} />
@@ -371,18 +373,18 @@ const Officers = () => {
                                                                                             onClick={() => { setEditing(officer); setShowForm(true) }}
                                                                                             style={{ cursor: 'pointer' }}
                                                                                         >
-                                                                                            Edit Details
+                                                                                            Editar Detalles
                                                                                         </CDropdownItem>
-                                                                                        <CDropdownItem divider />
-                                                                                        <CDropdownItem header style={{ cursor: 'default' }}>Status Management</CDropdownItem>
+                                                                                        <CDropdownDivider />
+                                                                                        <CDropdownHeader style={{ cursor: 'default' }}>Gestión de Estado</CDropdownHeader>
                                                                                         {getStatusOptions(officer.status).map(status => (
                                                                                             <CDropdownItem
                                                                                                 key={status.value}
                                                                                                 onClick={() => handleStatusChange(officer.id, status.value)}
-                                                                                                className={status.value === 'Suspended' ? 'text-danger' : ''}
+                                                                                                className={status.value === 'suspended' ? 'text-danger' : ''}
                                                                                                 style={{ cursor: 'pointer' }}
                                                                                             >
-                                                                                                Mark as {status.label}
+                                                                                                Marcar como {status.label}
                                                                                             </CDropdownItem>
                                                                                         ))}
                                                                                     </CDropdownMenu>
@@ -391,7 +393,7 @@ const Officers = () => {
                                                                                     size="sm"
                                                                                     className="text-danger shadow-sm"
                                                                                     onClick={() => showDeleteConfirmation(officer.id, `${officer.name} ${officer.lastName}`)}
-                                                                                    title="Deactivate/Delete"
+                                                                                    title="Desactivar/Eliminar"
                                                                                     shape="rounded-pill"
                                                                                 >
                                                                                     <CIcon icon={cilTrash} />
@@ -420,11 +422,11 @@ const Officers = () => {
                                         <div className="text-center py-5 rounded-3 border border-dashed">
                                             <div className="text-muted">
                                                 <CIcon icon={cilSearch} size="3xl" className="mb-3 text-secondary opacity-25" />
-                                                <h5>{searchTerm ? 'No matches found' : 'No officers listed'}</h5>
+                                                <h5>{searchTerm ? 'No se encontraron coincidencias' : 'No hay oficiales listados'}</h5>
                                                 <p className="text-secondary">
                                                     {searchTerm
-                                                        ? 'Try adjusting your search terms.'
-                                                        : 'Start by creating a new officer profile.'
+                                                        ? 'Intente ajustar sus términos de búsqueda.'
+                                                        : 'Comience creando un nuevo perfil de oficial.'
                                                     }
                                                 </p>
                                                 {searchTerm && (
@@ -433,7 +435,7 @@ const Officers = () => {
                                                         variant="ghost"
                                                         onClick={() => { setSearchTerm(''); setCurrentPage(1); }}
                                                     >
-                                                        Clear Search
+                                                        Limpiar Búsqueda
                                                     </CButton>
                                                 )}
                                             </div>
@@ -470,9 +472,9 @@ const Officers = () => {
                 visible={deleteModal.visible}
                 onClose={() => setDeleteModal({ visible: false, officerId: null, officerName: '' })}
                 onConfirm={confirmDelete}
-                title="Delete Officer"
-                message={`Are you sure you want to delete the officer "${deleteModal.officerName}"? This action cannot be undone.`}
-                confirmText="Confirm Delete"
+                title="Eliminar Oficial"
+                message={`¿Está seguro de que desea eliminar al oficial "${deleteModal.officerName}"? Esta acción no se puede deshacer.`}
+                confirmText="Confirmar Eliminación"
                 type="danger"
             />
         </CContainer>

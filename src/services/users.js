@@ -15,14 +15,27 @@ export async function listUsers() {
             role: user.role?.type_rol || (typeof user.role === 'string' ? user.role : ''),
             status: user.status_user || user.status || 'active',
             first_name: user.first_name || '',
+            second_name: user.second_name || '',
             last_name: user.last_name || '',
+            second_last_name: user.second_last_name || '',
             email: user.email || '',
             profile_picture: user.profile_picture || null,
-            phone: user.number_phone || user.phone || ''
+            phone: user.number_phone || user.phone || '',
+            date_birth: user.date_birth || null
         }));
     } catch (error) {
         console.error('Error listing users:', error);
         return [];
+    }
+}
+
+export async function checkDniExists(dni) {
+    try {
+        const response = await apiService.get(`/api/users/check-dni/${encodeURIComponent(dni)}`);
+        return response; // Returns { exists: true/false, name: '...' }
+    } catch (error) {
+        console.error('Error checking DNI:', error);
+        return { exists: false };
     }
 }
 
@@ -47,13 +60,15 @@ export async function createUser(payload) {
         const backendPayload = {
             dni: payload.dni,
             first_name: payload.first_name,
+            second_name: payload.second_name,
             last_name: payload.last_name,
+            second_last_name: payload.second_last_name,
             email: payload.email,
             password: payload.password,
             role_type: payload.role || 'civil',
-            date_birth: payload.date_birth || "1990-01-01", // Default if missing
-            gender: payload.gender || "male", // Default if missing
-            number_phone: payload.phone
+            date_birth: payload.date_birth || "1990-01-01",
+            gender: payload.gender || "male",
+            phone: payload.phone
         };
 
         const response = await apiService.post('/api/users', backendPayload);

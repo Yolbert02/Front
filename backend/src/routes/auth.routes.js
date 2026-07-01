@@ -7,7 +7,7 @@ const validate = require('../middleware/validate.middleware');
 const { z } = require('zod');
 
 const loginSchema = z.object({
-    email: z.string().email("Formato de email inválido"),
+    dni: z.string().min(1, "La cédula o correo es requerido"),
     password: z.string().min(1, "La contraseña es requerida")
 });
 

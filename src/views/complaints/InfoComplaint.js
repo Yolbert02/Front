@@ -14,13 +14,7 @@ import {
     CCardHeader,
     CBadge,
     CListGroup,
-    CListGroupItem,
-    CTable,
-    CTableHead,
-    CTableRow,
-    CTableHeaderCell,
-    CTableBody,
-    CTableDataCell
+    CListGroupItem
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
 import {
@@ -41,6 +35,22 @@ import {
 } from '@coreui/icons'
 import { modalStyles, cardStyles, containerStyles } from 'src/styles/darkModeStyles'
 import { downloadComplaintPDF } from 'src/services/reports'
+
+// Leaflet imports
+import { MapContainer, TileLayer, Marker } from 'react-leaflet'
+import 'leaflet/dist/leaflet.css'
+import L from 'leaflet'
+
+// Fix for default marker icon
+import markerIcon from 'leaflet/dist/images/marker-icon.png'
+import markerShadow from 'leaflet/dist/images/marker-shadow.png'
+
+let DefaultIcon = L.icon({
+    iconUrl: markerIcon,
+    shadowUrl: markerShadow,
+    iconSize: [25, 41],
+    iconAnchor: [12, 41]
+});
 
 const InfoComplaint = ({ visible, onClose, complaint }) => {
     const dispatch = useDispatch()
@@ -82,21 +92,21 @@ const InfoComplaint = ({ visible, onClose, complaint }) => {
     }
 
     const formatDate = (dateString) => {
-        if (!dateString) return 'Not available'
+        if (!dateString) return 'No disponible'
         try {
-            return new Date(dateString).toLocaleDateString('en-US', {
+            return new Date(dateString).toLocaleDateString('es-ES', {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric'
             })
         } catch (e) {
-            return 'Invalid date'
+            return 'Fecha inválida'
         }
     }
 
     const getFileIcon = (fileType) => {
-        if (fileType.includes('image')) return cilImage
-        if (fileType.includes('video')) return cilImage
+        if (fileType?.includes('image')) return cilImage
+        if (fileType?.includes('video')) return cilImage
         return cilPaperclip
     }
 
@@ -110,14 +120,12 @@ const InfoComplaint = ({ visible, onClose, complaint }) => {
 
     const buildFullAddress = () => {
         const parts = []
-        if (complaint.address_detail) parts.push(complaint.address_detail)
+        if (complaint.address) parts.push(complaint.address)
         if (complaint.zone) parts.push(complaint.zone)
         if (complaint.city) parts.push(complaint.city)
         if (complaint.municipality) parts.push(complaint.municipality)
-        if (complaint.parish) parts.push(complaint.parish)
         if (complaint.state) parts.push(complaint.state)
         if (complaint.country) parts.push(complaint.country)
-
         return parts.join(', ')
     }
 
@@ -129,7 +137,7 @@ const InfoComplaint = ({ visible, onClose, complaint }) => {
                 appAlert: {
                     visible: true,
                     color: 'success',
-                    message: 'Your PDF downloaded successfully',
+                    message: 'Su PDF se descargó correctamente',
                 },
             })
         } catch (error) {
@@ -139,28 +147,31 @@ const InfoComplaint = ({ visible, onClose, complaint }) => {
                 appAlert: {
                     visible: true,
                     color: 'danger',
-                    message: 'Error downloading PDF report',
+                    message: 'Error al descargar el reporte PDF',
                 },
             })
         }
     }
+
+    const hasCoords = complaint.latitude && complaint.longitude;
+    const position = hasCoords ? [complaint.latitude, complaint.longitude] : null;
 
     return (
         <CModal size="lg" visible={visible} onClose={onClose}>
             <CModalHeader style={modalStyles.header}>
                 <CModalTitle>
                     <CIcon icon={cilWarning} className="me-2" />
-                    Complaint Details
+                    Detalles de la Denuncia
                 </CModalTitle>
             </CModalHeader>
             <CModalBody style={modalStyles.bodyScrollable}>
                 <CRow className="g-3">
                     <CCol md={12}>
-                        <CCard className="mb-4" style={cardStyles.card}>
+                        <CCard className="tour-complaint-info-card mb-4" style={cardStyles.card}>
                             <CCardHeader style={cardStyles.header}>
                                 <h6 className="mb-0">
                                     <CIcon icon={cilWarning} className="me-2" />
-                                    Complaint Information
+                                    Información de la Denuncia
                                 </h6>
                             </CCardHeader>
                             <CCardBody style={cardStyles.body}>
@@ -170,13 +181,13 @@ const InfoComplaint = ({ visible, onClose, complaint }) => {
                                         <p className="text-muted">{complaint.description}</p>
                                     </CCol>
                                     <CCol md={4}>
-                                        <div className="d-flex flex-column gap-2">
-                                            <div className="d-flex justify-content-between">
-                                                <span>Status:</span>
+                                        <div className="d-flex flex-column gap-2 text-end">
+                                            <div>
+                                                <span className="me-2">Estado:</span>
                                                 {getStatusBadge(complaint.status)}
                                             </div>
-                                            <div className="d-flex justify-content-between">
-                                                <span>Priority:</span>
+                                            <div>
+                                                <span className="me-2">Prioridad:</span>
                                                 {getPriorityBadge(complaint.priority)}
                                             </div>
                                         </div>
@@ -187,288 +198,137 @@ const InfoComplaint = ({ visible, onClose, complaint }) => {
                     </CCol>
 
                     <CCol md={12}>
-                        <CCard className="mb-4" style={cardStyles.card}>
+                        <CCard className="tour-complaint-info-location-card mb-4" style={cardStyles.card}>
                             <CCardHeader style={cardStyles.header}>
                                 <h6 className="mb-0">
                                     <CIcon icon={cilMap} className="me-2" />
-                                    Detailed Location Information
+                                    Ubicación Geográfica
                                 </h6>
                             </CCardHeader>
                             <CCardBody style={cardStyles.body}>
-                                <CRow>
-                                    <CCol md={12} className="mb-3">
-                                        <div className="p-3 border rounded" style={containerStyles.lightBg}>
-                                            <strong>Full Address:</strong>
-                                            <div className="mt-1">
-                                                {buildFullAddress() || 'No address details available'}
+                                <CRow className="g-3">
+                                    <CCol md={hasCoords ? 6 : 12}>
+                                        <div className="p-3 border rounded h-100 bg-light">
+                                            <div className="mb-3">
+                                                <strong>Dirección Completa:</strong>
+                                                <div className="text-muted small mt-1">{buildFullAddress() || 'No disponible'}</div>
                                             </div>
+                                            <CRow className="g-2 small">
+                                                <CCol xs={6}><strong>Zona:</strong> {complaint.zone || 'N/A'}</CCol>
+                                                <CCol xs={6}><strong>Ciudad:</strong> {complaint.city || 'N/A'}</CCol>
+                                                <CCol xs={6}><strong>Municipio:</strong> {complaint.municipality || 'N/A'}</CCol>
+                                                <CCol xs={6}><strong>Estado:</strong> {complaint.state || 'N/A'}</CCol>
+                                            </CRow>
                                         </div>
                                     </CCol>
-
-                                    <CCol md={12}>
-                                        <CRow className="g-3">
-                                            <CCol md={4}>
-                                                <div className="d-flex align-items-center mb-2">
-                                                    <CIcon icon={cilGlobeAlt} className="me-2 text-primary" />
-                                                    <strong>Country:</strong>
-                                                </div>
-                                                <div className="ms-4">
-                                                    {complaint.country || 'Not specified'}
-                                                </div>
-                                            </CCol>
-
-                                            <CCol md={4}>
-                                                <div className="d-flex align-items-center mb-2">
-                                                    <CIcon icon={cilMap} className="me-2 text-primary" />
-                                                    <strong>State:</strong>
-                                                </div>
-                                                <div className="ms-4">
-                                                    {complaint.state || 'Not specified'}
-                                                </div>
-                                            </CCol>
-
-                                            <CCol md={4}>
-                                                <div className="d-flex align-items-center mb-2">
-                                                    <CIcon icon={cilBuilding} className="me-2 text-primary" />
-                                                    <strong>Municipality:</strong>
-                                                </div>
-                                                <div className="ms-4">
-                                                    {complaint.municipality || 'Not specified'}
-                                                </div>
-                                            </CCol>
-
-                                            <CCol md={4}>
-                                                <div className="d-flex align-items-center mb-2">
-                                                    <CIcon icon={cilMap} className="me-2 text-primary" />
-                                                    <strong>Parish:</strong>
-                                                </div>
-                                                <div className="ms-4">
-                                                    {complaint.parish || 'Not specified'}
-                                                </div>
-                                            </CCol>
-
-                                            <CCol md={4}>
-                                                <div className="d-flex align-items-center mb-2">
-                                                    <CIcon icon={cilBuilding} className="me-2 text-primary" />
-                                                    <strong>City:</strong>
-                                                </div>
-                                                <div className="ms-4">
-                                                    {complaint.city || 'Not specified'}
-                                                </div>
-                                            </CCol>
-
-                                            <CCol md={4}>
-                                                <div className="d-flex align-items-center mb-2">
-                                                    <CIcon icon={cilLocationPin} className="me-2 text-primary" />
-                                                    <strong>Zone/Neighborhood:</strong>
-                                                </div>
-                                                <div className="ms-4">
-                                                    {complaint.zone || 'Not specified'}
-                                                </div>
-                                            </CCol>
-
-                                            <CCol md={4}>
-                                                <div className="d-flex align-items-center mb-2">
-                                                    <CIcon icon={cilHome} className="me-2 text-primary" />
-                                                    <strong>Street Address:</strong>
-                                                </div>
-                                                <div className="ms-4">
-                                                    {complaint.address_detail || 'Not specified'}
-                                                </div>
-                                            </CCol>
-                                        </CRow>
-                                    </CCol>
+                                    {hasCoords && (
+                                        <CCol md={6}>
+                                            <div className="border rounded overflow-hidden shadow-sm" style={{ height: '200px' }}>
+                                                <MapContainer center={position} zoom={15} style={{ height: '100%', width: '100%' }} zoomControl={false} dragging={false} scrollWheelZoom={false} doubleClickZoom={false}>
+                                                    <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                                                    <Marker position={position} icon={DefaultIcon} />
+                                                </MapContainer>
+                                            </div>
+                                            <div className="text-center small mt-1 text-muted">
+                                                Lat: {complaint.latitude.toFixed(6)}, Lon: {complaint.longitude.toFixed(6)}
+                                            </div>
+                                        </CCol>
+                                    )}
                                 </CRow>
                             </CCardBody>
                         </CCard>
                     </CCol>
 
                     <CCol md={6}>
-                        <CCard className="h-100" style={cardStyles.card}>
+                        <CCard className="tour-complaint-info-complainant-card h-100" style={cardStyles.card}>
                             <CCardHeader style={cardStyles.header}>
                                 <h6 className="mb-0">
-                                    <CIcon icon={cilCalendar} className="me-2" />
-                                    Incident Details
+                                    <CIcon icon={cilUser} className="me-2" />
+                                    Información del Denunciante
                                 </h6>
                             </CCardHeader>
                             <CCardBody style={cardStyles.body}>
                                 <CListGroup flush>
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
-                                        <span className="d-flex align-items-center">
-                                            <CIcon icon={cilCalendar} className="me-2 text-primary" />
-                                            Incident Date:
-                                        </span>
-                                        <strong>{formatDate(complaint.incidentDate)}</strong>
-                                    </CListGroupItem>
-                                    <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
-                                        <span className="d-flex align-items-center">
-                                            <CIcon icon={cilCalendar} className="me-2 text-primary" />
-                                            Created:
-                                        </span>
-                                        <small className="text-muted">
-                                            {formatDate(complaint.createdAt)}
-                                        </small>
-                                    </CListGroupItem>
-                                    {complaint.latitude !== null && complaint.latitude !== undefined &&
-                                        complaint.longitude !== null && complaint.longitude !== undefined && (
-                                            <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
-                                                <span className="d-flex align-items-center">
-                                                    <CIcon icon={cilLocationPin} className="me-2 text-primary" />
-                                                    Coordinates:
-                                                </span>
-                                                <small className="text-muted">
-                                                    {Number(complaint.latitude).toFixed(6)}, {Number(complaint.longitude).toFixed(6)}
-                                                </small>
-                                            </CListGroupItem>
-                                        )}
-                                </CListGroup>
-                            </CCardBody>
-                        </CCard>
-                    </CCol>
-                    <CCol md={6}>
-                        <CCard className="h-100" style={cardStyles.card}>
-                            <CCardHeader style={cardStyles.header}>
-                                <h6 className="mb-0">
-                                    <CIcon icon={cilUser} className="me-2" />
-                                    Assigned Officer
-                                </h6>
-                            </CCardHeader>
-                            <CCardBody style={cardStyles.body}>
-                                {complaint.assignedOfficerName ? (
-                                    <CListGroup flush>
-                                        <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
-                                            <span>Officer:</span>
-                                            <strong>{complaint.assignedOfficerName}</strong>
-                                        </CListGroupItem>
-                                    </CListGroup>
-                                ) : (
-                                    <div className="text-center text-muted py-3">
-                                        <CIcon icon={cilUser} size="xl" />
-                                        <div>No officer assigned</div>
-                                        <small>This complaint is not assigned to any officer yet</small>
-                                    </div>
-                                )}
-                            </CCardBody>
-                        </CCard>
-                    </CCol>
-                    <CCol md={6}>
-                        <CCard className="h-100" style={cardStyles.card}>
-                            <CCardHeader style={cardStyles.header}>
-                                <h6 className="mb-0">
-                                    <CIcon icon={cilUser} className="me-2" />
-                                    Complainant Information
-                                </h6>
-                            </CCardHeader>
-                            <CCardBody style={cardStyles.body}>
-                                <CListGroup flush>
-                                    <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
-                                        <span>Name:</span>
+                                        <span>Nombre:</span>
                                         <strong>{complaint.complainant_name}</strong>
                                     </CListGroupItem>
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
-                                        <span className="d-flex align-items-center">
-                                            <CIcon icon={cilPhone} className="me-2 text-primary" />
-                                            Phone:
-                                        </span>
-                                        <strong>{complaint.complainant_phone || 'Not provided'}</strong>
+                                        <span>Teléfono:</span>
+                                        <strong>{complaint.complainant_phone || 'N/A'}</strong>
                                     </CListGroupItem>
                                     <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
-                                        <span className="d-flex align-items-center">
-                                            <CIcon icon={cilEnvelopeOpen} className="me-2 text-primary" />
-                                            Email:
-                                        </span>
-                                        <strong>{complaint.complainant_email || 'Not provided'}</strong>
+                                        <span>Correo:</span>
+                                        <strong className="small">{complaint.complainant_email || 'N/A'}</strong>
                                     </CListGroupItem>
                                 </CListGroup>
                             </CCardBody>
                         </CCard>
                     </CCol>
+
                     <CCol md={6}>
-                        <CCard className="h-100" style={cardStyles.card}>
+                        <CCard className="tour-complaint-info-chronology-card h-100" style={cardStyles.card}>
+                            <CCardHeader style={cardStyles.header}>
+                                <h6 className="mb-0">
+                                    <CIcon icon={cilCalendar} className="me-2" />
+                                    Cronología y Asignación
+                                </h6>
+                            </CCardHeader>
+                            <CCardBody style={cardStyles.body}>
+                                <CListGroup flush>
+                                    <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
+                                        <span>Incidente:</span>
+                                        <strong>{formatDate(complaint.incidentDate)}</strong>
+                                    </CListGroupItem>
+                                    <CListGroupItem className="d-flex justify-content-between align-items-center px-0">
+                                        <span>Oficial:</span>
+                                        <strong>{complaint.assignedOfficerName || 'Sin asignar'}</strong>
+                                    </CListGroupItem>
+                                </CListGroup>
+                            </CCardBody>
+                        </CCard>
+                    </CCol>
+
+                    <CCol md={12}>
+                        <CCard className="tour-complaint-info-evidence-card" style={cardStyles.card}>
                             <CCardHeader style={cardStyles.header}>
                                 <h6 className="mb-0">
                                     <CIcon icon={cilPaperclip} className="me-2" />
-                                    Evidence ({complaint.evidence?.length || 0})
+                                    Evidencia Multimedia ({complaint.evidence?.length || 0})
                                 </h6>
                             </CCardHeader>
                             <CCardBody style={cardStyles.body}>
                                 {complaint.evidence && complaint.evidence.length > 0 ? (
-                                    <CListGroup flush>
+                                    <div className="d-flex flex-wrap gap-3">
                                         {complaint.evidence.map((file, index) => {
                                             const isImage = file.type?.includes('image') || file.url?.startsWith('data:image')
                                             return (
-                                                <CListGroupItem key={index} className="px-0 py-3 border-bottom">
-                                                    <div className="d-flex align-items-start">
-                                                        <CIcon
-                                                            icon={getFileIcon(file.type || 'image/png')}
-                                                            className="me-3 text-primary mt-1"
-                                                            size="lg"
-                                                        />
-                                                        <div className="flex-grow-1">
-                                                            <div className="d-flex justify-content-between align-items-center mb-1">
-                                                                <span className="fw-semibold">{file.name}</span>
-                                                                <small className="text-muted">
-                                                                    {formatFileSize(file.size || 0)}
-                                                                </small>
-                                                            </div>
-                                                            <div className="small text-muted mb-2">
-                                                                Uploaded: {formatDate(file.uploadedAt)}
-                                                            </div>
-                                                            {isImage && file.url && (
-                                                                <div className="mt-2 rounded overflow-hidden border shadow-sm" style={{ maxWidth: '200px' }}>
-                                                                    <img
-                                                                        src={file.url}
-                                                                        alt={file.name}
-                                                                        style={{ width: '100%', height: 'auto', display: 'block', cursor: 'pointer' }}
-                                                                        onClick={() => window.open(file.url, '_blank')}
-                                                                    />
-                                                                </div>
-                                                            )}
+                                                <div key={index} className="border rounded p-2 text-center" style={{ width: '120px' }}>
+                                                    {isImage ? (
+                                                        <img src={file.url} alt={file.name} style={{ width: '100px', height: '100px', objectFit: 'cover', cursor: 'pointer' }} onClick={() => window.open(file.url, '_blank')} className="rounded mb-1" />
+                                                    ) : (
+                                                        <div className="bg-light rounded d-flex align-items-center justify-content-center mb-1" style={{ width: '100px', height: '100px' }}>
+                                                            <CIcon icon={getFileIcon(file.type)} size="xl" />
                                                         </div>
-                                                    </div>
-                                                </CListGroupItem>
+                                                    )}
+                                                    <div className="small text-truncate" title={file.name}>{file.name}</div>
+                                                </div>
                                             )
                                         })}
-                                    </CListGroup>
-                                ) : (
-                                    <div className="text-center text-muted py-3">
-                                        <CIcon icon={cilPaperclip} size="xl" />
-                                        <div>No evidence files</div>
-                                        <small>No multimedia evidence has been uploaded</small>
                                     </div>
+                                ) : (
+                                    <div className="text-center text-muted py-3 small">No hay evidencia adjunta</div>
                                 )}
-                            </CCardBody>
-                        </CCard>
-                    </CCol>
-                    <CCol md={12}>
-                        <CCard style={cardStyles.card}>
-                            <CCardHeader style={cardStyles.header}>
-                                <h6 className="mb-0">
-                                    <CIcon icon={cilDescription} className="me-2" />
-                                    Full Description
-                                </h6>
-                            </CCardHeader>
-                            <CCardBody style={cardStyles.body}>
-                                <div className="p-3 rounded" style={containerStyles.lightBg}>
-                                    {complaint.description || 'No detailed description provided.'}
-                                </div>
                             </CCardBody>
                         </CCard>
                     </CCol>
                 </CRow>
             </CModalBody>
             <CModalFooter style={modalStyles.footer}>
-                <CButton
-                    color="primary"
-                    onClick={() => downloadPDF(complaint.id)}
-                    className="me-auto"
-                >
-                    <CIcon icon={cilCloudDownload} className="me-2" />
-                    Download PDF Report
+                <CButton color="primary" onClick={() => downloadPDF(complaint.id)} className="tour-complaint-info-pdf-btn me-auto">
+                    <CIcon icon={cilCloudDownload} className="me-2" /> Reporte PDF
                 </CButton>
-                <CButton color="secondary" onClick={onClose}>
-                    Close
-                </CButton>
+                <CButton color="secondary" onClick={onClose}>Cerrar</CButton>
             </CModalFooter>
         </CModal>
     )

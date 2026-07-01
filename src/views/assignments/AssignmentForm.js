@@ -21,6 +21,8 @@ import { colorbutton } from 'src/styles/darkModeStyles'
 import CIcon from '@coreui/icons-react'
 import { cilPlus, cilTrash } from '@coreui/icons'
 import { getFuncionaries, getCitizens } from 'src/services/assignments'
+import { CRIME_TYPES } from 'src/constants/crimes'
+import { COURTS } from 'src/constants/courts'
 
 const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
     const [caseTitle, setCaseTitle] = useState('')
@@ -84,59 +86,57 @@ const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
 
         if (currentStep === 1) {
             if (!caseTitle.trim())
-                newErrors.caseTitle = 'Case title is required'
-            else if (caseTitle.trim().length < 5)
-                newErrors.caseTitle = 'Case title must be at least 5 characters'
+                newErrors.caseTitle = 'El título del caso (delito) es obligatorio'
 
             if (!caseDescription.trim())
-                newErrors.caseDescription = 'Case description is required'
+                newErrors.caseDescription = 'La descripción del caso es obligatoria'
             else if (caseDescription.trim().length < 10)
-                newErrors.caseDescription = 'Description must be at least 10 characters'
+                newErrors.caseDescription = 'La descripción debe tener al menos 10 caracteres'
 
             if (!judgeId)
-                newErrors.judgeId = 'A judge must be assigned to the case'
+                newErrors.judgeId = 'Se debe asignar un juez al caso'
         }
 
         if (currentStep === 2) {
             if (!hearingDate)
-                newErrors.hearingDate = 'Hearing date is required'
+                newErrors.hearingDate = 'La fecha de la audiencia es obligatoria'
             else if (hearingDate < today)
-                newErrors.hearingDate = 'Hearing date cannot be in the past'
+                newErrors.hearingDate = 'La fecha de la audiencia no puede ser en el pasado'
 
             if (trialDate && trialDate < today)
-                newErrors.trialDate = 'Trial date cannot be in the past'
+                newErrors.trialDate = 'La fecha del juicio no puede ser en el pasado'
 
             if (hearingDate && trialDate && trialDate < hearingDate)
-                newErrors.trialDate = 'Trial date must be after the hearing date'
+                newErrors.trialDate = 'La fecha del juicio debe ser posterior a la fecha de la audiencia'
         }
 
         if (currentStep === 3) {
             // Check for unselected officials
             const unselectedOfficials = officials.filter(o => !o.user_id)
             if (unselectedOfficials.length > 0)
-                newErrors.officials = 'All added officials must have a user selected'
+                newErrors.officials = 'Todos los oficiales añadidos deben tener un usuario seleccionado'
 
             const unselectedFuncionaries = funcionaries.filter(f => !f.user_id)
             if (unselectedFuncionaries.length > 0)
-                newErrors.funcionaries = 'All added functionaries must have a user selected'
+                newErrors.funcionaries = 'Todos los funcionarios añadidos deben tener un usuario seleccionado'
 
             const unselectedWitnesses = witnesses.filter(w => !w.user_id)
             if (unselectedWitnesses.length > 0)
-                newErrors.witnesses = 'All added witnesses must have a user selected'
+                newErrors.witnesses = 'Todos los testigos añadidos deben tener un usuario seleccionado'
 
             const unselectedJury = jury.filter(j => !j.user_id)
             if (unselectedJury.length > 0)
-                newErrors.jury = 'All added jury members must have a user selected'
+                newErrors.jury = 'Todos los miembros del jurado añadidos deben tener un usuario seleccionado'
 
             // Check for duplicate participants
             const allOfficialIds = officials.map(o => o.user_id).filter(Boolean)
             if (new Set(allOfficialIds).size !== allOfficialIds.length)
-                newErrors.officialsDuplicate = 'Duplicate officials detected — each official must be unique'
+                newErrors.officialsDuplicate = 'Se detectaron oficiales duplicados — cada oficial debe ser único'
 
             const allWitnessIds = witnesses.map(w => w.user_id).filter(Boolean)
             const allJuryIds = jury.map(j => j.user_id).filter(Boolean)
             if (new Set(allJuryIds).size !== allJuryIds.length)
-                newErrors.juryDuplicate = 'Duplicate jury members detected'
+                newErrors.juryDuplicate = 'Se detectaron miembros del jurado duplicados'
         }
 
         setErrors(newErrors)
@@ -332,11 +332,11 @@ const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
             <CRow key={index} className="g-3 mb-3 align-items-end">
                 <CCol md={5}>
                     <CFormSelect
-                        label="Official (Officer)"
+                        label="Oficial (Oficial)"
                         value={official.user_id}
                         onChange={(e) => updateOfficial(index, 'user_id', e.target.value)}
                     >
-                        <option value="">Select official</option>
+                        <option value="">Seleccionar oficial</option>
                         {availableOfficials.map(user => (
                             <option key={user.id} value={user.id}>
                                 {user.first_name} {user.last_name} - {user.dni}
@@ -346,13 +346,13 @@ const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
                 </CCol>
                 <CCol md={5}>
                     <CFormSelect
-                        label="Role"
+                        label="Rol"
                         value={official.role}
                         onChange={(e) => updateOfficial(index, 'role', e.target.value)}
                     >
                         <option value="Detective">Detective</option>
-                        <option value="Agent">Agent</option>
-                        <option value="Investigator">Investigator</option>
+                        <option value="Agent">Agente</option>
+                        <option value="Investigator">Investigador</option>
                         <option value="Supervisor">Supervisor</option>
                     </CFormSelect>
                 </CCol>
@@ -374,11 +374,11 @@ const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
             <CRow key={index} className="g-3 mb-3 align-items-end">
                 <CCol md={5}>
                     <CFormSelect
-                        label="Court Functionary"
+                        label="Funcionario Judicial"
                         value={f.user_id}
                         onChange={(e) => updateFuncionary(index, 'user_id', e.target.value)}
                     >
-                        <option value="">Select functionary</option>
+                        <option value="">Seleccionar funcionario</option>
                         {availableFuncionaries.map(user => (
                             <option key={user.id} value={user.id}>
                                 {user.first_name} {user.last_name} - {user.dni}
@@ -388,17 +388,17 @@ const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
                 </CCol>
                 <CCol md={5}>
                     <CFormSelect
-                        label="Role"
+                        label="Rol"
                         value={f.role}
                         onChange={(e) => updateFuncionary(index, 'role', e.target.value)}
                     >
-                        <option value="Clerk">Clerk</option>
-                        <option value="Court Reporter">Court Reporter</option>
-                        <option value="Bailiff">Bailiff</option>
-                        <option value="Secretary">Secretary</option>
-                        <option value="Lawyer">Lawyer</option>
-                        <option value="Prosecutor">Prosecutor</option>
-                        <option value="Defender">Defender</option>
+                        <option value="Clerk">Secretario</option>
+                        <option value="Court Reporter">Relator</option>
+                        <option value="Bailiff">Alguacil</option>
+                        <option value="Secretary">Secretaria</option>
+                        <option value="Lawyer">Abogado</option>
+                        <option value="Prosecutor">Fiscal</option>
+                        <option value="Defender">Defensor</option>
                     </CFormSelect>
                 </CCol>
                 <CCol md={2}>
@@ -419,11 +419,11 @@ const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
             <CRow key={index} className="g-3 mb-3 align-items-end">
                 <CCol md={5}>
                     <CFormSelect
-                        label="Witness"
+                        label="Testigo"
                         value={witness.user_id}
                         onChange={(e) => updateWitness(index, 'user_id', e.target.value)}
                     >
-                        <option value="">Select witness</option>
+                        <option value="">Seleccionar testigo</option>
                         {availableCitizens.map(user => (
                             <option key={user.id} value={user.id}>
                                 {user.first_name} {user.last_name} - {user.dni}
@@ -433,10 +433,10 @@ const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
                 </CCol>
                 <CCol md={5}>
                     <CFormInput
-                        label="Role"
+                        label="Rol"
                         value={witness.role}
                         onChange={(e) => updateWitness(index, 'role', e.target.value)}
-                        placeholder="Eyewitness, Expert witness..."
+                        placeholder="Testigo presencial, perito..."
                     />
                 </CCol>
                 <CCol md={2}>
@@ -457,11 +457,11 @@ const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
             <CRow key={index} className="g-3 mb-3 align-items-end">
                 <CCol md={5}>
                     <CFormSelect
-                        label="Jury Member"
+                        label="Miembro del Jurado"
                         value={juryMember.user_id}
                         onChange={(e) => updateJury(index, 'user_id', e.target.value)}
                     >
-                        <option value="">Select member</option>
+                        <option value="">Seleccionar miembro</option>
                         {availableCitizens.map(user => (
                             <option key={user.id} value={user.id}>
                                 {user.first_name} {user.last_name} - {user.dni}
@@ -471,10 +471,10 @@ const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
                 </CCol>
                 <CCol md={5}>
                     <CFormInput
-                        label="Role"
+                        label="Rol"
                         value={juryMember.role}
                         onChange={(e) => updateJury(index, 'role', e.target.value)}
-                        placeholder="Juror"
+                        placeholder="Jurado"
                     />
                 </CCol>
                 <CCol md={2}>
@@ -491,10 +491,10 @@ const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
     }
 
     return (
-        <CModal size="lg" visible={visible} onClose={onClose}>
+        <CModal size="lg" visible={visible} onClose={onClose} backdrop="static" keyboard={false}>
             <CModalHeader>
                 <CModalTitle>
-                    {initial ? 'Edit Assignment' : 'New Assignment'} - Step {step} of 3
+                    {initial ? 'Editar Asignación' : 'Nueva Asignación'} - Paso {step} de 3
                 </CModalTitle>
             </CModalHeader>
             <CForm onSubmit={handleSubmit}>
@@ -508,30 +508,45 @@ const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
                                 ))}
                             </ul>
                         </CAlert>
-                    )}>
+                    )}
 
-                    {/* SECCIÓN 1: CASE INFORMATION */}
+                    {/* SECCIÓN 1: INFORMACIÓN DEL CASO */}
                     {step === 1 && (
                         <>
-                            <h6 className="mb-3 text-primary">Case Information</h6>
+                            <h6 className="mb-3 text-primary">Información del Caso</h6>
                             <CRow className="g-3">
                                 <CCol md={12}>
-                                    <CFormInput
-                                        label="Case Title *"
-                                        placeholder="Robbery in public space"
+                                    <CFormSelect
+                                        className="tour-assignment-form-title"
+                                        label="Delito Asignado *"
                                         value={caseTitle}
                                         onChange={(e) => setCaseTitle(e.target.value)}
                                         invalid={!!errors.caseTitle}
                                         feedback={errors.caseTitle}
                                         required
-                                    />
+                                    >
+                                        <option value="">Seleccione un delito...</option>
+                                        {CRIME_TYPES.map(crime => (
+                                            <option key={crime.id} value={crime.title}>
+                                                {crime.title}
+                                            </option>
+                                        ))}
+                                    </CFormSelect>
+
+                                    {caseTitle && CRIME_TYPES.find(c => c.title === caseTitle) && (
+                                        <div className="mt-2 p-2 bg-light rounded text-muted small">
+                                            <strong>Descripción del delito: </strong>
+                                            {CRIME_TYPES.find(c => c.title === caseTitle).description}
+                                        </div>
+                                    )}
                                 </CCol>
                             </CRow>
 
                             <div className="mt-3">
                                 <CFormTextarea
-                                    label="Case Description *"
-                                    placeholder="Detailed description of the case..."
+                                    className="tour-assignment-form-description"
+                                    label="Descripción del Caso *"
+                                    placeholder="Descripción detallada del caso..."
                                     rows="3"
                                     value={caseDescription}
                                     onChange={(e) => setCaseDescription(e.target.value)}
@@ -543,35 +558,52 @@ const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
 
                             <CRow className="g-3 mt-2">
                                 <CCol md={6}>
-                                    <CFormInput
-                                        label="Court"
-                                        placeholder="First Criminal Court"
+                                    <CFormSelect
+                                        className="tour-assignment-form-court"
+                                        label="Tribunal"
                                         value={court}
-                                        onChange={(e) => setCourt(e.target.value)}
-                                    />
+                                        onChange={(e) => {
+                                            const selectedCourt = e.target.value;
+                                            setCourt(selectedCourt);
+                                            const courtData = COURTS.find(c => c.name === selectedCourt);
+                                            if (courtData) {
+                                                setLocation(courtData.location);
+                                            } else {
+                                                setLocation('');
+                                            }
+                                        }}
+                                    >
+                                        <option value="">Seleccione un tribunal...</option>
+                                        {COURTS.map(c => (
+                                            <option key={c.id} value={c.name}>{c.name}</option>
+                                        ))}
+                                    </CFormSelect>
                                 </CCol>
                                 <CCol md={6}>
                                     <CFormInput
-                                        label="Location"
-                                        placeholder="Justice Palace, Room 4A"
+                                        className="tour-assignment-form-location"
+                                        label="Ubicación"
                                         value={location}
                                         onChange={(e) => setLocation(e.target.value)}
+                                        readOnly
+                                        style={{ backgroundColor: location ? '#e8f5e9' : '' }}
                                     />
                                 </CCol>
                             </CRow>
 
-                            <h6 className="mb-3 mt-4 text-primary">Main Judge</h6>
+                            <h6 className="mb-3 mt-4 text-primary">Juez Principal</h6>
                             <CRow className="g-3">
                                 <CCol md={12}>
                                     <CFormSelect
-                                        label="Assigned Judge *"
+                                        className="tour-assignment-form-judge"
+                                        label="Juez Asignado *"
                                         value={judgeId}
                                         onChange={(e) => setJudgeId(e.target.value)}
                                         disabled={loading}
                                         invalid={!!errors.judgeId}
                                         feedback={errors.judgeId}
                                     >
-                                        <option value="">Select a judge</option>
+                                        <option value="">Seleccione un juez</option>
                                         {availableOfficials.map(official => (
                                             <option key={official.id} value={official.id}>
                                                 {official.first_name} {official.last_name} - {official.dni}
@@ -583,14 +615,15 @@ const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
                         </>
                     )}
 
-                    {/* SECCIÓN 2: DATES AND STATUS */}
+                    {/* SECCIÓN 2: FECHAS Y ESTADO */}
                     {step === 2 && (
                         <>
-                            <h6 className="mb-3 text-primary">Important Dates</h6>
+                            <h6 className="mb-3 text-primary">Fechas Importantes</h6>
                             <CRow className="g-3">
                                 <CCol md={6}>
                                     <CFormInput
-                                        label="Hearing Date *"
+                                        className="tour-assignment-form-hearing-date"
+                                        label="Fecha de Audiencia *"
                                         type="date"
                                         value={hearingDate}
                                         min={today}
@@ -601,7 +634,8 @@ const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
                                 </CCol>
                                 <CCol md={6}>
                                     <CFormInput
-                                        label="Hearing Time"
+                                        className="tour-assignment-form-hearing-time"
+                                        label="Hora de Audiencia"
                                         type="time"
                                         value={hearingTime}
                                         onChange={(e) => setHearingTime(e.target.value)}
@@ -612,7 +646,8 @@ const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
                             <CRow className="g-3 mt-2">
                                 <CCol md={6}>
                                     <CFormInput
-                                        label="Trial Date"
+                                        className="tour-assignment-form-trial-date"
+                                        label="Fecha de Juicio"
                                         type="date"
                                         value={trialDate}
                                         min={hearingDate || today}
@@ -623,7 +658,8 @@ const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
                                 </CCol>
                                 <CCol md={6}>
                                     <CFormInput
-                                        label="Trial Time"
+                                        className="tour-assignment-form-trial-time"
+                                        label="Hora de Juicio"
                                         type="time"
                                         value={trialTime}
                                         onChange={(e) => setTrialTime(e.target.value)}
@@ -631,79 +667,81 @@ const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
                                 </CCol>
                             </CRow>
 
-                            <h6 className="mb-3 mt-4 text-primary">Status and Priority</h6>
+                            <h6 className="mb-3 mt-4 text-primary">Estado y Prioridad</h6>
                             <CRow className="g-3">
                                 <CCol md={6}>
                                     <CFormSelect
-                                        label="Status"
+                                        className="tour-assignment-form-status"
+                                        label="Estado"
                                         value={status}
                                         onChange={(e) => setStatus(e.target.value)}
                                     >
-                                        <option value="scheduled">Scheduled</option>
-                                        <option value="in_progress">In Progress</option>
-                                        <option value="completed">Completed</option>
-                                        <option value="cancelled">Cancelled</option>
-                                        <option value="postponed">Postponed</option>
+                                        <option value="scheduled">Programada</option>
+                                        <option value="in_progress">En Progreso</option>
+                                        <option value="completed">Completada</option>
+                                        <option value="cancelled">Cancelada</option>
+                                        <option value="postponed">Pospuesta</option>
                                     </CFormSelect>
                                 </CCol>
                                 <CCol md={6}>
                                     <CFormSelect
-                                        label="Priority"
+                                        className="tour-assignment-form-priority"
+                                        label="Prioridad"
                                         value={priority}
                                         onChange={(e) => setPriority(e.target.value)}
                                     >
-                                        <option value="high">High</option>
-                                        <option value="medium">Medium</option>
-                                        <option value="low">Low</option>
+                                        <option value="high">Alta</option>
+                                        <option value="medium">Media</option>
+                                        <option value="low">Baja</option>
                                     </CFormSelect>
                                 </CCol>
                             </CRow>
                         </>
                     )}
 
-                    {/* SECCIÓN 3: PARTICIPANTS */}
+                    {/* SECCIÓN 3: PARTICIPANTES */}
                     {step === 3 && (
                         <>
-                            <h6 className="mb-3 text-primary">Case Officials (Police/Investigators)</h6>
-                            <CCard className="mb-3">
+                            <h6 className="mb-3 text-primary">Oficiales del Caso (Policía/Investigadores)</h6>
+                            <CCard className="tour-assignment-form-officials mb-3">
                                 <CCardBody>
                                     {renderOfficials()}
                                     <CButton color="primary" variant="outline" onClick={addOfficial}>
                                         <CIcon icon={cilPlus} className="me-2" />
-                                        Add Official
+                                        Añadir Oficial
                                     </CButton>
                                 </CCardBody>
                             </CCard>
 
-                            <h6 className="mb-3 mt-4 text-primary">Court Functionaries</h6>
-                            <CCard className="mb-3">
+                            <h6 className="mb-3 mt-4 text-primary">Funcionarios Judiciales</h6>
+                            <CCard className="tour-assignment-form-funcionaries mb-3">
                                 <CCardBody>
                                     {renderFuncionaries()}
                                     <CButton color="primary" variant="outline" onClick={addFuncionary}>
                                         <CIcon icon={cilPlus} className="me-2" />
-                                        Add Functionary
+                                        Añadir Funcionario
                                     </CButton>
                                 </CCardBody>
                             </CCard>
 
-                            <h6 className="mb-3 mt-4 text-primary">Witnesses</h6>
-                            <CCard className="mb-3">
+                            <h6 className="mb-3 mt-4 text-primary">Testigos</h6>
+                            <CCard className="tour-assignment-form-witnesses mb-3">
                                 <CCardBody>
                                     {renderWitnesses()}
                                     <CButton color="primary" variant="outline" onClick={addWitness}>
                                         <CIcon icon={cilPlus} className="me-2" />
-                                        Add Witness
+                                        Añadir Testigo
                                     </CButton>
                                 </CCardBody>
                             </CCard>
 
-                            <h6 className="mb-3 mt-4 text-primary">Jury Members</h6>
-                            <CCard className="mb-3">
+                            <h6 className="mb-3 mt-4 text-primary">Miembros del Jurado</h6>
+                            <CCard className="tour-assignment-form-jury mb-3">
                                 <CCardBody>
                                     {renderJury()}
                                     <CButton color="primary" variant="outline" onClick={addJury}>
                                         <CIcon icon={cilPlus} className="me-2" />
-                                        Add Member
+                                        Añadir Miembro
                                     </CButton>
                                 </CCardBody>
                             </CCard>
@@ -711,33 +749,33 @@ const AssignmentForm = ({ visible, onClose, onSave, initial = null }) => {
                     )}
 
                     <div className="mt-3">
-                        <small className="text-muted">* Required fields</small>
+                        <small className="text-muted">* Campos obligatorios</small>
                     </div>
                 </CModalBody>
                 <CModalFooter>
                     {step > 1 && (
                         <CButton type="button" color="secondary" onClick={handleBack}>
-                            Back
+                            Atrás
                         </CButton>
                     )}
                     {step < 3 ? (
                         <CButton type="button" color="primary colorbutton" style={colorbutton} onClick={handleNext} disabled={saving}>
-                            Next
+                            Siguiente
                         </CButton>
                     ) : (
                         <CButton type="submit" color="success" disabled={saving}>
                             {saving ? (
                                 <>
                                     <CSpinner size="sm" className="me-2" />
-                                    Saving...
+                                    Guardando...
                                 </>
                             ) : (
-                                <>{initial ? 'Update' : 'Create'} Assignment</>
+                                <>{initial ? 'Actualizar' : 'Crear'} Asignación</>
                             )}
                         </CButton>
                     )}
                     <CButton type="button" color="light" onClick={onClose} className="ms-auto">
-                        Cancel
+                        Cancelar
                     </CButton>
                 </CModalFooter>
             </CForm>

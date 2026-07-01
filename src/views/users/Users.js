@@ -4,7 +4,7 @@ import {
     CCard, CCardBody, CCardHeader, CContainer, CRow, CCol,
     CButton, CTable, CTableHead, CTableRow, CTableHeaderCell,
     CTableBody, CTableDataCell, CBadge, CSpinner, CDropdown,
-    CDropdownToggle, CDropdownMenu, CDropdownItem
+    CDropdownToggle, CDropdownMenu, CDropdownItem, CDropdownDivider, CDropdownHeader
 } from '@coreui/react'
 import SearchInput from 'src/components/SearchInput'
 import CIcon from '@coreui/icons-react'
@@ -96,7 +96,7 @@ const Users = () => {
                     appAlert: {
                         visible: true,
                         color: 'success',
-                        message: 'User updated successfully',
+                        message: 'Usuario actualizado con éxito',
                     },
                 })
             } else {
@@ -106,7 +106,7 @@ const Users = () => {
                     appAlert: {
                         visible: true,
                         color: 'success',
-                        message: 'User created successfully',
+                        message: 'Usuario creado con éxito',
                     },
                 })
             }
@@ -120,7 +120,7 @@ const Users = () => {
                 appAlert: {
                     visible: true,
                     color: 'danger',
-                    message: 'Error saving user: ' + error.message,
+                    message: 'Error al guardar el usuario: ' + error.message,
                 },
             })
         }
@@ -144,7 +144,7 @@ const Users = () => {
                 appAlert: {
                     visible: true,
                     color: 'warning',
-                    message: 'User deleted from the system',
+                    message: 'Usuario eliminado del sistema',
                 },
             })
         } catch (error) {
@@ -154,7 +154,7 @@ const Users = () => {
                 appAlert: {
                     visible: true,
                     color: 'danger',
-                    message: 'Error deleting user: ' + error.message,
+                    message: 'Error al eliminar al usuario: ' + error.message,
                 },
             })
         }
@@ -173,7 +173,7 @@ const Users = () => {
             await fetchData()
         } catch (error) {
             console.error('Error changing user status:', error)
-            alert('Error changing status: ' + error.message)
+            alert('Error al cambiar el estado: ' + error.message)
         }
     }
 
@@ -183,7 +183,7 @@ const Users = () => {
             await fetchData()
         } catch (error) {
             console.error('Error changing user role:', error)
-            alert('Error changing role: ' + error.message)
+            alert('Error al cambiar el rol: ' + error.message)
         }
     }
 
@@ -195,9 +195,9 @@ const Users = () => {
     const getRoleBadge = (role) => {
         const r = role?.toLowerCase()
         const roleConfig = {
-            'administrator': { color: 'warning', text: 'ADMINISTRATOR', icon: cilShieldAlt, textColor: 'text-dark' },
-            'functionary': { color: 'primary', text: 'FUNCTIONARY', icon: cilShieldAlt, textColor: 'text-white' },
-            'officer': { color: 'info', text: 'OFFICER', icon: cilShieldAlt, textColor: 'text-white' },
+            'administrator': { color: 'warning', text: 'ADMINISTRADOR', icon: cilShieldAlt, textColor: 'text-dark' },
+            'functionary': { color: 'primary', text: 'FUNCIONARIO', icon: cilShieldAlt, textColor: 'text-white' },
+            'officer': { color: 'info', text: 'OFICIAL', icon: cilShieldAlt, textColor: 'text-white' },
             'civil': { color: 'light', text: 'CIVIL', icon: cilUser, textColor: 'text-dark' }
         }
 
@@ -217,10 +217,10 @@ const Users = () => {
     const getStatusBadge = (status) => {
         const s = status?.toLowerCase()
         const statusConfig = {
-            'active': { color: 'success', text: 'Active' },
-            'suspended': { color: 'warning', text: 'Suspended' },
-            'inactive': { color: 'secondary', text: 'Inactive' },
-            'deleted': { color: 'danger', text: 'Deleted' }
+            'active': { color: 'success', text: 'Activo' },
+            'suspended': { color: 'warning', text: 'Suspendido' },
+            'inactive': { color: 'secondary', text: 'Inactivo' },
+            'deleted': { color: 'danger', text: 'Eliminado' }
         }
 
         const config = statusConfig[s] || { color: 'secondary', text: status }
@@ -234,9 +234,9 @@ const Users = () => {
     const getRoleOptions = (currentRole) => {
         const r = currentRole?.toLowerCase()
         const roles = [
-            { value: 'administrator', label: 'Administrator', icon: cilShieldAlt },
-            { value: 'functionary', label: 'Functionary', icon: cilPeople },
-            { value: 'officer', label: 'Officer', icon: cilPeople },
+            { value: 'administrator', label: 'Administrador', icon: cilShieldAlt },
+            { value: 'functionary', label: 'Funcionario', icon: cilPeople },
+            { value: 'officer', label: 'Oficial', icon: cilPeople },
             { value: 'civil', label: 'Civil', icon: cilUser }
         ]
         return roles.filter(role => role.value !== r)
@@ -245,9 +245,9 @@ const Users = () => {
     const getStatusOptions = (currentStatus) => {
         const s = currentStatus?.toLowerCase()
         const statuses = [
-            { value: 'active', label: 'Active' },
-            { value: 'suspended', label: 'Suspended' },
-            { value: 'inactive', label: 'Inactive' }
+            { value: 'active', label: 'Activo' },
+            { value: 'suspended', label: 'Suspendido' },
+            { value: 'inactive', label: 'Inactivo' }
         ]
         return statuses.filter(status => status.value !== s)
     }
@@ -263,12 +263,12 @@ const Users = () => {
                         <CCardHeader className="border-bottom-0 pt-4 pb-3 px-4">
                             <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
                                 <div>
-                                    <h4 className="mb-1 fw-bold" style={{ letterSpacing: '-0.5px' }}>
+                                    <h4 className="mb-1 fw-bold tour-users-title" style={{ letterSpacing: '-0.5px' }}>
                                         <CIcon icon={cilPeople} className="me-2 text-primary" style={{ color: '#1a237e' }} />
-                                        User Management
+                                        Gestión de Usuarios
                                     </h4>
                                     <p className="text-muted mb-0 small">
-                                        System access control and personnel administration
+                                        Control de acceso al sistema y administración de personal
                                     </p>
                                 </div>
                                 {userRole === 'administrator' && (
@@ -280,11 +280,11 @@ const Users = () => {
                                                 setEditing(null);
                                                 setShowForm(true)
                                             }}
-                                            className="d-flex align-items-center px-4 py-2 shadow-sm"
+                                            className="d-flex align-items-center px-4 py-2 shadow-sm tour-users-new-btn"
                                             shape="rounded-pill"
                                         >
                                             <CIcon icon={cilPlus} className="me-2 fw-bold" />
-                                            NEW USER
+                                            NUEVO USUARIO
                                         </CButton>
                                     </div>
                                 )}
@@ -295,16 +295,16 @@ const Users = () => {
                             {loading ? (
                                 <div className="text-center py-5">
                                     <CSpinner color="primary" variant="grow" />
-                                    <div className="mt-3 text-muted">Loading secure data...</div>
+                                    <div className="mt-3 text-muted">Cargando datos seguros...</div>
                                 </div>
                             ) : (
                                 <>
                                     <div className="mb-4 p-3 rounded-3 border d-flex justify-content-between align-items-center gap-3 bg-light-subtle dark:bg-dark-subtle">
                                         <div className="text-muted fw-semibold small">
-                                            Total Users: <span className="fs-6">{filteredUsers.length}</span>
+                                            Total de Usuarios: <span className="fs-6">{filteredUsers.length}</span>
                                         </div>
 
-                                        <div style={{ maxWidth: '350px', width: '100%' }}>
+                                        <div style={{ maxWidth: '350px', width: '100%' }} className="tour-users-search">
                                             <SearchInput
                                                 value={searchTerm}
                                                 onChange={(e) => {
@@ -317,19 +317,19 @@ const Users = () => {
 
                                     {currentPageData.length > 0 ? (
                                         <>
-                                            <div className="table-responsive border rounded-3">
+                                            <div className="table-responsive border rounded-3 tour-users-table">
                                                 <CTable hover align="middle" className="mb-0">
                                                     <CTableHead>
                                                         <CTableRow>
-                                                            <CTableHeaderCell className="text-uppercase text-secondary small ps-4 py-3" style={{ fontWeight: 600 }}>User Profile</CTableHeaderCell>
-                                                            <CTableHeaderCell className="text-uppercase text-secondary small py-3" style={{ fontWeight: 600 }}>Contact Info</CTableHeaderCell>
-                                                            <CTableHeaderCell className="text-uppercase text-secondary small py-3" style={{ fontWeight: 600 }}>System Role</CTableHeaderCell>
-                                                            <CTableHeaderCell className="text-uppercase text-secondary small py-3" style={{ fontWeight: 600 }}>Status</CTableHeaderCell>
-                                                            <CTableHeaderCell className="text-uppercase text-secondary small text-end pe-4 py-3" style={{ fontWeight: 600, width: '180px' }}>Actions</CTableHeaderCell>
+                                                            <CTableHeaderCell className="text-uppercase text-secondary small ps-4 py-3" style={{ fontWeight: 600 }}>Perfil de Usuario</CTableHeaderCell>
+                                                            <CTableHeaderCell className="text-uppercase text-secondary small py-3" style={{ fontWeight: 600 }}>Información de Contacto</CTableHeaderCell>
+                                                            <CTableHeaderCell className="text-uppercase text-secondary small py-3" style={{ fontWeight: 600 }}>Rol del Sistema</CTableHeaderCell>
+                                                            <CTableHeaderCell className="text-uppercase text-secondary small py-3" style={{ fontWeight: 600 }}>Estado</CTableHeaderCell>
+                                                            <CTableHeaderCell className="text-uppercase text-secondary small text-end pe-4 py-3" style={{ fontWeight: 600, width: '180px' }}>Acciones</CTableHeaderCell>
                                                         </CTableRow>
                                                     </CTableHead>
                                                     <CTableBody>
-                                                        {currentPageData.map(user => (
+                                                        {currentPageData.map((user, index) => (
                                                             <CTableRow key={user.id}>
                                                                 <CTableDataCell className="ps-4">
                                                                     <div className="d-flex align-items-center py-2">
@@ -359,12 +359,12 @@ const Users = () => {
                                                                     {getStatusBadge(user.status)}
                                                                 </CTableDataCell>
                                                                 <CTableDataCell className="text-end pe-4">
-                                                                    <div className="d-flex justify-content-end gap-2">
+                                                                    <div className={`d-flex justify-content-end gap-2 ${index === 0 ? 'tour-users-actions-first' : ''}`}>
                                                                         <CButton
                                                                             size="sm"
                                                                             shape="rounded-pill"
                                                                             onClick={() => handleShowInfo(user)}
-                                                                            title="View Details"
+                                                                            title="Ver detalles"
                                                                             className="text-info shadow-sm"
                                                                         >
                                                                             <CIcon icon={cilInfo} />
@@ -386,28 +386,28 @@ const Users = () => {
                                                                                             onClick={() => { setEditing(user); setShowForm(true) }}
                                                                                             style={{ cursor: 'pointer' }}
                                                                                         >
-                                                                                            Edit Details
+                                                                                            Editar Detalles
                                                                                         </CDropdownItem>
-                                                                                        <CDropdownItem divider />
-                                                                                        <CDropdownItem header style={{ cursor: 'default' }}>Role Management</CDropdownItem>
+                                                                                        <CDropdownDivider />
+                                                                                        <CDropdownHeader style={{ cursor: 'default' }}>Gestión de Roles</CDropdownHeader>
                                                                                         {getRoleOptions(user.role).map(role => (
                                                                                             <CDropdownItem
                                                                                                 key={role.value}
                                                                                                 onClick={() => handleRoleChange(user.id, role.value)}
                                                                                                 style={{ cursor: 'pointer' }}
                                                                                             >
-                                                                                                Change to {role.label}
+                                                                                                Cambiar a {role.label}
                                                                                             </CDropdownItem>
                                                                                         ))}
-                                                                                        <CDropdownItem divider />
-                                                                                        <CDropdownItem header style={{ cursor: 'default' }}>Status Management</CDropdownItem>
+                                                                                        <CDropdownDivider />
+                                                                                        <CDropdownHeader style={{ cursor: 'default' }}>Gestión de Estados</CDropdownHeader>
                                                                                         {getStatusOptions(user.status).map(status => (
                                                                                             <CDropdownItem
                                                                                                 key={status.value}
                                                                                                 onClick={() => handleStatusChange(user.id, status.value)}
                                                                                                 style={{ cursor: 'pointer' }}
                                                                                             >
-                                                                                                Mark as {status.label}
+                                                                                                Marcar como {status.label}
                                                                                             </CDropdownItem>
                                                                                         ))}
                                                                                     </CDropdownMenu>
@@ -417,7 +417,7 @@ const Users = () => {
                                                                                     shape="rounded-pill"
                                                                                     onClick={() => showDeleteConfirmation(user.id, `${user.first_name} ${user.last_name}`)}
                                                                                     disabled={user.role?.toLowerCase() === 'administrator'}
-                                                                                    title="Delete User"
+                                                                                    title="Eliminar Usuario"
                                                                                     className="text-danger shadow-sm"
                                                                                 >
                                                                                     <CIcon icon={cilTrash} />
@@ -447,11 +447,11 @@ const Users = () => {
                                         <div className="text-center py-5 rounded-3 border border-dashed">
                                             <div className="text-muted">
                                                 <CIcon icon={cilSearch} size="3xl" className="mb-3 text-secondary opacity-25" />
-                                                <h5>{searchTerm ? 'No results found' : 'No users available'}</h5>
+                                                <h5>{searchTerm ? 'No se encontraron resultados' : 'No hay usuarios disponibles'}</h5>
                                                 <p className="text-secondary">
                                                     {searchTerm
-                                                        ? 'Try refining your search query.'
-                                                        : 'Get started by adding a new user to the system.'
+                                                        ? 'Intente refinar su consulta de búsqueda.'
+                                                        : 'Comience agregando un nuevo usuario al sistema.'
                                                     }
                                                 </p>
                                                 {searchTerm && (
@@ -460,7 +460,7 @@ const Users = () => {
                                                         variant="ghost"
                                                         onClick={() => { setSearchTerm(''); setCurrentPage(1); }}
                                                     >
-                                                        Clear Search
+                                                        Limpiar Búsqueda
                                                     </CButton>
                                                 )}
                                             </div>
@@ -496,9 +496,9 @@ const Users = () => {
                 visible={deleteModal.visible}
                 onClose={() => setDeleteModal({ visible: false, userId: null, userName: '' })}
                 onConfirm={confirmDelete}
-                title="Delete User"
-                message={`Are you sure you want to delete the user "${deleteModal.userName}"? This action cannot be undone.`}
-                confirmText="Confirm Delete"
+                title="Eliminar Usuario"
+                message={`¿Está seguro de que desea eliminar al usuario "${deleteModal.userName}"? Esta acción no se puede deshacer.`}
+                confirmText="Confirmar Eliminación"
                 type="danger"
             />
         </CContainer>

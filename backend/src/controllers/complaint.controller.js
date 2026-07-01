@@ -134,7 +134,7 @@ const createComplaint = async (req, res) => {
             title,
             description,
             Id_zone: Number(Id_zone),
-            Id_user: (isAdminOrOfficer && req.body.Id_user) ? Number(req.body.Id_user) : userId,
+            Id_user: (isAdminOrOfficer && req.body.Id_user) ? req.body.Id_user : userId,
             latitude: latitude ? Number(latitude) : null,
             longitude: longitude ? Number(longitude) : null,
             address_detail,

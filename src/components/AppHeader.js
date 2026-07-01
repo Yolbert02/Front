@@ -47,7 +47,7 @@ const AppHeader = () => {
   }, [])
 
   return (
-    <CHeader position="sticky" className="mb-4 p-0 shadow-sm border-0" ref={headerRef} style={{ zIndex: 1030 }}>
+    <CHeader position="sticky" className="mb-4 p-0 shadow-sm border-0 header-nav" ref={headerRef} style={{ zIndex: 1030 }}>
       <div style={{ height: '4px', width: '100%', background: 'linear-gradient(90deg, #1a237e 0%, #0d47a1 100%)' }}></div>
 
       <CContainer className="border-bottom px-4 py-2" fluid>
@@ -69,7 +69,7 @@ const AppHeader = () => {
                 fontWeight: isActive ? '700' : '500'
               })}
             >
-              Dashboard
+              Tablero
             </CNavLink>
           </CNavItem>
           {sessionStorage.getItem('user') && JSON.parse(sessionStorage.getItem('user')).role === 'administrator' && (
@@ -82,7 +82,7 @@ const AppHeader = () => {
                   fontWeight: isActive ? '700' : '500'
                 })}
               >
-                Users
+                Usuarios
               </CNavLink>
             </CNavItem>
           )}
@@ -103,7 +103,7 @@ const AppHeader = () => {
               className="px-2 border-0 bg-transparent text-secondary"
               onClick={() => setColorMode(colorMode === 'dark' ? 'light' : 'dark')}
               style={{ cursor: 'pointer' }}
-              title={`Switch to ${colorMode === 'dark' ? 'light' : 'dark'} mode`}
+              title={`Cambiar a modo ${colorMode === 'dark' ? 'claro' : 'oscuro'}`}
             >
               <CIcon icon={colorMode === 'dark' ? cilSun : cilMoon} size="lg" />
             </CNavLink>

@@ -7,9 +7,12 @@ const getAllOfficers = async (req, res) => {
                 user: {
                     select: {
                         first_name: true,
+                        second_name: true,
                         last_name: true,
+                        second_last_name: true,
                         email: true,
                         dni: true,
+                        number_phone: true,
                         profile_picture: true,
                         status_user: true
                     }
@@ -76,6 +79,33 @@ const updateOfficer = async (req, res) => {
 const deleteOfficer = async (req, res) => {
     try {
         const { id } = req.params;
+
+        // Check if officer is assigned to any active/existing complaints
+        const assignedComplaint = await prisma.complaint.findFirst({
+            where: { assigned_officer_id: id }
+        });
+
+        if (assignedComplaint) {
+            return res.status(400).json({
+                message: 'No se puede eliminar el oficial porque tiene denuncias asignadas en el sistema.'
+            });
+        }
+
+        // Check if officer is assigned to any tribunal assignments
+        const assignedAssignment = await prisma.assignment.findFirst({
+            where: {
+                officials: {
+                    some: { Id_user: id }
+                }
+            }
+        });
+
+        if (assignedAssignment) {
+            return res.status(400).json({
+                message: 'No se puede eliminar el oficial porque está asignado a un juicio u ocurrencia programada.'
+            });
+        }
+
         // This only deletes the officer profile, not the user unless cascaded in DB (which it is)
         await prisma.police_Officer.delete({
             where: { Id_user: id }

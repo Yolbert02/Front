@@ -95,10 +95,10 @@ const ZoneSiderbar = ({ onLocate }) => {
                     <div className="zone-body"
                         style={{ '--zone-color': zoneColor }}>
                         <strong className="d-block complaint-title" style={{ fontSize: '0.9rem' }}>
-                            {complaint.title || 'Untitled'}
+                            {complaint.title || 'Sin título'}
                         </strong>
                         <small className="text-muted d-block mt-1">
-                            {complaint.zone || 'Unknown Zone'}
+                            {complaint.zone || 'Zona desconocida'}
                         </small>
                     </div>
                 </div>
@@ -107,7 +107,7 @@ const ZoneSiderbar = ({ onLocate }) => {
                     <CButton
                         size="sm"
                         className="text-success shadow-sm"
-                        title="View Location"
+                        title="Ver ubicación"
                         shape="rounded-pill"
                         onClick={() => onLocate && onLocate(complaint)}
                     >
@@ -118,7 +118,7 @@ const ZoneSiderbar = ({ onLocate }) => {
                         size="sm"
                         className="text-info shadow-sm"
                         onClick={() => handleInfoClick(complaint)}
-                        title="View Details"
+                        title="Ver detalles"
                         shape="rounded-pill"
                     >
                         <CIcon icon={cilInfo} />
@@ -139,7 +139,7 @@ const ZoneSiderbar = ({ onLocate }) => {
                 <div style={{ height: '5px', background: 'linear-gradient(90deg, #1a237e 0%, #0d47a1 100%)' }}></div>
                 <CCardBody className="text-center py-5">
                     <CSpinner color="primary" />
-                    <p className="mt-3 text-muted">Loading complaints...</p>
+                    <p className="mt-3 text-muted">Cargando denuncias...</p>
                 </CCardBody>
             </CCard>
         )
@@ -152,12 +152,12 @@ const ZoneSiderbar = ({ onLocate }) => {
                 <CCardHeader className="border-bottom-0 pt-4 pb-3 px-4">
                     <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
                         <div>
-                            <h4 className="mb-1 fw-bold" style={{ letterSpacing: '-0.5px' }}>
+                            <h4 className="mb-1 fw-bold tour-zones-sidebar-title" style={{ letterSpacing: '-0.5px' }}>
                                 <CIcon icon={cilListRich} className="me-2 text-primary" />
-                                Zone Panel
+                                Panel de Zonas
                             </h4>
                             <p className="text-muted mb-0 small">
-                                Zone indicators • {complaints.length} complaints
+                                Indicadores de zona • {complaints.length} denuncias
                             </p>
                         </div>
                     </div>
@@ -178,7 +178,7 @@ const ZoneSiderbar = ({ onLocate }) => {
                             ) : (
                                 <div className="text-center text-muted py-4">
                                     <CIcon icon={cilWarning} className="me-2 opacity-50" />
-                                    No results found for "{searchTerm}"
+                                    No se encontraron resultados para "{searchTerm}"
                                 </div>
                             )}
                         </div>
@@ -204,7 +204,7 @@ const ZoneSiderbar = ({ onLocate }) => {
                                             ) : (
                                                 <div className="text-center text-muted py-2">
                                                     <CIcon icon={cilWarning} className="me-2 opacity-50" />
-                                                    No complaints
+                                                    Sin denuncias
                                                 </div>
                                             )}
                                         </CAccordionBody>
@@ -219,8 +219,8 @@ const ZoneSiderbar = ({ onLocate }) => {
                         <CButton
                             size="lg"
                             onClick={() => setShowGlobalStats(true)}
-                            title="View Details"
-                            className="text-info shadow-lg"
+                            title="Ver detalles"
+                            className="tour-zones-global-stats-btn text-info shadow-lg"
                         >
                             <CIcon icon={cilInfo} />
                         </CButton>
