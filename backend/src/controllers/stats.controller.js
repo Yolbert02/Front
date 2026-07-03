@@ -316,9 +316,101 @@ const generateAssignmentPDF = async (req, res) => {
     }
 };
 
+const getCivilStats = async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        const complaints = await prisma.complaint.findMany({
+            where: { Id_user: userId },
+            orderBy: { created_at: 'desc' },
+            include: {
+                zone: { select: { name_zone: true } },
+                crime: { select: { title: true } }
+            }
+        });
+
+        const total = complaints.length;
+        const resolved = complaints.filter(c => c.status === 'closed').length;
+        const investigating = complaints.filter(c => c.status === 'under_investigation').length;
+        const received = complaints.filter(c => c.status === 'received').length;
+        const highPriority = complaints.filter(c => c.priority === 'high').length;
+
+        const byStatus = {
+            received,
+            under_investigation: investigating,
+            closed: resolved,
+        };
+
+        res.json({
+            success: true,
+            data: {
+                counts: { total, resolved, investigating, received, highPriority },
+                byStatus,
+                recentComplaints: complaints.slice(0, 5).map(c => ({
+                    id: c.Id_complaint,
+                    title: c.title,
+                    status: c.status,
+                    priority: c.priority,
+                    zone: c.zone?.name_zone || 'N/A',
+                    crime: c.crime?.title || 'No especificado',
+                    createdAt: c.created_at
+                }))
+            }
+        });
+    } catch (error) {
+        console.error('Civil stats error:', error);
+        res.status(500).json({ success: false, message: 'Error fetching civil statistics', error: error.message });
+    }
+};
+
+const getOfficerStats = async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        const complaints = await prisma.complaint.findMany({
+            where: { assigned_officer_id: userId },
+            orderBy: { created_at: 'desc' },
+            include: {
+                zone: { select: { name_zone: true } },
+                crime: { select: { title: true } },
+                user: { select: { first_name: true, last_name: true } }
+            }
+        });
+
+        const total = complaints.length;
+        const resolved = complaints.filter(c => c.status === 'closed').length;
+        const investigating = complaints.filter(c => c.status === 'under_investigation').length;
+        const received = complaints.filter(c => c.status === 'received').length;
+        const highPriority = complaints.filter(c => c.priority === 'high').length;
+        const efficiency = total > 0 ? Math.round((resolved / total) * 100) : 0;
+
+        res.json({
+            success: true,
+            data: {
+                counts: { total, resolved, investigating, received, highPriority, efficiency },
+                recentCases: complaints.slice(0, 5).map(c => ({
+                    id: c.Id_complaint,
+                    title: c.title,
+                    status: c.status,
+                    priority: c.priority,
+                    zone: c.zone?.name_zone || 'N/A',
+                    crime: c.crime?.title || 'No especificado',
+                    complainant: c.user ? `${c.user.first_name} ${c.user.last_name}` : 'Anónimo',
+                    createdAt: c.created_at
+                }))
+            }
+        });
+    } catch (error) {
+        console.error('Officer stats error:', error);
+        res.status(500).json({ success: false, message: 'Error fetching officer statistics', error: error.message });
+    }
+};
+
 module.exports = {
     getDashboardStats,
     generateComplaintsExcel,
     generateComplaintPDF,
-    generateAssignmentPDF
+    generateAssignmentPDF,
+    getCivilStats,
+    getOfficerStats
 };

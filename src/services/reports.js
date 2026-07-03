@@ -8,6 +8,22 @@ export const getDashboardStats = async () => {
     throw new Error(response.message || 'Error fetching stats');
 };
 
+export const getCivilDashboardStats = async () => {
+    const response = await apiService.get('/api/stats/civil-dashboard');
+    if (response.success) {
+        return response.data;
+    }
+    throw new Error(response.message || 'Error fetching civil stats');
+};
+
+export const getOfficerDashboardStats = async () => {
+    const response = await apiService.get('/api/stats/officer-dashboard');
+    if (response.success) {
+        return response.data;
+    }
+    throw new Error(response.message || 'Error fetching officer stats');
+};
+
 export const downloadComplaintsExcel = async () => {
     // For downloads we need the blob response, but our apiService handles JSON
     // Let's use fetch directly with the token for this specific case
