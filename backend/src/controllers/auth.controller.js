@@ -5,7 +5,7 @@ const crypto = require('crypto');
 const { sendEmail } = require('../services/email.service');
 
 const login = async (req, res) => {
-    const identifier = req.body.dni?.trim();
+    const identifier = req.body.identifier?.trim() || req.body.dni?.trim(); // Fallback to dni for backward compatibility
     const password = req.body.password?.trim();
     const isEmail = identifier && identifier.includes('@');
     console.log(`Intento de login para ${isEmail ? 'Email' : 'DNI'}: ${identifier}`);

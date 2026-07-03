@@ -1,10 +1,10 @@
 import { apiService } from './api';
 
-export const login = async (dni, password) => {
+export const login = async (identifier, password) => {
   console.log('Attempting login with Backend Server...');
 
   const response = await apiService.post('/api/auth/login', {
-    dni,
+    identifier,
     password
   });
 

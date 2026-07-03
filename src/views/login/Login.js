@@ -21,7 +21,7 @@ import { login, checkAuth, forgotPassword } from 'src/services/auth'
 import { authStyles, containerStyles } from 'src/styles/darkModeStyles'
 
 const Login = () => {
-  const [dni, setDni] = useState('')
+  const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -70,14 +70,14 @@ const Login = () => {
     setError('')
     setLoading(true)
 
-    if (!dni.trim() || !password.trim()) {
+    if (!identifier.trim() || !password.trim()) {
       setError('Por favor complete todos los campos.')
       setLoading(false)
       return
     }
 
     try {
-      const result = await login(dni, password)
+      const result = await login(identifier, password)
 
       if (result.success) {
         navigate('/dashboard', { replace: true })
@@ -125,8 +125,8 @@ const Login = () => {
                       <CFormInput
                         placeholder="Cédula de Identidad o Correo"
                         autoComplete="username"
-                        value={dni}
-                        onChange={(e) => setDni(e.target.value)}
+                        value={identifier}
+                        onChange={(e) => setIdentifier(e.target.value)}
                         disabled={loading}
                         required
                       />
