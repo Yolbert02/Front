@@ -29,7 +29,7 @@ import {
 import { useNavigate } from 'react-router-dom'
 import { listComplaints } from 'src/services/complaints'
 import { listOfficers } from 'src/services/officers'
-import { getOfficerDashboardStats } from 'src/services/reports'
+import { getOfficerDashboardStats, getPublicStats } from 'src/services/reports'
 import { getCurrentUser } from 'src/services/auth'
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -187,7 +187,7 @@ const DonutSidebar = ({ statusData }) => (
 // ─── CIVIL DASHBOARD ──────────────────────────────────────────────────────────
 const CivilDashboard = ({ user, navigate }) => {
     const [stats, setStats] = useState({
-        total: 0, resolved: 0, pending: 0, investigating: 0, highPriority: 0,
+        total: 0, resolved: 0, investigating: 0, highPriority: 0,
         statusData: [0, 0, 0, 0, 0], officerStats: [], loaded: false
     })
     const [loading, setLoading] = useState(true)
@@ -195,19 +195,16 @@ const CivilDashboard = ({ user, navigate }) => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [allComplaints, allOfficers] = await Promise.all([listComplaints(), listOfficers()])
-                const total = allComplaints.length
-                const resolved = allComplaints.filter(c => c.status === 'resolved' || c.status === 'closed').length
-                const investigating = allComplaints.filter(c => c.status === 'under_investigation').length
-                const highPriority = allComplaints.filter(c => c.priority === 'high').length
-                const statusCounts = { received: 0, under_investigation: 0, resolved: 0, dismissed: 0, rejected: 0 }
-                allComplaints.forEach(c => { if (statusCounts[c.status] !== undefined) statusCounts[c.status]++ })
-                const officerPerformance = allOfficers.map(officer => {
-                    const assigned = allComplaints.filter(c => c.assignedOfficerId === officer.id)
-                    const solved = assigned.filter(c => c.status === 'resolved' || c.status === 'closed').length
-                    return { ...officer, assignedCount: assigned.length, resolvedCount: solved, efficiency: assigned.length > 0 ? Math.round((solved / assigned.length) * 100) : 0 }
-                }).sort((a, b) => b.resolvedCount - a.resolvedCount)
-                setStats({ total, resolved, investigating, highPriority, statusData: Object.values(statusCounts), officerStats: officerPerformance, loaded: true })
+                const data = await getPublicStats()
+                setStats({
+                    total: data.counts.total,
+                    resolved: data.counts.resolved,
+                    investigating: data.counts.investigating,
+                    highPriority: data.counts.highPriority,
+                    statusData: data.statusData,
+                    officerStats: data.officerStats,
+                    loaded: true
+                })
             } catch (err) {
                 console.error('Civil dashboard error:', err)
             } finally {
@@ -418,7 +415,7 @@ const OfficerDashboard = ({ user, navigate }) => {
 // ─── ADMIN DASHBOARD ──────────────────────────────────────────────────────────
 const AdminDashboard = ({ user, navigate }) => {
     const [stats, setStats] = useState({
-        total: 0, resolved: 0, pending: 0, investigating: 0, highPriority: 0,
+        total: 0, resolved: 0, investigating: 0, highPriority: 0,
         statusData: [0, 0, 0, 0, 0], officerStats: [], loaded: false
     })
     const [loading, setLoading] = useState(true)
@@ -426,19 +423,16 @@ const AdminDashboard = ({ user, navigate }) => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [allComplaints, allOfficers] = await Promise.all([listComplaints(), listOfficers()])
-                const total = allComplaints.length
-                const resolved = allComplaints.filter(c => c.status === 'resolved' || c.status === 'closed').length
-                const investigating = allComplaints.filter(c => c.status === 'under_investigation').length
-                const highPriority = allComplaints.filter(c => c.priority === 'high').length
-                const statusCounts = { received: 0, under_investigation: 0, resolved: 0, dismissed: 0, rejected: 0 }
-                allComplaints.forEach(c => { if (statusCounts[c.status] !== undefined) statusCounts[c.status]++ })
-                const officerPerformance = allOfficers.map(officer => {
-                    const assigned = allComplaints.filter(c => c.assignedOfficerId === officer.id)
-                    const solved = assigned.filter(c => c.status === 'resolved' || c.status === 'closed').length
-                    return { ...officer, assignedCount: assigned.length, resolvedCount: solved, efficiency: assigned.length > 0 ? Math.round((solved / assigned.length) * 100) : 0 }
-                }).sort((a, b) => b.resolvedCount - a.resolvedCount)
-                setStats({ total, resolved, investigating, highPriority, statusData: Object.values(statusCounts), officerStats: officerPerformance, loaded: true })
+                const data = await getPublicStats()
+                setStats({
+                    total: data.counts.total,
+                    resolved: data.counts.resolved,
+                    investigating: data.counts.investigating,
+                    highPriority: data.counts.highPriority,
+                    statusData: data.statusData,
+                    officerStats: data.officerStats,
+                    loaded: true
+                })
             } catch (err) {
                 console.error('Admin dashboard error:', err)
             } finally {
