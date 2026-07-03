@@ -5,6 +5,7 @@ export const login = async (identifier, password) => {
 
   const response = await apiService.post('/api/auth/login', {
     identifier,
+    dni: identifier,  // compatibilidad con backend viejo
     password
   });
 
