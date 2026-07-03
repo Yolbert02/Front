@@ -11,13 +11,35 @@ const login = async (req, res) => {
     console.log(`Intento de login para ${isEmail ? 'Email' : 'DNI'}: ${identifier}`);
 
     try {
-        const user = await prisma.user.findUnique({
-            where: isEmail ? { email: identifier } : { dni: identifier },
-            include: {
-                role: true,
-                officer: true
+        let user = null;
+        
+        if (isEmail) {
+            user = await prisma.user.findUnique({
+                where: { email: identifier },
+                include: { role: true, officer: true }
+            });
+        } else {
+            // Intento 1: Búsqueda exacta
+            user = await prisma.user.findUnique({
+                where: { dni: identifier },
+                include: { role: true, officer: true }
+            });
+
+            // Intento 2 y 3: Si no se encontró y son puros números, intentar con V- y E-
+            if (!user && /^\d+$/.test(identifier)) {
+                user = await prisma.user.findUnique({
+                    where: { dni: `V-${identifier}` },
+                    include: { role: true, officer: true }
+                });
+
+                if (!user) {
+                    user = await prisma.user.findUnique({
+                        where: { dni: `E-${identifier}` },
+                        include: { role: true, officer: true }
+                    });
+                }
             }
-        });
+        }
 
         if (!user) {
             console.log(`User not found with ${isEmail ? 'Email' : 'DNI'}: ${identifier}`);
