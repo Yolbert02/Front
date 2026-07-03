@@ -18,6 +18,7 @@ import InfoZone from './InfoZone'
 import { listZones } from 'src/services/zones'
 import { listComplaints } from 'src/services/complaints'
 import ZoneSiderbar from './ZoneSiderbar'
+import { getCurrentUser } from 'src/services/auth'
 
 delete L.Icon.Default.prototype._getIconUrl
 L.Icon.Default.mergeOptions({
@@ -72,6 +73,11 @@ const Zones = () => {
 
   const fetchComplaints = async () => {
     try {
+      const user = getCurrentUser()
+      if (user?.role === 'civil') {
+        setComplaints([]) // Civilians shouldn't see individual complaint markers
+        return
+      }
       const data = await listComplaints()
       console.log('Complaints for map:', data.filter(c => c.latitude && c.longitude))
       setComplaints(data || [])

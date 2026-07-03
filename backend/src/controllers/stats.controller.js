@@ -422,6 +422,13 @@ const getPublicStats = async (req, res) => {
             GROUP BY priority
         `;
 
+        const complaintsByZoneRaw = await prisma.$queryRaw`
+            SELECT "Id_zone", COUNT(*) as count 
+            FROM "Complaint"
+            WHERE "Id_zone" IS NOT NULL
+            GROUP BY "Id_zone"
+        `;
+
         const formattedStatus = complaintsByStatus.map(s => ({
             status: s.status,
             count: Number(s.count)
@@ -430,6 +437,11 @@ const getPublicStats = async (req, res) => {
         const formattedPriority = complaintsByPriority.map(s => ({
             priority: s.priority,
             count: Number(s.count)
+        }));
+
+        const complaintsByZone = complaintsByZoneRaw.map(z => ({
+            zoneId: z.Id_zone,
+            count: Number(z.count)
         }));
 
         const total = Number(totalComplaints[0].count);
@@ -479,7 +491,8 @@ const getPublicStats = async (req, res) => {
             data: {
                 counts: { total, resolved, investigating, received, highPriority },
                 statusData,
-                officerStats
+                officerStats,
+                complaintsByZone
             }
         });
     } catch (error) {

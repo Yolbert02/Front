@@ -22,15 +22,20 @@ import InfoComplaint from '../complaints/InfoComplaint'
 import SearchInput from 'src/components/SearchInput'
 import InfoGlobalZone from './InfoGlobalZone'
 import { listZones } from 'src/services/zones'
+import { getCurrentUser } from 'src/services/auth'
+import { getPublicStats } from 'src/services/reports'
 
 const ZoneSiderbar = ({ onLocate }) => {
     const [complaints, setComplaints] = useState([])
+    const [zoneStats, setZoneStats] = useState([])
     const [loading, setLoading] = useState(true)
     const [selectedComplaint, setSelectedComplaint] = useState(null)
     const [showComplaintInfo, setShowComplaintInfo] = useState(false)
     const [searchTerm, setSearchTerm] = useState('')
     const [showGlobalStats, setShowGlobalStats] = useState(false)
     const [zones, setZones] = useState([])
+    const user = getCurrentUser()
+    const isCivil = user?.role === 'civil'
 
 
     useEffect(() => {
@@ -50,8 +55,14 @@ const ZoneSiderbar = ({ onLocate }) => {
 
     const fetchComplaints = async () => {
         try {
-            const data = await listComplaints()
-            setComplaints(data || [])
+            if (isCivil) {
+                const data = await getPublicStats()
+                setZoneStats(data.complaintsByZone || [])
+                setComplaints([]) // Civils don't get individual complaints
+            } else {
+                const data = await listComplaints()
+                setComplaints(data || [])
+            }
         } catch (error) {
             console.error('Error fetching complaints:', error)
             setComplaints([])
@@ -157,7 +168,7 @@ const ZoneSiderbar = ({ onLocate }) => {
                                 Panel de Zonas
                             </h4>
                             <p className="text-muted mb-0 small">
-                                Indicadores de zona • {complaints.length} denuncias
+                                {isCivil ? 'Indicadores de zona' : `Indicadores de zona • ${complaints.length} denuncias`}
                             </p>
                         </div>
                     </div>
@@ -186,6 +197,8 @@ const ZoneSiderbar = ({ onLocate }) => {
                         <CAccordion className="custom-accordion">
                             {zones.map((zone) => {
                                 const zoneComplaints = getZoneComplaints(zone)
+                                const statCount = zoneStats.find(z => z.zoneId === zone.id)?.count || 0
+                                const count = isCivil ? statCount : zoneComplaints.length
 
                                 return (
                                     <CAccordionItem key={zone.id} itemKey={zone.id}>
@@ -194,18 +207,26 @@ const ZoneSiderbar = ({ onLocate }) => {
                                             style={{ '--zone-color': zone.color }}
                                         >
                                             <span>{zone.name}</span>
-
+                                            <CBadge color="secondary" shape="rounded-pill" className="ms-auto me-3">{count}</CBadge>
                                         </CAccordionHeader>
                                         <CAccordionBody>
-                                            {zoneComplaints.length > 0 ? (
-                                                <CListGroup flush>
-                                                    {zoneComplaints.map(renderComplaintItem)}
-                                                </CListGroup>
-                                            ) : (
-                                                <div className="text-center text-muted py-2">
-                                                    <CIcon icon={cilWarning} className="me-2 opacity-50" />
-                                                    Sin denuncias
+                                            {isCivil ? (
+                                                <div className="text-center text-muted py-3">
+                                                    <CIcon icon={cilChart} className="me-2 text-primary opacity-50" size="xl" />
+                                                    <div className="mt-2 fw-semibold">{count} denuncias</div>
+                                                    <small className="d-block mt-1">Detalles protegidos por privacidad.</small>
                                                 </div>
+                                            ) : (
+                                                zoneComplaints.length > 0 ? (
+                                                    <CListGroup flush>
+                                                        {zoneComplaints.map(renderComplaintItem)}
+                                                    </CListGroup>
+                                                ) : (
+                                                    <div className="text-center text-muted py-2">
+                                                        <CIcon icon={cilWarning} className="me-2 opacity-50" />
+                                                        Sin denuncias
+                                                    </div>
+                                                )
                                             )}
                                         </CAccordionBody>
                                     </CAccordionItem>
