@@ -24,6 +24,14 @@ export const getOfficerDashboardStats = async () => {
     throw new Error(response.message || 'Error fetching officer stats');
 };
 
+export const getPublicStats = async () => {
+    const response = await apiService.get('/api/stats/public');
+    if (response.success) {
+        return response.data;
+    }
+    throw new Error(response.message || 'Error fetching public stats');
+};
+
 export const downloadComplaintsExcel = async () => {
     // For downloads we need the blob response, but our apiService handles JSON
     // Let's use fetch directly with the token for this specific case

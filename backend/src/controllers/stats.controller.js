@@ -406,11 +406,94 @@ const getOfficerStats = async (req, res) => {
     }
 };
 
+const getPublicStats = async (req, res) => {
+    try {
+        const totalComplaints = await prisma.$queryRaw`SELECT COUNT(*) FROM "Complaint"`;
+        
+        const complaintsByStatus = await prisma.$queryRaw`
+            SELECT status, COUNT(*) as count 
+            FROM "Complaint" 
+            GROUP BY status
+        `;
+
+        const complaintsByPriority = await prisma.$queryRaw`
+            SELECT priority, COUNT(*) as count 
+            FROM "Complaint" 
+            GROUP BY priority
+        `;
+
+        const formattedStatus = complaintsByStatus.map(s => ({
+            status: s.status,
+            count: Number(s.count)
+        }));
+
+        const formattedPriority = complaintsByPriority.map(s => ({
+            priority: s.priority,
+            count: Number(s.count)
+        }));
+
+        const total = Number(totalComplaints[0].count);
+        const resolved = formattedStatus.find(s => s.status === 'resolved' || s.status === 'closed')?.count || 0;
+        const investigating = formattedStatus.find(s => s.status === 'under_investigation')?.count || 0;
+        const received = formattedStatus.find(s => s.status === 'received')?.count || 0;
+        const highPriority = formattedPriority.find(p => p.priority === 'high')?.count || 0;
+
+        // Officer leaderboard
+        const officers = await prisma.police_Officer.findMany({
+            include: {
+                user: { select: { first_name: true, last_name: true, email: true } }
+            }
+        });
+
+        const allComplaints = await prisma.complaint.findMany({
+            select: { status: true, priority: true, assigned_officer_id: true }
+        });
+
+        const officerStats = officers.map(officer => {
+            const assigned = allComplaints.filter(c => c.assigned_officer_id === officer.Id_user);
+            const solvedCount = assigned.filter(c => c.status === 'resolved' || c.status === 'closed').length;
+            return {
+                id: officer.Id_user,
+                name: officer.user?.first_name || '',
+                lastName: officer.user?.last_name || '',
+                rank: officer.rank,
+                unit: officer.unit,
+                badge_number: officer.badge_number,
+                assignedCount: assigned.length,
+                resolvedCount: solvedCount,
+                efficiency: assigned.length > 0 ? Math.round((solvedCount / assigned.length) * 100) : 0
+            };
+        }).sort((a, b) => b.resolvedCount - a.resolvedCount);
+
+        // Status data array for donut chart: [received, under_investigation, resolved, dismissed, rejected]
+        const statusData = [
+            received,
+            investigating,
+            resolved,
+            formattedStatus.find(s => s.status === 'dismissed')?.count || 0,
+            formattedStatus.find(s => s.status === 'rejected')?.count || 0,
+        ];
+
+        res.json({
+            success: true,
+            data: {
+                counts: { total, resolved, investigating, received, highPriority },
+                statusData,
+                officerStats
+            }
+        });
+    } catch (error) {
+        console.error('Public stats error:', error);
+        res.status(500).json({ success: false, message: 'Error fetching public statistics', error: error.message });
+    }
+};
+
 module.exports = {
     getDashboardStats,
     generateComplaintsExcel,
     generateComplaintPDF,
     generateAssignmentPDF,
     getCivilStats,
-    getOfficerStats
+    getOfficerStats,
+    getPublicStats
 };

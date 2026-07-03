@@ -4,6 +4,9 @@ const statsController = require('../controllers/stats.controller');
 const verifyToken = require('../middleware/auth.middleware');
 const checkRole = require('../middleware/role.middleware');
 
+// Public stats (all authenticated users)
+router.get('/public', verifyToken, statsController.getPublicStats);
+
 // Admin/Officer global dashboard
 router.get('/dashboard', verifyToken, checkRole(['administrator', 'oficial']), statsController.getDashboardStats);
 router.get('/reports/excel', verifyToken, checkRole(['administrator', 'oficial']), statsController.generateComplaintsExcel);
